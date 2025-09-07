@@ -5,7 +5,7 @@ var playerY = 375;
 
 
 function preload(){
-  character = loadImage("images/redpaintbucket.gif")
+  character = loadImage("images/redpaintbucketgif.gif");
 }
 
 function setup() {
