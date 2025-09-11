@@ -14,6 +14,7 @@ let startButton;
 function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
+  bg = loadImage("images/background.png");
 }
 
 function setup() {
@@ -34,7 +35,7 @@ function setup() {
 
 function draw() {
   if(state == 0){ //start screen
-    background("grey");
+    background(bg);
 
     colorFluctuation();
 
