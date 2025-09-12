@@ -43,10 +43,10 @@ class Actor {
 
 
 function preload(){
-  chrSprite[0] = loadImage("images/redpb5.png");
-  chrSprite[1] = loadImage("images/bluepb5.png");
-  chrSprite[2] = loadImage("images/purplepb5.png");
-  chrSprite[3] = loadImage("images/greenpb5.png");
+  chrSprite[0] = loadImage("images/redpaintbucket.png");
+  chrSprite[1] = loadImage("images/bluepaintbucket.png");
+  chrSprite[2] = loadImage("images/purplepaintbucket.png");
+  chrSprite[3] = loadImage("images/greenpaintbucket.png");
 }
 
 
