@@ -52,7 +52,7 @@ function preload(){
 
 function setup() {
   createCanvas(800, 800);
-  background(backgroundImage);
+  background(220);
 
   ourCharacters.push(new Actor(100, 100, chrSprite[0]));
   ourCharacters.push(new Actor(200, 200, chrSprite[1]));
