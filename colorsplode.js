@@ -120,6 +120,11 @@ function startMenu(){
 
   if (startButton.mouse.pressing()){
     startButton.remove();
+    pauseButton = new Sprite(750, 50);
+    pauseButton.text = "||";
+    pauseButton.width = 70;
+    pauseButton.height = 50;
+    pauseButton.color = "lightgreen";
     state = 1;
   }
 }
@@ -129,6 +134,9 @@ function gameMenu(){
   for (let actor of ourCharacters) {
     actor.update();
     image(actor.sprite, actor.x, actor.y, actor.size, actor.size);
+  }
+  if(pauseButton.mouse.pressed()){
+    pauseGame();
   }
   if(gamePaused){
     text("Paused", 310, 250);
@@ -183,7 +191,7 @@ function pauseGame(){
     resumeButton.height = 50;
     resumeButton.color = "lightgreen";
   }
-  else{
+  else{ // Remove the resume button, then draw the pause button again
     resumeButton.remove();
     resumeButton = null;
   }
