@@ -11,19 +11,24 @@ let b = 0;
 let state = 0;
 let startButton;
 
-
-function preload(){
-  character = loadImage("images/redpaintbucketgif.gif");
-  myFont = loadFont('font/PressStart2P-Regular.ttf');
-  bg = loadImage("images/background.png");
-
-
 let chrSprite =[]; //array of character sprits
 let ourCharacters = []; //array of character objects
 
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
 let backgroundImage;
+
+function preload(){
+  character = loadImage("images/redpaintbucketgif.gif");
+  myFont = loadFont('font/PressStart2P-Regular.ttf');
+  bg = loadImage("images/menubackground.png");
+  chrSprite[0] = loadImage("images/redpaintbucket.png");
+  chrSprite[1] = loadImage("images/bluepaintbucket.png");
+  chrSprite[2] = loadImage("images/purplepaintbucket.png");
+  chrSprite[3] = loadImage("images/greenpaintbucket.png");
+}
+
+
 
 // A Class of Our Actors/Characters
 class Actor {
@@ -59,15 +64,6 @@ class Actor {
     }
 }
 
-
-
-function preload(){
-  chrSprite[0] = loadImage("images/redpaintbucket.png");
-  chrSprite[1] = loadImage("images/bluepaintbucket.png");
-  chrSprite[2] = loadImage("images/purplepaintbucket.png");
-  chrSprite[3] = loadImage("images/greenpaintbucket.png");
-
-}
 
 
 function setup() {
@@ -142,10 +138,10 @@ function colorFluctuation(){
     b += random(0,3);
 }
 
-function keyReleased(){
-  character.reset();
-  character.pause();
-
+// function keyReleased(){
+//   character.reset();
+//   character.pause();
+// }
 function mousePressed() { 
   for (let actor of ourCharacters){
     if (actor.state === "FREE" && actor.isMouseOver()){
@@ -158,8 +154,9 @@ function mousePressed() {
 }
 
 function mouseReleased() {
-  if (grabbedCharacter.state === "GRABBED") {
+  if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     grabbedCharacter.state = "FREE";
+    grabbedCharacter = null;
   }
 }
 
