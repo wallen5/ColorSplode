@@ -35,28 +35,35 @@ function setup() {
 
 function draw() {
   if(state == 0){ //start screen
-    background(bg);
+    startMenu();
 
-    colorFluctuation();
-
-    fill(r, g, b);
-    stroke("black");
-    strokeWeight(5);
-    textSize(30);
-    textStyle("bold");
-    
-    text("ColorSplode", 250 , 350 );
-
-    if (startButton.mouse.pressing()){
-      startButton.remove();
-      state = 1;
-    }
-
-    
   } else if (state == 1){ //game screen
-      background(220);
-      playerMovement();
+      gameMenu();
   }
+}
+
+function startMenu(){
+   background(bg);
+
+  colorFluctuation();
+
+  fill(r, g, b);
+  stroke("black");
+  strokeWeight(5);
+  textSize(30);
+  textStyle("bold");
+    
+  text("ColorSplode", 250 , 350 );
+
+  if (startButton.mouse.pressing()){
+    startButton.remove();
+    state = 1;
+  }
+}
+
+function gameMenu(){
+  background(220);
+  playerMovement();
 }
 
 function colorFluctuation(){
