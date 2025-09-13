@@ -18,10 +18,11 @@ let ourCharacters = []; //array of character objects
 let grabbedCharacter; 
 let backgroundImage;
 
-// This detects if the game state is supposed to be paused
+// Pause buttons
 let gamePaused = false;
 let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
+let quitButton;
 
 function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
@@ -82,6 +83,7 @@ function setup() {
 
   //start button
   textFont(myFont);
+  textSize(12); // Sets a font size to keep text size consistent
   startButton = new Sprite(400, 450);
   startButton.text = "Play Game";
   startButton.width = 120;
@@ -138,9 +140,28 @@ function gameMenu(){
   if(pauseButton.mouse.pressed()){
     pauseGame();
   }
-  if(gamePaused){
-    text("Paused", 310, 250);
-    if(resumeButton.mouse.pressing()){
+  
+  if (gamePaused) {
+    push(); // save current drawing settings
+
+    // Creates the semi-transparent background for the pause menu
+    fill(0, 0, 0, 150);
+    noStroke();
+    rect(0, 0, width, height);
+
+    // pause text
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(32);
+    text("Paused", width / 2, height / 2);
+    textSize(12);
+
+    pop(); // restore settings
+    if(quitButton.mouse.pressed()){
+      state = 0;
+      quitGame();
+    }
+    if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
       pauseGame();
     }
   }
@@ -184,19 +205,42 @@ function pauseGame(){
       actor.state = "FREE"
     }
   }
-  if(gamePaused){
+  if(gamePaused){ // if game paused, draw the new buttons
     resumeButton = new Sprite(400, 450);
     resumeButton.text = "Resume";
     resumeButton.width = 200;
     resumeButton.height = 50;
     resumeButton.color = "lightgreen";
+
+    quitButton = new Sprite(400, 500);
+    quitButton.text = "Quit";
+    quitButton.width = 200;
+    quitButton.height = 50;
+    quitButton.color = "lightgreen";
   }
-  else{ // Remove the resume button, then draw the pause button again
+  else{ // Remove the resume button
     resumeButton.remove();
     resumeButton = null;
+    quitButton.remove();
+    quitButton = null;
   }
 }
 
+// Quits the game, resets game state
+function quitGame(){
+  quitButton.remove();
+  quitButton = null;
+  resumeButton.remove();
+  resumeButton = null;
+  pauseButton.remove();
+  pauseButton = null;
+  gamePaused = false;
+
+  ourCharacters = []; // Removes all enemies to prevent duplicates
+  setup();
+}
+
+// Grabs enemies
 function mousePressed() { 
   for (let actor of ourCharacters){
     if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
@@ -208,6 +252,7 @@ function mousePressed() {
 
 }
 
+// Release the enemies
 function mouseReleased() {
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     grabbedCharacter.state = "FREE";
