@@ -18,6 +18,12 @@ let ourCharacters = []; //array of character objects
 let grabbedCharacter; 
 let backgroundImage;
 
+// Pause buttons
+let gamePaused = false;
+let pauseButton;
+let resumeButton; // Stored here so we can detect drawing it ONCE
+let quitButton;
+
 function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -50,10 +56,12 @@ class Actor {
 
   // Update the position of the character
   update() {
-    if (this.state === "FREE") {
-      roamingMovement(this);
-    } else if (this.state === "GRABBED") {
-      grabbedMovement(this);
+    if(!gamePaused){ // If the game ISN'T Paused then we update their movement
+      if (this.state === "FREE") {
+        roamingMovement(this);
+      } else if (this.state === "GRABBED") {
+        grabbedMovement(this);
+      }
     }
   } 
 
@@ -75,6 +83,7 @@ function setup() {
 
   //start button
   textFont(myFont);
+  textSize(12); // Sets a font size to keep text size consistent
   startButton = new Sprite(400, 450);
   startButton.text = "Play Game";
   startButton.width = 120;
@@ -113,6 +122,11 @@ function startMenu(){
 
   if (startButton.mouse.pressing()){
     startButton.remove();
+    pauseButton = new Sprite(750, 50);
+    pauseButton.text = "||";
+    pauseButton.width = 70;
+    pauseButton.height = 50;
+    pauseButton.color = "lightgreen";
     state = 1;
   }
 }
@@ -122,6 +136,34 @@ function gameMenu(){
   for (let actor of ourCharacters) {
     actor.update();
     image(actor.sprite, actor.x, actor.y, actor.size, actor.size);
+  }
+  if(pauseButton.mouse.pressed()){
+    pauseGame();
+  }
+  
+  if (gamePaused) {
+    push(); // save current drawing settings
+
+    // Creates the semi-transparent background for the pause menu
+    fill(0, 0, 0, 150);
+    noStroke();
+    rect(0, 0, width, height);
+
+    // pause text
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(32);
+    text("Paused", width / 2, height / 2);
+    textSize(12);
+
+    pop(); // restore settings
+    if(quitButton.mouse.pressed()){
+      state = 0;
+      quitGame();
+    }
+    if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
+      pauseGame();
+    }
   }
   text("X: " + mouseX + " Y: " + mouseY, 10, 20);
 }
@@ -142,9 +184,66 @@ function colorFluctuation(){
 //   character.reset();
 //   character.pause();
 // }
+
+function keyPressed() // Generic Keypress function
+{
+  if((keyCode === ESCAPE || key === 'p') && state == 1) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
+  {
+    pauseGame();
+  }
+  else if(state != 1)
+  {
+    resumeButton.remove();
+    resumeButton = null;
+  }
+}
+
+function pauseGame(){
+  gamePaused = !gamePaused;
+  for(let actor of ourCharacters){
+    if(actor.state === "GRABBED"){ // Ensures the player can't click, and then pause and move the enemy
+      actor.state = "FREE"
+    }
+  }
+  if(gamePaused){ // if game paused, draw the new buttons
+    resumeButton = new Sprite(400, 450);
+    resumeButton.text = "Resume";
+    resumeButton.width = 200;
+    resumeButton.height = 50;
+    resumeButton.color = "lightgreen";
+
+    quitButton = new Sprite(400, 500);
+    quitButton.text = "Quit";
+    quitButton.width = 200;
+    quitButton.height = 50;
+    quitButton.color = "lightgreen";
+  }
+  else{ // Remove the resume button
+    resumeButton.remove();
+    resumeButton = null;
+    quitButton.remove();
+    quitButton = null;
+  }
+}
+
+// Quits the game, resets game state
+function quitGame(){
+  quitButton.remove();
+  quitButton = null;
+  resumeButton.remove();
+  resumeButton = null;
+  pauseButton.remove();
+  pauseButton = null;
+  gamePaused = false;
+
+  ourCharacters = []; // Removes all enemies to prevent duplicates
+  setup();
+}
+
+// Grabs enemies
 function mousePressed() { 
   for (let actor of ourCharacters){
-    if (actor.state === "FREE" && actor.isMouseOver()){
+    if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
       grabbedCharacter = actor;
       break;
@@ -153,6 +252,7 @@ function mousePressed() {
 
 }
 
+// Release the enemies
 function mouseReleased() {
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     grabbedCharacter.state = "FREE";
