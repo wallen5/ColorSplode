@@ -26,7 +26,7 @@ let quitButton;
 
 // color zones
 const colors = ["red","blue","purple","green"];
-let colorZones = []; // {x,y,w,h,color}
+let colorZones = [];
 
 
 function preload(){
@@ -337,7 +337,6 @@ function drawColorZones(){
     fill(zoneFill(z.color)); // light tint
     rect(z.x, z.y, z.w, z.h);
     fill(0);
-    text(capitalize(z.color), z.x + z.w/2, z.y + z.h/2);
   }
   pop();
 }
@@ -362,6 +361,4 @@ function zoneFill(colorName){
   if (colorName === "green")  return color(180,255,180);
   return color(230);
 }
-
-function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 
