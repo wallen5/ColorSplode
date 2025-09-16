@@ -24,6 +24,11 @@ let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 
+// color zones
+const colors = ["red","blue","purple","green"];
+let colorZones = [];
+
+
 function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -61,6 +66,8 @@ class Actor {
         roamingMovement(this);
       } else if (this.state === "GRABBED") {
         grabbedMovement(this);
+      } else if (this.state === "SNAPPED") {
+        // Do nothing; actor is in a zone
       }
     }
   } 
@@ -95,6 +102,16 @@ function setup() {
   ourCharacters.push(new Actor(200, 200, chrSprite[1]));
   ourCharacters.push(new Actor(300, 300, chrSprite[2]));
   ourCharacters.push(new Actor(400, 400, chrSprite[3]));
+
+    // create 4 drop zones along the bottom
+  let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
+  colorZones = [
+    { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "red"    },
+    { x: zoneX + 1*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "blue"   },
+    { x: zoneX + 2*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "purple" },
+    { x: zoneX + 3*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "green"  },
+  ];
+
 
 }
 
@@ -132,11 +149,20 @@ function startMenu(){
 }
 
 function gameMenu(){
+
+ 
+
   background(220);
+
+   drawColorZones();
+
   for (let actor of ourCharacters) {
     actor.update();
     image(actor.sprite, actor.x, actor.y, actor.size, actor.size);
   }
+
+  
+
   if(pauseButton.mouse.pressed()){
     pauseGame();
   }
@@ -252,13 +278,28 @@ function mousePressed() {
 
 }
 
-// Release the enemies
 function mouseReleased() {
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
-    grabbedCharacter.state = "FREE";
+    const zone = zoneUnderActor(grabbedCharacter);
+    if (zone) {
+      const idx = chrSprite.indexOf(grabbedCharacter.sprite); 
+      const actorColor = colors[idx]; // "red","blue","purple","green"
+      if (zone.color === actorColor) {
+        grabbedCharacter.xspeed = 0;
+        grabbedCharacter.yspeed = 0;
+        grabbedCharacter.state = "SNAPPED";
+      } else {
+        // wrong zone release normally
+        grabbedCharacter.state = "FREE";
+      }
+    } else {
+      // no zone is a normal release
+      grabbedCharacter.state = "FREE";
+    }
     grabbedCharacter = null;
   }
 }
+
 
 //random character movement
 function roamingMovement(actor) {
@@ -281,3 +322,39 @@ function grabbedMovement(actor) {
   actor.x = mouseX - actor.size/2;
   actor.y = mouseY - actor.size/2;
 }
+
+// draw colored drop zones 
+function drawColorZones(){
+  push();
+  stroke(0);
+  strokeWeight(3);
+  textAlign(CENTER, CENTER);
+  textSize(14);
+  for (let z of colorZones){
+    fill(zoneFill(z.color));
+    rect(z.x, z.y, z.w, z.h);
+    fill(0);
+  }
+  pop();
+}
+
+function zoneUnderActor(actor){
+  // Use actor center to test
+  const centerX = actor.x + actor.size/2;
+  const centerY = actor.y + actor.size/2;
+  for (let z of colorZones){
+    if (centerX >= z.x && centerX <= z.x + z.w && centerY >= z.y && centerY <= z.y + z.h){
+      return z;
+    }
+  }
+  return null;
+}
+
+function zoneFill(colorName){
+  if (colorName === "red")    return color(255,180,180);
+  if (colorName === "blue")   return color(180,180,255);
+  if (colorName === "purple") return color(210,180,255);
+  if (colorName === "green")  return color(180,255,180);
+  return color(230);
+}
+
