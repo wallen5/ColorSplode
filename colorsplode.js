@@ -286,8 +286,6 @@ function mouseReleased() {
       const actorColor = colors[idx]; // "red","blue","purple","green"
       if (zone.color === actorColor) {
         // Snap to center of zone and stop moving
-        grabbedCharacter.x = zone.x + zone.w/2 - grabbedCharacter.size/2;
-        grabbedCharacter.y = zone.y + zone.h/2 - grabbedCharacter.size/2;
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
