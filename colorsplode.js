@@ -104,12 +104,12 @@ function setup() {
   ourCharacters.push(new Actor(400, 400, chrSprite[3]));
 
     // create 4 drop zones along the bottom
-  let zx = 60, zy = 620, zw = 150, zh = 150, gap = 20;
+  let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
   colorZones = [
-    { x: zx + 0*(zw+gap), y: zy, w: zw, h: zh, color: "red"    },
-    { x: zx + 1*(zw+gap), y: zy, w: zw, h: zh, color: "blue"   },
-    { x: zx + 2*(zw+gap), y: zy, w: zw, h: zh, color: "purple" },
-    { x: zx + 3*(zw+gap), y: zy, w: zw, h: zh, color: "green"  },
+    { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "red"    },
+    { x: zoneX + 1*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "blue"   },
+    { x: zoneX + 2*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "purple" },
+    { x: zoneX + 3*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "green"  },
   ];
 
 
@@ -340,10 +340,10 @@ function drawColorZones(){
 
 function zoneUnderActor(actor){
   // Use actor center to test
-  const cx = actor.x + actor.size/2;
-  const cy = actor.y + actor.size/2;
+  const centerX = actor.x + actor.size/2;
+  const centerY = actor.y + actor.size/2;
   for (let z of colorZones){
-    if (cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + z.h){
+    if (centerX >= z.x && centerX <= z.x + z.w && centerY >= z.y && centerY <= z.y + z.h){
       return z;
     }
   }
