@@ -67,7 +67,7 @@ class Actor {
       } else if (this.state === "GRABBED") {
         grabbedMovement(this);
       } else if (this.state === "SNAPPED") {
-        // Do nothing; actor is parked in a zone
+        // Do nothing; actor is in a zone
       }
     }
   } 
@@ -285,7 +285,6 @@ function mouseReleased() {
       const idx = chrSprite.indexOf(grabbedCharacter.sprite); 
       const actorColor = colors[idx]; // "red","blue","purple","green"
       if (zone.color === actorColor) {
-        // Snap to center of zone and stop moving
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
@@ -332,7 +331,7 @@ function drawColorZones(){
   textAlign(CENTER, CENTER);
   textSize(14);
   for (let z of colorZones){
-    fill(zoneFill(z.color)); // light tint
+    fill(zoneFill(z.color));
     rect(z.x, z.y, z.w, z.h);
     fill(0);
   }
@@ -352,7 +351,6 @@ function zoneUnderActor(actor){
 }
 
 function zoneFill(colorName){
-  // gentle tints to keep visibility
   if (colorName === "red")    return color(255,180,180);
   if (colorName === "blue")   return color(180,180,255);
   if (colorName === "purple") return color(210,180,255);
