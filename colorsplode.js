@@ -111,11 +111,6 @@ function setup() {
   startButton.color = "lightgreen";
   background(220);
 
-  // ourCharacters.push(new Actor(60, 100, chrSprite[0]));
-  // ourCharacters.push(new Actor(750, 100, chrSprite[1]));
-  // ourCharacters.push(new Actor(20, 450, chrSprite[2]));
-  // ourCharacters.push(new Actor(750, 450, chrSprite[3]));
-
     // create 4 drop zones along the bottom
   let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
   colorZones = [
