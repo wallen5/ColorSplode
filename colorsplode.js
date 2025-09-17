@@ -1,9 +1,9 @@
-
 var player;
 var character;
 var playerX = 375;
 var playerY = 375;
 let time = 0;
+//start menu global vars
 let r = 250;
 let g = 0;
 let b = 0;
@@ -24,6 +24,8 @@ let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 
+//zone vars
+let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
 // color zones
 const colors = ["red","blue","purple","green"];
 let colorZones = [];
@@ -82,8 +84,6 @@ class Actor {
 
 
 function setup() {
-
-  
   createCanvas(800, 800);
 
   character.resize(50, 50);
@@ -104,7 +104,6 @@ function setup() {
   ourCharacters.push(new Actor(400, 400, chrSprite[3]));
 
     // create 4 drop zones along the bottom
-  let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
   colorZones = [
     { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "red"    },
     { x: zoneX + 1*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "blue"   },
@@ -150,8 +149,6 @@ function startMenu(){
 
 function gameMenu(){
 
- 
-
   background(220);
 
    drawColorZones();
@@ -160,8 +157,6 @@ function gameMenu(){
     actor.update();
     image(actor.sprite, actor.x, actor.y, actor.size, actor.size);
   }
-
-  
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -313,14 +308,14 @@ function roamingMovement(actor) {
   actor.y += actor.yspeed;
 
   //make sure characters don't go off screen
-  if (actor.x < 0 || actor.x > width - 50) actor.xspeed *= -1;
-  if (actor.y < 0 || actor.y > height - 50) actor.yspeed *= -1;
+  if (actor.x < 0 || actor.x > width - actor.size) actor.xspeed *= -1;
+  if (actor.y < 0 || actor.y > zoneY - actor.size) actor.yspeed *= -1;
 
 }
 
 function grabbedMovement(actor) {
-  actor.x = mouseX - actor.size/2;
-  actor.y = mouseY - actor.size/2;
+  actor.x = constrain(mouseX - actor.size/2, 0, width - actor.size);
+  actor.y = constrain(mouseY - actor.size/2, 0, width - actor.size);
 }
 
 // draw colored drop zones 
@@ -357,4 +352,3 @@ function zoneFill(colorName){
   if (colorName === "green")  return color(180,255,180);
   return color(230);
 }
-
