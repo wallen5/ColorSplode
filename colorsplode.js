@@ -4,9 +4,13 @@ var character;
 var playerX = 375;
 var playerY = 375;
 let time = 0;
+
+//start menu text
 let r = 250;
 let g = 0;
 let b = 0;
+
+
 
 let state = 0;
 let startButton;
@@ -98,10 +102,10 @@ function setup() {
   startButton.color = "lightgreen";
   background(220);
 
-  ourCharacters.push(new Actor(100, 100, chrSprite[0]));
-  ourCharacters.push(new Actor(200, 200, chrSprite[1]));
-  ourCharacters.push(new Actor(300, 300, chrSprite[2]));
-  ourCharacters.push(new Actor(400, 400, chrSprite[3]));
+  // ourCharacters.push(new Actor(60, 100, chrSprite[0]));
+  // ourCharacters.push(new Actor(750, 100, chrSprite[1]));
+  // ourCharacters.push(new Actor(20, 450, chrSprite[2]));
+  // ourCharacters.push(new Actor(750, 450, chrSprite[3]));
 
     // create 4 drop zones along the bottom
   let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
@@ -115,12 +119,35 @@ function setup() {
 
 }
 
+// used for actor spawning
+let timeToSpawn = 100;
+let timer = 50;
+
+//spawn rate
+let rate = 1;
+
 function draw() {
   if(state == 0){ //start screen
     startMenu();
 
   } else if (state == 1){ //game screen
       gameMenu();
+      spawnActor();
+                      //needs to be whole number
+      if(timer == Math.round(timeToSpawn/rate)){
+        timer = 0;
+
+        //spawn rate starts to slow down.
+        if (rate < 2){
+          rate += 0.05; 
+        } else {
+          rate += 0.0125;
+        }
+      }
+
+      ++timer;
+    
+      
   }
 }
 
@@ -147,6 +174,7 @@ function startMenu(){
     state = 1;
   }
 }
+
 
 function gameMenu(){
 
@@ -338,15 +366,20 @@ function drawColorZones(){
   pop();
 }
 
+let activeActors = 0;
+
 function zoneUnderActor(actor){
   // Use actor center to test
   const centerX = actor.x + actor.size/2;
   const centerY = actor.y + actor.size/2;
   for (let z of colorZones){
     if (centerX >= z.x && centerX <= z.x + z.w && centerY >= z.y && centerY <= z.y + z.h){
+      --activeActors;
       return z;
     }
   }
+
+  
   return null;
 }
 
@@ -357,4 +390,23 @@ function zoneFill(colorName){
   if (colorName === "green")  return color(180,255,180);
   return color(230);
 }
+
+
+function spawnActor(){
+  //let spawnRate = 90;
+
+  if(timer == Math.round(timeToSpawn/rate) && !gamePaused && activeActors <= 10){
+    // Determine a random position for the new actor
+    let newX = random(0, width - 50);
+    let newY = random(0, height - 50);
+    // Select a random sprite from your array
+   let randomSprite = random(chrSprite);
+    // Create a new Actor object and add it to the array
+    ourCharacters.push(new Actor(newX, newY, randomSprite));
+
+    ++activeActors;
+  }
+
+}
+
 
