@@ -3,6 +3,7 @@ var character;
 var playerX = 375;
 var playerY = 375;
 let time = 0;
+var cnv;
 //start menu global vars
 let r = 250;
 let g = 0;
@@ -25,7 +26,7 @@ let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 
 //zone vars
-let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
+let zoneX = 100, zoneY = 620, zoneWidth = 250, zoneHeight = 250, gap = 200;
 // color zones
 const colors = ["red","blue","purple","green"];
 let colorZones = [];
@@ -48,7 +49,7 @@ class Actor {
   constructor(x, y, sprite) {
     this.x = x;
     this.y = y;
-    this.size = 50;
+    this.size = 100;
     this.sprite = sprite;
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
@@ -81,20 +82,25 @@ class Actor {
     }
 }
 
-
+function centerCanvas(){
+  var x = (windowWidth - width) / 2;
+  var y = (windowHeight - height) / 2;
+  cnv.position(x, y);
+}
 
 function setup() {
-  createCanvas(800, 800);
+  cnv = createCanvas(windowWidth - 200, windowHeight - 200);
+  centerCanvas();
 
-  character.resize(50, 50);
+  character.resize(100, 100);
 
   //start button
   textFont(myFont);
-  textSize(12); // Sets a font size to keep text size consistent
-  startButton = new Sprite(400, 450);
+  textSize(20); // Sets a font size to keep text size consistent
+  startButton = new Sprite(windowWidth/2 - 50, windowHeight/2 - 50);
   startButton.text = "Play Game";
-  startButton.width = 120;
-  startButton.height = 50;
+  startButton.width = 200;
+  startButton.height = 70;
   startButton.color = "lightgreen";
   background(220);
 
@@ -114,6 +120,10 @@ function setup() {
 
 }
 
+function windowResized(){
+  resizeCanvas(windowWidth - 200, windowHeight - 200)
+}
+
 function draw() {
   if(state == 0){ //start screen
     startMenu();
@@ -131,17 +141,17 @@ function startMenu(){
   fill(r, g, b);
   stroke("black");
   strokeWeight(5);
-  textSize(30);
+  textSize(50);
   textStyle("bold");
     
-  text("ColorSplode", 250 , 350 );
+  text("ColorSplode", windowWidth/2 - 300 , windowHeight/2 - 150);
 
   if (startButton.mouse.pressing()){
     startButton.remove();
-    pauseButton = new Sprite(750, 50);
+    pauseButton = new Sprite(windowWidth - 300, 100);
     pauseButton.text = "||";
-    pauseButton.width = 70;
-    pauseButton.height = 50;
+    pauseButton.width = 90;
+    pauseButton.height = 70;
     pauseButton.color = "lightgreen";
     state = 1;
   }
@@ -186,7 +196,7 @@ function gameMenu(){
       pauseGame();
     }
   }
-  text("X: " + mouseX + " Y: " + mouseY, 10, 20);
+  text("X: " + mouseX + " Y: " + mouseY, 30, 70);
 }
 
 
@@ -227,16 +237,16 @@ function pauseGame(){
     }
   }
   if(gamePaused){ // if game paused, draw the new buttons
-    resumeButton = new Sprite(400, 450);
+    resumeButton = new Sprite(windowWidth/2 - 100, windowHeight/2 + 50);
     resumeButton.text = "Resume";
-    resumeButton.width = 200;
-    resumeButton.height = 50;
+    resumeButton.width = 310;
+    resumeButton.height = 70;
     resumeButton.color = "lightgreen";
 
-    quitButton = new Sprite(400, 500);
+    quitButton = new Sprite(windowWidth/2 - 100, windowHeight/2 + 50);
     quitButton.text = "Quit";
-    quitButton.width = 200;
-    quitButton.height = 50;
+    quitButton.width = 220;
+    quitButton.height = 70;
     quitButton.color = "lightgreen";
   }
   else{ // Remove the resume button
