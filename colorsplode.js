@@ -387,9 +387,11 @@ function spawnActor(){
   if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= 10){
     // position
     let newX = random(0, width - 50);
-    let newY = random(0, height - 50);
+    let newY = random(0, height - 210);
+
     // random sprite
-   let randomSprite = random(chrSprite);
+    let randomSprite = random(chrSprite);
+    
     // Creates new actor. adds it to the array
     ourCharacters.push(new Actor(newX, newY, randomSprite));
 
@@ -400,18 +402,20 @@ function spawnActor(){
 
 function spawnRate(){
                   //needs to be whole number
-      if(spawnLogic.timer == Math.round(spawnLogic.timeToSpawn/spawnLogic.rate)){
-        spawnLogic.timer = 0;
+  let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
 
-        //spawn rate starts to slow down.
-        if (spawnLogic.rate < 2){
-          spawnLogic.rate += 0.05; 
-        } else {
-          spawnLogic.rate += 0.0125;
-        }
-      }
+  if(spawnLogic.timer == Math.round(rate)){
+    spawnLogic.timer = 0;
 
-      ++spawnLogic.timer;
+    //spawn rate starts to slow down.
+    if (spawnLogic.rate < 2){
+      spawnLogic.rate += 0.05; 
+    } else {
+      spawnLogic.rate += 0.0125;
+    }
+  }
+
+  ++spawnLogic.timer;
 }
 
 ///////////////////////////
