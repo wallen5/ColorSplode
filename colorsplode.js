@@ -276,6 +276,13 @@ function quitGame(){
   gamePaused = false;
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
+
+  //reset spawn logic after quit
+  spawnLogic.timer = 50;
+  spawnLogic.timeToSpawn =  100;
+  spawnLogic.rate = 1;
+  spawnLogic.activeActors = 0;
+
   setup();
 }
 
@@ -383,8 +390,9 @@ function zoneFill(colorName){
 function spawnActor(){
 
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
+  const MAXACTORS = 10;
 
-  if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= 10){
+  if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS){
     // position
     let newX = random(0, width - 50);
     let newY = random(0, height - 210);
