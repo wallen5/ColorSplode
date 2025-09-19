@@ -11,6 +11,8 @@ let b = 0;
 let state = 0;
 let startButton;
 
+let compressor;
+
 let chrSprite =[]; //array of character sprits
 let ourCharacters = []; //array of character objects
 
@@ -37,6 +39,7 @@ function preload(){
   bg = loadImage("images/menubackground.png");
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
+  pauseSound = loadSound('sounds/pause.wav');
   pickup = loadSound('sounds/pickup.wav');
   chrSprite[0] = loadImage("images/redpaintbucket.png");
   chrSprite[1] = loadImage("images/bluepaintbucket.png");
@@ -100,10 +103,24 @@ function setup() {
   startButton.height = 50;
   startButton.color = "lightgreen";
   background(220);
+  
+  compressor = new p5.Compressor();
   pickup.setVolume(0.2) ;
   menuMusic.setVolume(0.01);
-  levelMusic.setVolume(0.01);
+  levelMusic.setVolume(0.05);
+  pauseSound.setVolume(0.02);
   menuMusic.play();
+  
+
+  levelMusic.disconnect();
+  levelMusic.connect(compressor);
+  compressor.connect();
+
+  //normal compressor settings
+  compressor.threshold(-24);
+  compressor.ratio(4);
+  compressor.attack(0.003);
+  compressor.release(0.25);
 
   ourCharacters.push(new Actor(100, 100, chrSprite[0]));
   ourCharacters.push(new Actor(200, 200, chrSprite[1]));
@@ -152,7 +169,7 @@ function startMenu(){
     pauseButton.color = "lightgreen";
     state = 1;
     menuMusic.stop();
-    levelMusic.play();
+    levelMusic.loop();
   }
 }
 
@@ -229,7 +246,8 @@ function keyPressed() // Generic Keypress function
 }
 
 function pauseGame(){
-  gamePaused = !gamePaused;
+  gamePaused = !gamePaused; 
+
   for(let actor of ourCharacters){
     if(actor.state === "GRABBED"){ // Ensures the player can't click, and then pause and move the enemy
       actor.state = "FREE"
@@ -247,12 +265,25 @@ function pauseGame(){
     quitButton.width = 200;
     quitButton.height = 50;
     quitButton.color = "lightgreen";
+
+    pauseSound.play();
+    levelMusic.setVolume(0.005, 0.2); 
+    levelMusic.rate(0.85, 0.2);
+    compressor.threshold(-50);
+    compressor.ratio(10);
+
   }
   else{ // Remove the resume button
     resumeButton.remove();
     resumeButton = null;
     quitButton.remove();
     quitButton = null;
+
+    pauseSound.play();
+    levelMusic.setVolume(0.05, 0.2); 
+    levelMusic.rate(1.0, 0.2);
+    compressor.threshold(-24);
+    compressor.ratio(4);
   }
 }
 
