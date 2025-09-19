@@ -53,6 +53,16 @@ class Actor {
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
 
+    // 8.0 seconds
+    this.timer = 10.0;
+    this.timerStart = millis();  // when the timer started
+
+    this.shakeThreshold = 8.0; // when the bucket starts shaking
+    this.angle = 0;          // current rotation angle
+    this.rotationSpeed = 100.0;  // how fast it rotates per frame
+    this.rotationDirection = 1; // 1 = clockwise, -1 = counter-clockwise
+    this.rotationMax = 480; // seems like a lot, but looks good (?)
+
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
   }
@@ -64,23 +74,58 @@ class Actor {
   // Update the position of the character
   update() {
     if(!gamePaused){ // If the game ISN'T Paused then we update their movement
+      
       if (this.state === "FREE") {
+        checkTimer(this);
         roamingMovement(this);
       } else if (this.state === "GRABBED") {
+        checkTimer(this);
         grabbedMovement(this);
       } else if (this.state === "SNAPPED") {
         // Do nothing; actor is in a zone
       }
+      
+    
     }
   } 
-
+  
   //makes sure the mouse is over the character
-  isMouseOver() { 
+    isMouseOver() { 
     return mouseX > this.x && mouseX < this.x + this.size &&
            mouseY > this.y && mouseY < this.y + this.size;
     }
 }
 
+// Checks the actors timer
+function checkTimer(actor) {
+  
+  let elapsed = (millis() - actor.timerStart) / 1000.0;
+  let remaining = max(actor.timer - elapsed, 0);
+  let t = remaining / actor.timer; // goes 1 → 0 over time
+
+
+  if (remaining <= 0) {
+    onTimerFinished(actor);
+    return;
+  }
+  
+  let speedMultiplier = 1 / (t + 0.05);  // tweak 0.05 to control max speed
+  actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
+    
+
+  let flipThreshold = actor.rotationMax * (1 + (1 - t) * 2);  
+  if (abs(actor.angle) > flipThreshold) {
+    actor.rotationDirection *= -1.0;
+    actor.angle = constrain(actor.angle, -flipThreshold, flipThreshold);
+    }
+  }
+
+
+// Called when timer finishes
+function onTimerFinished(actor) {
+  console.log("Timer finished for actor!");
+  actor.state = "EXPLODED"; 
+  }
 
 
 function setup() {
@@ -155,7 +200,13 @@ function gameMenu(){
 
   for (let actor of ourCharacters) {
     actor.update();
-    image(actor.sprite, actor.x, actor.y, actor.size, actor.size);
+
+    // draw the actor rotated around its center
+    push();                                           // isolate transform
+    translate(actor.x + actor.size/2, actor.y + actor.size/2); // move origin to actor center
+    rotate(radians(actor.angle || 0));               // rotate (use 0 if angle undefined)
+    image(actor.sprite, -actor.size/2, -actor.size/2, actor.size, actor.size);
+    pop();                                            // restore coordinate system
   }
 
   if(pauseButton.mouse.pressed()){
