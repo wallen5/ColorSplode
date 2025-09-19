@@ -3,6 +3,7 @@ var character;
 var playerX = 375;
 var playerY = 375;
 let time = 0;
+let score = 0;
 
 let state = 0;
 let startButton;
@@ -155,6 +156,7 @@ function startMenu(){
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
     state = 1;
+    drawScore();
   }
 }
 
@@ -164,6 +166,8 @@ function gameMenu(){
   background(220);
 
    drawColorZones();
+   //update the displayed score
+   scoreDisplay.text = "Score:" + score;
 
   for (let actor of ourCharacters) {
     actor.update();
@@ -269,6 +273,9 @@ function quitGame(){
   pauseButton.remove();
   pauseButton = null;
   gamePaused = false;
+  scoreDisplay.remove()
+  scoreDisplay = null;
+  score = 0;
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
 
@@ -304,6 +311,8 @@ function mouseReleased() {
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
+        //update score if character is in correct zone
+        score += 1;
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
@@ -354,6 +363,13 @@ function drawColorZones(){
   pop();
 }
 
+function drawScore(){
+  scoreDisplay = new Sprite(150, 50);
+  scoreDisplay.text = "Score:" + score;
+  scoreDisplay.width = 250;
+  scoreDisplay.height = 50;
+  scoreDisplay.color = "lightgreen";
+}
 
 function zoneUnderActor(actor){
   // Use actor center to test
@@ -423,4 +439,3 @@ function spawnRate(){
 }
 
 ///////////////////////////
-
