@@ -53,15 +53,14 @@ class Actor {
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
 
-    // 8.0 seconds
-    this.timer = 10.0;
+    this.timer = 10.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
 
-    this.shakeThreshold = 8.0; // when the bucket starts shaking
-    this.angle = 0;          // current rotation angle
+    this.shakeThreshold = 8.0;   // when the bucket starts shaking
+    this.angle = 0;              // current rotation angle
     this.rotationSpeed = 100.0;  // how fast it rotates per frame
-    this.rotationDirection = 1; // 1 = clockwise, -1 = counter-clockwise
-    this.rotationMax = 480; // seems like a lot, but looks good (?)
+    this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
+    this.rotationMax = 480;      // seems like a lot, but looks good (?)
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
@@ -101,7 +100,7 @@ function checkTimer(actor) {
   
   let elapsed = (millis() - actor.timerStart) / 1000.0;
   let remaining = max(actor.timer - elapsed, 0);
-  let t = remaining / actor.timer; // goes 1 → 0 over time
+  let t = remaining / actor.timer; // goes 1 to 0 over time
 
 
   if (remaining <= 0) {
@@ -202,11 +201,11 @@ function gameMenu(){
     actor.update();
 
     // draw the actor rotated around its center
-    push();                                           // isolate transform
-    translate(actor.x + actor.size/2, actor.y + actor.size/2); // move origin to actor center
-    rotate(radians(actor.angle || 0));               // rotate (use 0 if angle undefined)
+    push();
+    translate(actor.x + actor.size/2, actor.y + actor.size/2);
+    rotate(radians(actor.angle || 0));        // rotate (use 0 if angle undefined)
     image(actor.sprite, -actor.size/2, -actor.size/2, actor.size, actor.size);
-    pop();                                            // restore coordinate system
+    pop();
   }
 
   if(pauseButton.mouse.pressed()){
