@@ -35,6 +35,7 @@ function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
+  pickup = loadSound('sounds/pickup.wav')
   chrSprite[0] = loadImage("images/redpaintbucket.png");
   chrSprite[1] = loadImage("images/bluepaintbucket.png");
   chrSprite[2] = loadImage("images/purplepaintbucket.png");
@@ -267,6 +268,7 @@ function mousePressed() {
     if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
       grabbedCharacter = actor;
+      pickup.play();
       break;
     }
   }
