@@ -47,11 +47,11 @@ function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
-  pickup = loadSound('sounds/pickup.wav')
   chrSprite[0] = loadImage("images/redpaintbucket.png");
   chrSprite[1] = loadImage("images/bluepaintbucket.png");
   chrSprite[2] = loadImage("images/purplepaintbucket.png");
   chrSprite[3] = loadImage("images/greenpaintbucket.png");
+  pickup = loadSound('sounds/pickup.wav')
 }
 
 
