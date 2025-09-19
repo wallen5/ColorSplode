@@ -21,14 +21,14 @@ let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 
-//start menu text
+//start menu text. acts as namespace
 let titleColor = {
   r: 250,
   g: 0,
   b: 0
 };
 
-//Spawns
+//Spawns. acts as namespace
 let spawnLogic = {
   timer: 50,
   timeToSpawn: 100,
