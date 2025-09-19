@@ -25,6 +25,21 @@ let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 
+//start menu text. acts as namespace
+let titleColor = {
+  r: 250,
+  g: 0,
+  b: 0
+};
+
+//Spawns. acts as namespace
+let spawnLogic = {
+  timer: 50,
+  timeToSpawn: 100,
+  rate: 1,
+  activeActors: 0
+};
+
 //zone vars
 let zoneX = 100, zoneY = 620, zoneWidth = 250, zoneHeight = 250, gap = 200;
 // color zones
@@ -104,11 +119,6 @@ function setup() {
   startButton.color = "lightgreen";
   background(220);
 
-  ourCharacters.push(new Actor(100, 100, chrSprite[0]));
-  ourCharacters.push(new Actor(200, 200, chrSprite[1]));
-  ourCharacters.push(new Actor(300, 300, chrSprite[2]));
-  ourCharacters.push(new Actor(400, 400, chrSprite[3]));
-
     // create 4 drop zones along the bottom
   colorZones = [
     { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "red"    },
@@ -130,6 +140,8 @@ function draw() {
 
   } else if (state == 1){ //game screen
       gameMenu();
+      spawnActor();
+      spawnRate();
   }
 }
 
@@ -138,7 +150,7 @@ function startMenu(){
 
   colorFluctuation();
 
-  fill(r, g, b);
+  fill(titleColor.r, titleColor.g, titleColor.b);
   stroke("black");
   strokeWeight(5);
   textSize(50);
@@ -156,6 +168,7 @@ function startMenu(){
     state = 1;
   }
 }
+
 
 function gameMenu(){
 
@@ -201,14 +214,15 @@ function gameMenu(){
 
 
 function colorFluctuation(){
-  if(r > 230 || b > 220 || g > 220){
-      r = random(0,100);
-      b = random(0,100);
-      g = random(0,100);
-    }
-    r += random(0,1);
-    g += random(0,3);
-    b += random(0,3);
+  if(titleColor.r > 230 || titleColor.b > 220 || titleColor.g > 220){
+      titleColor.r = random(0,100);
+      titleColor.b = random(0,100);
+      titleColor.g = random(0,100);
+  }
+    titleColor.r += random(0,1);
+    titleColor.g += random(0,3);
+    titleColor.b += random(0,3);
+
 }
 
 // function keyReleased(){
@@ -268,6 +282,13 @@ function quitGame(){
   gamePaused = false;
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
+
+  //reset spawn logic after quit
+  spawnLogic.timer = 50;
+  spawnLogic.timeToSpawn =  100;
+  spawnLogic.rate = 1;
+  spawnLogic.activeActors = 0;
+
   setup();
 }
 
@@ -343,15 +364,19 @@ function drawColorZones(){
   pop();
 }
 
+
 function zoneUnderActor(actor){
   // Use actor center to test
   const centerX = actor.x + actor.size/2;
   const centerY = actor.y + actor.size/2;
   for (let z of colorZones){
     if (centerX >= z.x && centerX <= z.x + z.w && centerY >= z.y && centerY <= z.y + z.h){
+      --spawnLogic.activeActors;
       return z;
     }
   }
+
+  
   return null;
 }
 
@@ -362,3 +387,50 @@ function zoneFill(colorName){
   if (colorName === "green")  return color(180,255,180);
   return color(230);
 }
+
+
+//SPAWN LOGIC
+//////////////////////////////////////
+// used for actor spawning
+
+function spawnActor(){
+
+  let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
+  const MAXACTORS = 10;
+
+  if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS){
+    // position
+    let newX = random(0, width - 50);
+    let newY = random(0, height - 210);
+
+    // random sprite
+    let randomSprite = random(chrSprite);
+    
+    // Creates new actor. adds it to the array
+    ourCharacters.push(new Actor(newX, newY, randomSprite));
+
+    ++spawnLogic.activeActors;
+  }
+
+}
+
+function spawnRate(){
+                  //needs to be whole number
+  let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
+
+  if(spawnLogic.timer == Math.round(rate)){
+    spawnLogic.timer = 0;
+
+    //spawn rate starts to slow down.
+    if (spawnLogic.rate < 2){
+      spawnLogic.rate += 0.05; 
+    } else {
+      spawnLogic.rate += 0.0125;
+    }
+  }
+
+  ++spawnLogic.timer;
+}
+
+///////////////////////////
+
