@@ -35,11 +35,13 @@ function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
+  menuMusic = loadSound('sounds/menu_music.mp3');
+  levelMusic = loadSound('sounds/level_music.mp3');
+  pickup = loadSound('sounds/pickup.wav');
   chrSprite[0] = loadImage("images/redpaintbucket.png");
   chrSprite[1] = loadImage("images/bluepaintbucket.png");
   chrSprite[2] = loadImage("images/purplepaintbucket.png");
   chrSprite[3] = loadImage("images/greenpaintbucket.png");
-  pickup = loadSound('sounds/pickup.wav')
 }
 
 
@@ -98,6 +100,10 @@ function setup() {
   startButton.height = 50;
   startButton.color = "lightgreen";
   background(220);
+  pickup.setVolume(0.2) ;
+  menuMusic.setVolume(0.01);
+  levelMusic.setVolume(0.01);
+  menuMusic.play();
 
   ourCharacters.push(new Actor(100, 100, chrSprite[0]));
   ourCharacters.push(new Actor(200, 200, chrSprite[1]));
@@ -128,7 +134,6 @@ function startMenu(){
    background(bg);
 
   colorFluctuation();
-
   fill(r, g, b);
   stroke("black");
   strokeWeight(5);
@@ -136,6 +141,7 @@ function startMenu(){
   textStyle("bold");
     
   text("ColorSplode", 250 , 350 );
+
 
   if (startButton.mouse.pressing()){
     startButton.remove();
@@ -145,6 +151,8 @@ function startMenu(){
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
     state = 1;
+    menuMusic.stop();
+    levelMusic.play();
   }
 }
 
