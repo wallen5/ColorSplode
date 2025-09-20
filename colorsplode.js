@@ -111,7 +111,7 @@ function setup() {
   startButton.color = "lightgreen";
   background(220);
 
-  // Comment one in or out 
+  // Color zone spawn method (comment one in or out as needed)
   makeColorZones();
   //randomizeZonePlacements();
 }
@@ -454,7 +454,7 @@ function spawnActor(){
       for(let zone of colorZones)
       {
         // Treats our actors as a circle to make spawning more precise
-        let hit = collideRectCircle(zone.x, zone.y, zone.w, zone.h, newX + 50/2, newY + 50/2, 50);
+        let hit = collideRectCircle(zone.x, zone.y, zone.w, zone.h, newX + 60/2, newY + 60/2, 60);
 
         // Rerolls the newX and newY if the spawn is invalid
         if(hit)
