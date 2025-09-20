@@ -3,7 +3,6 @@ var character;
 var playerX = 375;
 var playerY = 375;
 let time = 0;
-let score = 0;
 
 let state = 0;
 let startButton;
@@ -45,7 +44,6 @@ let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
 const colors = ["red","blue","purple","green"];
 let colorZones = [];
 
-
 function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -67,11 +65,13 @@ class Actor {
   constructor(x, y, sprite) {
     this.x = x;
     this.y = y;
+    this.prevX = x; // Needed for "bouncing" collision detection
+    this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
-
+    
     this.timer = 14.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
 
@@ -92,23 +92,18 @@ class Actor {
   // Update the position of the character
   update() {
     if(!gamePaused){ // If the game ISN'T Paused then we update their movement
-      
       if (this.state === "FREE") {
-        checkTimer(this);
         roamingMovement(this);
       } else if (this.state === "GRABBED") {
-        checkTimer(this);
         grabbedMovement(this);
       } else if (this.state === "SNAPPED") {
         // Do nothing; actor is in a zone
       }
-      
-    
     }
   } 
-  
+
   //makes sure the mouse is over the character
-    isMouseOver() { 
+  isMouseOver() { 
     return mouseX > this.x && mouseX < this.x + this.size &&
            mouseY > this.y && mouseY < this.y + this.size;
     }
@@ -183,17 +178,33 @@ function setup() {
   compressor.attack(0.003);
   compressor.release(0.25);
 
-    // create 4 drop zones along the bottom
-  colorZones = [
-    { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "red"    },
-    { x: zoneX + 1*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "blue"   },
-    { x: zoneX + 2*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "purple" },
-    { x: zoneX + 3*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "green"  },
-  ];
-
-
+  // Color zone spawn method (comment one in or out as needed)
+  makeColorZones();
+  //randomizeZonePlacements();
 }
 
+// create 4 drop zones along the bottom
+function makeColorZones()
+{
+  colorZones = [
+    { x: zoneX + 0*(zoneWidth+gap), y: 100, w: zoneWidth, h: zoneHeight, color: "red"    },
+    { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "blue"   },
+    { x: zoneX + 3*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "purple" },
+    { x: zoneX + 3*(zoneWidth+gap), y: 100, w: zoneWidth, h: zoneHeight, color: "green"  },
+  ];
+}
+
+// Sets random X and Y for color zones for testing (Could expand on this if we want to implement this as a feature later on)
+function randomizeZonePlacements()
+{
+  colorZones = colors.map(color => ({ 
+  x: random(0, width - zoneWidth), 
+  y: random(0, height - zoneHeight), 
+  w: zoneWidth,
+  h: zoneHeight,
+  color: color
+  }));
+}
 
 function draw() {
   if(state == 0){ //start screen
@@ -229,6 +240,7 @@ function startMenu(){
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
     state = 1;
+
     menuMusic.stop();
     levelMusic.loop();
     drawScore();
@@ -241,18 +253,10 @@ function gameMenu(){
   background(220);
 
    drawColorZones();
-   //update the displayed score
-   scoreDisplay.text = "Score:" + score;
 
   for (let actor of ourCharacters) {
     actor.update();
-
-    // draw the actor rotated around its center
-    push();
-    translate(actor.x + actor.size/2, actor.y + actor.size/2);
-    rotate(radians(actor.angle || 0));        // rotate (use 0 if angle undefined)
-    image(actor.sprite, -actor.size/2, -actor.size/2, actor.size, actor.size);
-    pop();
+    image(actor.sprite, actor.x, actor.y, actor.size, actor.size);
   }
 
   if(pauseButton.mouse.pressed()){
@@ -370,6 +374,7 @@ function quitGame(){
   pauseButton.remove();
   pauseButton = null;
   gamePaused = false;
+
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
@@ -410,8 +415,6 @@ function mouseReleased() {
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
-        //update score if character is in correct zone
-        score += 1;
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
@@ -433,13 +436,50 @@ function roamingMovement(actor) {
     actor.yspeed = random(-2, 2);
   }
 
+  
+  actor.prevX = actor.x;
+  actor.prevY = actor.y
   actor.x += actor.xspeed;
   actor.y += actor.yspeed;
 
   //make sure characters don't go off screen
   if (actor.x < 0 || actor.x > width - actor.size) actor.xspeed *= -1;
-  if (actor.y < 0 || actor.y > zoneY - actor.size) actor.yspeed *= -1;
+  if (actor.y < 0 || actor.y > height - actor.size) actor.yspeed *= -1;
 
+  checkActorCollision(actor)
+}
+
+function checkActorCollision(actor)
+{
+  for(let zone of colorZones)
+  {
+    // Collision works as follows: check the top left corner of rect 1, and top left corner of rect 2
+    // Because our buckets are a square, you simply use actor.size for both the width and height
+    hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
+    if(hit)
+    {
+      // came from the left?
+      if (actor.prevX + actor.size <= zone.x) {
+        actor.x = zone.x - actor.size;   // push out
+        actor.xspeed *= -1;
+      }
+      // came from the right?
+      else if (actor.prevX >= zone.x + zone.w) {
+        actor.x = zone.x + zone.w;       // push out
+        actor.xspeed *= -1;
+      }
+      // came from the top?
+      else if (actor.prevY + actor.size <= zone.y) {
+        actor.y = zone.y - actor.size;
+        actor.yspeed *= -1;
+      }
+      // came from the bottom?
+      else if (actor.prevY >= zone.y + zone.h) {
+        actor.y = zone.y + zone.h;
+        actor.yspeed *= -1;
+      }
+    }
+  }
 }
 
 function grabbedMovement(actor) {
@@ -462,13 +502,6 @@ function drawColorZones(){
   pop();
 }
 
-function drawScore(){
-  scoreDisplay = new Sprite(150, 50);
-  scoreDisplay.text = "Score:" + score;
-  scoreDisplay.width = 250;
-  scoreDisplay.height = 50;
-  scoreDisplay.color = "lightgreen";
-}
 
 function zoneUnderActor(actor){
   // Use actor center to test
@@ -507,6 +540,28 @@ function spawnActor(){
     // position
     let newX = random(0, width - 50);
     let newY = random(0, height - 210);
+    
+    // Loop to roll locations to randomize into
+    let inZone = true;
+    while(inZone)
+    {
+      inZone = false;
+      for(let zone of colorZones)
+      {
+        // Treats our actors as a circle to make spawning more precise
+        let hit = collideRectCircle(zone.x, zone.y, zone.w, zone.h, newX + 60/2, newY + 60/2, 60);
+
+        // Rerolls the newX and newY if the spawn is invalid
+        if(hit)
+        {
+          print("Not Valid");
+          newX = random(0, width - 50);
+          newY = random(0, height - 210);
+          inZone = true;
+          break; // break lets us reroll again
+        }
+      }
+    }
 
     // random sprite
     let randomSprite = random(chrSprite);
@@ -538,3 +593,4 @@ function spawnRate(){
 }
 
 ///////////////////////////
+
