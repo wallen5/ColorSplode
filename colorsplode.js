@@ -94,8 +94,10 @@ class Actor {
   update() {
     if(!gamePaused){ // If the game ISN'T Paused then we update their movement
       if (this.state === "FREE") {
+        checkTimer(this);
         roamingMovement(this);
       } else if (this.state === "GRABBED") {
+        checkTimer(this);
         grabbedMovement(this);
       } else if (this.state === "SNAPPED") {
         // Do nothing; actor is in a zone
@@ -260,8 +262,14 @@ function gameMenu(){
   scoreDisplay.text = "Score:" + score;
 
   for (let actor of ourCharacters) {
-    actor.update();
-    image(actor.sprite, actor.x, actor.y, actor.size, actor.size);
+      actor.update();
+
+      push();
+      translate(actor.x + actor.size/2, actor.y + actor.size/2); // move to center
+      rotate(radians(actor.angle)); // use actor.angle
+      imageMode(CENTER);
+      image(actor.sprite, 0, 0, actor.size, actor.size);
+      pop();
   }
 
   if(pauseButton.mouse.pressed()){
