@@ -67,14 +67,14 @@ class Actor {
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
 
-    this.timer = 10.0;           // measured in seconds
+    this.timer = 14.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
 
-    this.shakeThreshold = 8.0;   // when the bucket starts shaking
+    this.shakeThreshold = 3.0;   // how many seconds left to shake
     this.angle = 0;              // current rotation angle
-    this.rotationSpeed = 100.0;  // how fast it rotates per frame
+    this.rotationSpeed = 80.0;  // how fast it rotates per frame
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
-    this.rotationMax = 480;      // seems like a lot, but looks good (?)
+    this.rotationMax = 360;      // seems like a lot, but looks good (?)
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
@@ -122,7 +122,9 @@ function checkTimer(actor) {
     return;
   }
   
-  let speedMultiplier = 1 / (t + 0.05);  // tweak 0.05 to control max speed
+  if (remaining <= actor.shakeThreshold) {
+  let speedMultiplier = 1 / (t + 0.05);  // tweak 0.1 to control max speed
+  speedMultiplier = constrain(speedMultiplier, 0, 7);  // never shake faster than 7x normal
   actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
     
 
@@ -132,11 +134,13 @@ function checkTimer(actor) {
     actor.angle = constrain(actor.angle, -flipThreshold, flipThreshold);
     }
   }
+}
 
 
 // Called when timer finishes
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
+  actor.angle = 0;
   actor.state = "EXPLODED"; 
   }
 
