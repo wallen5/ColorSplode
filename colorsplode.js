@@ -65,6 +65,15 @@ class Actor {
     this.sprite = sprite;
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
+    
+    this.timer = 14.0;           // measured in seconds
+    this.timerStart = millis();  // when the timer started
+
+    this.shakeThreshold = 3.0;   // how many seconds left to shake
+    this.angle = 0;              // current rotation angle
+    this.rotationSpeed = 80.0;  // how fast it rotates per frame
+    this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
+    this.rotationMax = 360;      // seems like a lot, but looks good (?)
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
@@ -94,6 +103,40 @@ class Actor {
     }
 }
 
+// Checks the actors timer
+function checkTimer(actor) {
+  
+  let elapsed = (millis() - actor.timerStart) / 1000.0;
+  let remaining = max(actor.timer - elapsed, 0);
+  let t = remaining / actor.timer; // goes 1 to 0 over time
+
+
+  if (remaining <= 0) {
+    onTimerFinished(actor);
+    return;
+  }
+  
+  if (remaining <= actor.shakeThreshold) {
+  let speedMultiplier = 1 / (t + 0.05);  // tweak 0.1 to control max speed
+  speedMultiplier = constrain(speedMultiplier, 0, 7);  // never shake faster than 7x normal
+  actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
+    
+
+  let flipThreshold = actor.rotationMax * (1 + (1 - t) * 2);  
+  if (abs(actor.angle) > flipThreshold) {
+    actor.rotationDirection *= -1.0;
+    actor.angle = constrain(actor.angle, -flipThreshold, flipThreshold);
+    }
+  }
+}
+
+
+// Called when timer finishes
+function onTimerFinished(actor) {
+  console.log("Timer finished for actor!");
+  actor.angle = 0;
+  actor.state = "EXPLODED"; 
+  }
 
 
 function setup() {
