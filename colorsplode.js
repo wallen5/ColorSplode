@@ -156,7 +156,7 @@ function startMenu(){
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
     state = 1;
-    drawScore();
+    drawScore(); //start displaying score
   }
 }
 
