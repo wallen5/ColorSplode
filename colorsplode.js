@@ -8,6 +8,8 @@ let score = 0;
 let state = 0;
 let startButton;
 
+let compressor;
+
 let chrSprite =[]; //array of character sprits
 let ourCharacters = []; //array of character objects
 
@@ -48,11 +50,14 @@ function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
+  menuMusic = loadSound('sounds/menu_music.mp3');
+  levelMusic = loadSound('sounds/level_music.mp3');
+  pauseSound = loadSound('sounds/pause.wav');
+  pickup = loadSound('sounds/pickup.wav');
   chrSprite[0] = loadImage("images/redpaintbucket.png");
   chrSprite[1] = loadImage("images/bluepaintbucket.png");
   chrSprite[2] = loadImage("images/purplepaintbucket.png");
   chrSprite[3] = loadImage("images/greenpaintbucket.png");
-  pickup = loadSound('sounds/pickup.wav')
 }
 
 
@@ -159,6 +164,24 @@ function setup() {
   startButton.height = 50;
   startButton.color = "lightgreen";
   background(220);
+  
+  compressor = new p5.Compressor();
+  pickup.setVolume(0.2) ;
+  menuMusic.setVolume(0.01);
+  levelMusic.setVolume(0.05);
+  pauseSound.setVolume(0.02);
+  menuMusic.play();
+  
+
+  levelMusic.disconnect();
+  levelMusic.connect(compressor);
+  compressor.connect();
+
+  //normal compressor settings
+  compressor.threshold(-24);
+  compressor.ratio(4);
+  compressor.attack(0.003);
+  compressor.release(0.25);
 
     // create 4 drop zones along the bottom
   colorZones = [
@@ -189,12 +212,14 @@ function startMenu(){
   colorFluctuation();
 
   fill(titleColor.r, titleColor.g, titleColor.b);
+
   stroke("black");
   strokeWeight(5);
   textSize(30);
   textStyle("bold");
     
   text("ColorSplode", 250 , 350 );
+
 
   if (startButton.mouse.pressing()){
     startButton.remove();
@@ -204,6 +229,8 @@ function startMenu(){
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
     state = 1;
+    menuMusic.stop();
+    levelMusic.loop();
     drawScore();
   }
 }
@@ -285,13 +312,16 @@ function keyPressed() // Generic Keypress function
   }
   else if(state != 1)
   {
-    resumeButton.remove();
-    resumeButton = null;
+    if (resumeButton) {
+      resumeButton.remove();
+      resumeButton = null;
+  }
   }
 }
 
 function pauseGame(){
-  gamePaused = !gamePaused;
+  gamePaused = !gamePaused; 
+
   for(let actor of ourCharacters){
     if(actor.state === "GRABBED"){ // Ensures the player can't click, and then pause and move the enemy
       actor.state = "FREE"
@@ -309,12 +339,25 @@ function pauseGame(){
     quitButton.width = 200;
     quitButton.height = 50;
     quitButton.color = "lightgreen";
+
+    pauseSound.play();
+    levelMusic.setVolume(0.005, 0.2); 
+    levelMusic.rate(0.85, 0.2);
+    compressor.threshold(-50);
+    compressor.ratio(10);
+
   }
   else{ // Remove the resume button
     resumeButton.remove();
     resumeButton = null;
     quitButton.remove();
     quitButton = null;
+
+    pauseSound.play();
+    levelMusic.setVolume(0.05, 0.2); 
+    levelMusic.rate(1.0, 0.2);
+    compressor.threshold(-24);
+    compressor.ratio(4);
   }
 }
 
@@ -327,9 +370,11 @@ function quitGame(){
   pauseButton.remove();
   pauseButton = null;
   gamePaused = false;
+  levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
   score = 0;
+
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
 
