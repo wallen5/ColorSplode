@@ -240,8 +240,10 @@ function keyPressed() // Generic Keypress function
   }
   else if(state != 1)
   {
-    resumeButton.remove();
-    resumeButton = null;
+    if (resumeButton) {
+      resumeButton.remove();
+      resumeButton = null;
+  }
   }
 }
 
@@ -296,6 +298,7 @@ function quitGame(){
   pauseButton.remove();
   pauseButton = null;
   gamePaused = false;
+  levelMusic.stop();
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
   setup();
