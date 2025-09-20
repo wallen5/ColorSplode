@@ -256,6 +256,9 @@ function gameMenu(){
 
    drawColorZones();
 
+  //update the displayed score
+  scoreDisplay.text = "Score:" + score;
+
   for (let actor of ourCharacters) {
     actor.update();
     image(actor.sprite, actor.x, actor.y, actor.size, actor.size);
