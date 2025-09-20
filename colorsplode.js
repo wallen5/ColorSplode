@@ -3,10 +3,11 @@ var character;
 var playerX = 375;
 var playerY = 375;
 let time = 0;
-let score = 0;
 
 let state = 0;
 let startButton;
+
+let compressor;
 
 let chrSprite =[]; //array of character sprits
 let ourCharacters = []; //array of character objects
@@ -43,16 +44,18 @@ let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
 const colors = ["red","blue","purple","green"];
 let colorZones = [];
 
-
 function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
+  menuMusic = loadSound('sounds/menu_music.mp3');
+  levelMusic = loadSound('sounds/level_music.mp3');
+  pauseSound = loadSound('sounds/pause.wav');
+  pickup = loadSound('sounds/pickup.wav');
   chrSprite[0] = loadImage("images/redpaintbucket.png");
   chrSprite[1] = loadImage("images/bluepaintbucket.png");
   chrSprite[2] = loadImage("images/purplepaintbucket.png");
   chrSprite[3] = loadImage("images/greenpaintbucket.png");
-  pickup = loadSound('sounds/pickup.wav')
 }
 
 
@@ -62,10 +65,21 @@ class Actor {
   constructor(x, y, sprite) {
     this.x = x;
     this.y = y;
+    this.prevX = x; // Needed for "bouncing" collision detection
+    this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
+    
+    this.timer = 14.0;           // measured in seconds
+    this.timerStart = millis();  // when the timer started
+
+    this.shakeThreshold = 3.0;   // how many seconds left to shake
+    this.angle = 0;              // current rotation angle
+    this.rotationSpeed = 80.0;  // how fast it rotates per frame
+    this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
+    this.rotationMax = 360;      // seems like a lot, but looks good (?)
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
@@ -95,6 +109,40 @@ class Actor {
     }
 }
 
+// Checks the actors timer
+function checkTimer(actor) {
+  
+  let elapsed = (millis() - actor.timerStart) / 1000.0;
+  let remaining = max(actor.timer - elapsed, 0);
+  let t = remaining / actor.timer; // goes 1 to 0 over time
+
+
+  if (remaining <= 0) {
+    onTimerFinished(actor);
+    return;
+  }
+  
+  if (remaining <= actor.shakeThreshold) {
+  let speedMultiplier = 1 / (t + 0.05);  // tweak 0.1 to control max speed
+  speedMultiplier = constrain(speedMultiplier, 0, 7);  // never shake faster than 7x normal
+  actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
+    
+
+  let flipThreshold = actor.rotationMax * (1 + (1 - t) * 2);  
+  if (abs(actor.angle) > flipThreshold) {
+    actor.rotationDirection *= -1.0;
+    actor.angle = constrain(actor.angle, -flipThreshold, flipThreshold);
+    }
+  }
+}
+
+
+// Called when timer finishes
+function onTimerFinished(actor) {
+  console.log("Timer finished for actor!");
+  actor.angle = 0;
+  actor.state = "EXPLODED"; 
+  }
 
 
 function setup() {
@@ -111,18 +159,52 @@ function setup() {
   startButton.height = 50;
   startButton.color = "lightgreen";
   background(220);
+  
+  compressor = new p5.Compressor();
+  pickup.setVolume(0.2) ;
+  menuMusic.setVolume(0.01);
+  levelMusic.setVolume(0.05);
+  pauseSound.setVolume(0.02);
+  menuMusic.play();
+  
 
-    // create 4 drop zones along the bottom
-  colorZones = [
-    { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "red"    },
-    { x: zoneX + 1*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "blue"   },
-    { x: zoneX + 2*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "purple" },
-    { x: zoneX + 3*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "green"  },
-  ];
+  levelMusic.disconnect();
+  levelMusic.connect(compressor);
+  compressor.connect();
 
+  //normal compressor settings
+  compressor.threshold(-24);
+  compressor.ratio(4);
+  compressor.attack(0.003);
+  compressor.release(0.25);
 
+  // Color zone spawn method (comment one in or out as needed)
+  makeColorZones();
+  //randomizeZonePlacements();
 }
 
+// create 4 drop zones along the bottom
+function makeColorZones()
+{
+  colorZones = [
+    { x: zoneX + 0*(zoneWidth+gap), y: 100, w: zoneWidth, h: zoneHeight, color: "red"    },
+    { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "blue"   },
+    { x: zoneX + 3*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "purple" },
+    { x: zoneX + 3*(zoneWidth+gap), y: 100, w: zoneWidth, h: zoneHeight, color: "green"  },
+  ];
+}
+
+// Sets random X and Y for color zones for testing (Could expand on this if we want to implement this as a feature later on)
+function randomizeZonePlacements()
+{
+  colorZones = colors.map(color => ({ 
+  x: random(0, width - zoneWidth), 
+  y: random(0, height - zoneHeight), 
+  w: zoneWidth,
+  h: zoneHeight,
+  color: color
+  }));
+}
 
 function draw() {
   if(state == 0){ //start screen
@@ -141,12 +223,14 @@ function startMenu(){
   colorFluctuation();
 
   fill(titleColor.r, titleColor.g, titleColor.b);
+
   stroke("black");
   strokeWeight(5);
   textSize(30);
   textStyle("bold");
     
   text("ColorSplode", 250 , 350 );
+
 
   if (startButton.mouse.pressing()){
     startButton.remove();
@@ -156,7 +240,11 @@ function startMenu(){
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
     state = 1;
-    drawScore(); //start displaying score
+  
+
+    menuMusic.stop();
+    levelMusic.loop();
+    drawScore();
   }
 }
 
@@ -166,8 +254,6 @@ function gameMenu(){
   background(220);
 
    drawColorZones();
-   //update the displayed score
-   scoreDisplay.text = "Score:" + score;
 
   for (let actor of ourCharacters) {
     actor.update();
@@ -231,13 +317,16 @@ function keyPressed() // Generic Keypress function
   }
   else if(state != 1)
   {
-    resumeButton.remove();
-    resumeButton = null;
+    if (resumeButton) {
+      resumeButton.remove();
+      resumeButton = null;
+  }
   }
 }
 
 function pauseGame(){
-  gamePaused = !gamePaused;
+  gamePaused = !gamePaused; 
+
   for(let actor of ourCharacters){
     if(actor.state === "GRABBED"){ // Ensures the player can't click, and then pause and move the enemy
       actor.state = "FREE"
@@ -255,12 +344,25 @@ function pauseGame(){
     quitButton.width = 200;
     quitButton.height = 50;
     quitButton.color = "lightgreen";
+
+    pauseSound.play();
+    levelMusic.setVolume(0.005, 0.2); 
+    levelMusic.rate(0.85, 0.2);
+    compressor.threshold(-50);
+    compressor.ratio(10);
+
   }
   else{ // Remove the resume button
     resumeButton.remove();
     resumeButton = null;
     quitButton.remove();
     quitButton = null;
+
+    pauseSound.play();
+    levelMusic.setVolume(0.05, 0.2); 
+    levelMusic.rate(1.0, 0.2);
+    compressor.threshold(-24);
+    compressor.ratio(4);
   }
 }
 
@@ -273,9 +375,12 @@ function quitGame(){
   pauseButton.remove();
   pauseButton = null;
   gamePaused = false;
+
+  levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
   score = 0;
+
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
 
@@ -311,8 +416,6 @@ function mouseReleased() {
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
-        //update score if character is in correct zone
-        score += 1;
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
@@ -334,13 +437,50 @@ function roamingMovement(actor) {
     actor.yspeed = random(-2, 2);
   }
 
+  
+  actor.prevX = actor.x;
+  actor.prevY = actor.y
   actor.x += actor.xspeed;
   actor.y += actor.yspeed;
 
   //make sure characters don't go off screen
   if (actor.x < 0 || actor.x > width - actor.size) actor.xspeed *= -1;
-  if (actor.y < 0 || actor.y > zoneY - actor.size) actor.yspeed *= -1;
+  if (actor.y < 0 || actor.y > height - actor.size) actor.yspeed *= -1;
 
+  checkActorCollision(actor)
+}
+
+function checkActorCollision(actor)
+{
+  for(let zone of colorZones)
+  {
+    // Collision works as follows: check the top left corner of rect 1, and top left corner of rect 2
+    // Because our buckets are a square, you simply use actor.size for both the width and height
+    hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
+    if(hit)
+    {
+      // came from the left?
+      if (actor.prevX + actor.size <= zone.x) {
+        actor.x = zone.x - actor.size;   // push out
+        actor.xspeed *= -1;
+      }
+      // came from the right?
+      else if (actor.prevX >= zone.x + zone.w) {
+        actor.x = zone.x + zone.w;       // push out
+        actor.xspeed *= -1;
+      }
+      // came from the top?
+      else if (actor.prevY + actor.size <= zone.y) {
+        actor.y = zone.y - actor.size;
+        actor.yspeed *= -1;
+      }
+      // came from the bottom?
+      else if (actor.prevY >= zone.y + zone.h) {
+        actor.y = zone.y + zone.h;
+        actor.yspeed *= -1;
+      }
+    }
+  }
 }
 
 function grabbedMovement(actor) {
@@ -363,13 +503,6 @@ function drawColorZones(){
   pop();
 }
 
-function drawScore(){
-  scoreDisplay = new Sprite(150, 50);
-  scoreDisplay.text = "Score:" + score;
-  scoreDisplay.width = 250;
-  scoreDisplay.height = 50;
-  scoreDisplay.color = "lightgreen";
-}
 
 function zoneUnderActor(actor){
   // Use actor center to test
@@ -408,6 +541,28 @@ function spawnActor(){
     // position
     let newX = random(0, width - 50);
     let newY = random(0, height - 210);
+    
+    // Loop to roll locations to randomize into
+    let inZone = true;
+    while(inZone)
+    {
+      inZone = false;
+      for(let zone of colorZones)
+      {
+        // Treats our actors as a circle to make spawning more precise
+        let hit = collideRectCircle(zone.x, zone.y, zone.w, zone.h, newX + 60/2, newY + 60/2, 60);
+
+        // Rerolls the newX and newY if the spawn is invalid
+        if(hit)
+        {
+          print("Not Valid");
+          newX = random(0, width - 50);
+          newY = random(0, height - 210);
+          inZone = true;
+          break; // break lets us reroll again
+        }
+      }
+    }
 
     // random sprite
     let randomSprite = random(chrSprite);
@@ -439,3 +594,4 @@ function spawnRate(){
 }
 
 ///////////////////////////
+
