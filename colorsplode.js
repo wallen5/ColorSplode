@@ -53,10 +53,10 @@ function preload(){
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
   pickup = loadSound('sounds/pickup.wav');
-  chrSprite[0] = loadImage("images/redpaintbucket.png");
-  chrSprite[1] = loadImage("images/bluepaintbucket.png");
-  chrSprite[2] = loadImage("images/purplepaintbucket.png");
-  chrSprite[3] = loadImage("images/greenpaintbucket.png");
+  chrSprite[0] = loadImage("images/redpaintupdate.gif");
+  chrSprite[1] = loadImage("images/bluepaintupdate.gif");
+  chrSprite[2] = loadImage("images/purplepaintupdate.gif");
+  chrSprite[3] = loadImage("images/greenpaintupdate.gif");
 }
 
 
