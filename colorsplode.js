@@ -3,16 +3,23 @@ var character;
 var playerX = 375;
 var playerY = 375;
 let time = 0;
+<<<<<<< Updated upstream
 var cnv;
 //start menu global vars
 let r = 250;
 let g = 0;
 let b = 0;
+=======
+let score = 0;
+let canvas;
+>>>>>>> Stashed changes
 
 let state = 0;
 let startButton;
 
 let chrSprite =[]; //array of character sprits
+let grabSprite =[]; //array of grab animations
+let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
 
 // The mouse's 'grabbed' character
@@ -51,10 +58,29 @@ function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
+<<<<<<< Updated upstream
   chrSprite[0] = loadImage("images/redpaintbucket.png");
   chrSprite[1] = loadImage("images/bluepaintbucket.png");
   chrSprite[2] = loadImage("images/purplepaintbucket.png");
   chrSprite[3] = loadImage("images/greenpaintbucket.png");
+=======
+  menuMusic = loadSound('sounds/menu_music.mp3');
+  levelMusic = loadSound('sounds/level_music.mp3');
+  pauseSound = loadSound('sounds/pause.wav');
+  pickup = loadSound('sounds/pickup.wav');
+  chrSprite[0] = loadImage("images/redpaintupdate.gif");
+  chrSprite[1] = loadImage("images/bluepaintupdate.gif");
+  chrSprite[2] = loadImage("images/purplepaintupdate.gif");
+  chrSprite[3] = loadImage("images/greenpaintupdate.gif");
+  grabSprite[0] = loadImage("images/redpaintgrabbed.gif");
+  grabSprite[1] = loadImage("images/bluepaintgrabbed.gif");
+  grabSprite[2] = loadImage("images/purplepaintgrabbed.gif");
+  grabSprite[3] = loadImage("images/greenpaintgrabbed.gif");
+  deathSprite[0] = loadImage("images/redpaintdeath.gif");
+  deathSprite[1] = loadImage("images/bluepaintdeath.gif");
+  deathSprite[2] = loadImage("images/purplepaintdeath.gif");
+  deathSprite[3] = loadImage("images/greenpaintdeath.gif");
+>>>>>>> Stashed changes
 }
 
 
@@ -103,11 +129,34 @@ function centerCanvas(){
   cnv.position(x, y);
 }
 
+<<<<<<< Updated upstream
 function setup() {
   cnv = createCanvas(windowWidth - 200, windowHeight - 200);
   centerCanvas();
 
   character.resize(100, 100);
+=======
+
+// Called when timer finishes
+function onTimerFinished(actor) {
+  console.log("Timer finished for actor!");
+  actor.angle = 0;
+  idx = chrSprite.indexOf(actor.sprite);
+  actor.sprite = deathSprite[idx];
+  actor.state = "EXPLODED"; 
+  }
+
+function centerCanvas() {
+  let x = (windowWidth - width) / 2;
+  let y = (windowHeight - height) / 2;
+  canvas.position(x, y);
+}
+
+function setup() {
+  canvas = createCanvas(800, 800);
+  centerCanvas();
+  character.resize(50, 50);
+>>>>>>> Stashed changes
 
   //start button
   textFont(myFont);
@@ -298,6 +347,12 @@ function mousePressed() {
     if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
       grabbedCharacter = actor;
+<<<<<<< Updated upstream
+=======
+      idx = chrSprite.indexOf(grabbedCharacter.sprite);
+      grabbedCharacter.sprite = grabSprite[idx];
+      pickup.play();
+>>>>>>> Stashed changes
       break;
     }
   }
@@ -308,7 +363,7 @@ function mouseReleased() {
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     const zone = zoneUnderActor(grabbedCharacter);
     if (zone) {
-      const idx = chrSprite.indexOf(grabbedCharacter.sprite); 
+      const idx = grabSprite.indexOf(grabbedCharacter.sprite); 
       const actorColor = colors[idx]; // "red","blue","purple","green"
       if (zone.color === actorColor) {
         grabbedCharacter.xspeed = 0;
@@ -317,10 +372,12 @@ function mouseReleased() {
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
+        grabbedCharacter.sprite = chrSprite[idx];
       }
     } else {
       // no zone is a normal release
       grabbedCharacter.state = "FREE";
+      grabbedCharacter.sprite = chrSprite[idx];
     }
     grabbedCharacter = null;
   }
@@ -346,7 +403,7 @@ function roamingMovement(actor) {
 
 function grabbedMovement(actor) {
   actor.x = constrain(mouseX - actor.size/2, 0, width - actor.size);
-  actor.y = constrain(mouseY - actor.size/2, 0, width - actor.size);
+  actor.y = constrain(mouseY - actor.size/2, 0, height - actor.size);
 }
 
 // draw colored drop zones 
