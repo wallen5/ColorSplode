@@ -151,34 +151,6 @@ function checkTimer(actor) {
   }
 }
 
-
-// Called when timer finishes
-function onTimerFinished(actor) {
-  console.log("Timer finished for actor!");
-  actor.angle = 0;
-  actor.state = "EXPLODED"; 
-  }
-
-
-  if (remaining <= 0) {
-    onTimerFinished(actor);
-    return;
-  }
-  
-  if (remaining <= actor.shakeThreshold) {
-  let speedMultiplier = 1 / (t + 0.05);  // tweak 0.1 to control max speed
-  speedMultiplier = constrain(speedMultiplier, 0, 7);  // never shake faster than 7x normal
-  actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
-    
-
-  let flipThreshold = actor.rotationMax * (1 + (1 - t) * 2);  
-  if (abs(actor.angle) > flipThreshold) {
-    actor.rotationDirection *= -1.0;
-    actor.angle = constrain(actor.angle, -flipThreshold, flipThreshold);
-  }
-}
-
-
 // Called when timer finishes
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
