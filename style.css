@@ -1,11 +1,14 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
+html {
+  min-height: 100%;
+  background: linear-gradient(to bottom right, red, orange, yellow, lightgreen, turquoise, purple);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 body {
-  background-image: linear-gradient(to bottom right, red, orange, yellow, lightgreen, turquoise, purple);
+  min-height: 100vh;
+  margin: 0;
 }
 
 canvas {
