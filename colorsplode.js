@@ -23,6 +23,12 @@ let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 
+//Game Over Buttons
+let buttonCreated = false;
+let retryButton;
+let exitButton;
+let drawGameOver = false;
+
 //start menu text. acts as namespace
 let titleColor = {
   r: 250,
@@ -49,6 +55,7 @@ function preload(){
   character = loadImage("images/redpaintbucketgif.gif");
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
+  gameOverBG = loadImage("images/gameoverbackground.png")
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
@@ -73,7 +80,7 @@ class Actor {
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
-    this.timer = 14.0;           // measured in seconds
+    this.timer = 10.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
 
     this.shakeThreshold = 3.0;   // how many seconds left to shake
@@ -144,7 +151,8 @@ function checkTimer(actor) {
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
   actor.angle = 0;
-  actor.state = "EXPLODED"; 
+  actor.state = "EXPLODED";
+  state = 3;
   }
 
 
@@ -213,15 +221,107 @@ function draw() {
   if(state == 0){ //start screen
     startMenu();
 
-  } else if (state == 1){ //game screen
+  } if (state == 1){ //game screen
       gameMenu();
       spawnActor();
       spawnRate();
+  } if (state == 3){
+    pauseButton.remove();
+    scoreDisplay.remove();
+
+    background(gameOverBG);
+    stroke("black");
+    strokeWeight(5);
+    textSize(50);
+    textStyle("bold");
+    fill("red");
+
+    myString = "Game Over!"
+    let x = 50; // Starting x position
+    let y = 110; // Starting y position
+
+    colorFluctuation();
+    fill(titleColor.r, titleColor.g, titleColor.b);
+    text("Game Over!", 195 , 350 );
+    scoreDisplay.text = "Score:" + score;
+
+    if (!buttonCreated){
+      textSize(20);
+      retryButton = new Sprite(400, 425);
+      retryButton.text = "Retry";
+      retryButton.width = 120;
+      retryButton.height = 50;
+      retryButton.color = "lightred";
+
+      exitButton = new Sprite(400, 485);
+      exitButton.text = "Quit";
+      exitButton.width = 120;
+      exitButton.height = 50;
+      exitButton.color = "lightred";
+
+      buttonCreated = true;
+    }
+    if (retryButton.mouse.pressing()){
+      //remove characters and buttons
+      ourCharacters = [];
+      buttonCreated = false;
+      retryButton.remove();
+      exitButton.remove();
+
+      //set style
+      stroke("black");
+      strokeWeight(5);
+      textSize(30);
+      textStyle("bold");
+      fill(200);
+
+      //create pause button
+      pauseButton = new Sprite(750, 50);
+      pauseButton.text = "||";
+      pauseButton.width = 70;
+      pauseButton.height = 50;
+      pauseButton.color = "lightgreen";
+
+      //display score
+      score = 0;
+      drawScore();
+
+      //reset spawn logic after quit
+      spawnLogic.timer = 50;
+      spawnLogic.timeToSpawn =  100;
+      spawnLogic.rate = 1;
+      spawnLogic.activeActors = 0;
+
+      //return to game screen
+      state = 1;
+    }
+
+    if (exitButton.mouse.pressing()){
+      ourCharacters = [];
+      buttonCreated = false;
+      exitButton.remove();
+      retryButton.remove();
+
+      levelMusic.stop();
+      scoreDisplay.remove()
+      scoreDisplay = null;
+      score = 0;
+
+      //reset spawn logic after quit
+      spawnLogic.timer = 50;
+      spawnLogic.timeToSpawn =  100;
+      spawnLogic.rate = 1;
+      spawnLogic.activeActors = 0;
+
+      setup();
+      state = 0;
+    }
+
   }
 }
 
 function startMenu(){
-   background(bg);
+  background(bg);
 
   colorFluctuation();
 
@@ -244,7 +344,7 @@ function startMenu(){
     pauseButton.color = "lightgreen";
     state = 1;
   
-
+    
     menuMusic.stop();
     levelMusic.loop();
     drawScore();
