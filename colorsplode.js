@@ -4,6 +4,7 @@ var playerX = 375;
 var playerY = 375;
 let time = 0;
 let score = 0;
+let canvas;
 
 let state = 0;
 let startButton;
@@ -11,6 +12,8 @@ let startButton;
 let compressor;
 
 let chrSprite =[]; //array of character sprits
+let grabSprite =[]; //array of grab animations
+let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
 
 // The mouse's 'grabbed' character
@@ -57,6 +60,14 @@ function preload(){
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
   chrSprite[3] = loadImage("images/greenpaintupdate.gif");
+  grabSprite[0] = loadImage("images/redpaintgrabbed.gif");
+  grabSprite[1] = loadImage("images/bluepaintgrabbed.gif");
+  grabSprite[2] = loadImage("images/purplepaintgrabbed.gif");
+  grabSprite[3] = loadImage("images/greenpaintgrabbed.gif");
+  deathSprite[0] = loadImage("images/redpaintdeath.gif");
+  deathSprite[1] = loadImage("images/bluepaintdeath.gif");
+  deathSprite[2] = loadImage("images/purplepaintdeath.gif");
+  deathSprite[3] = loadImage("images/greenpaintdeath.gif");
 }
 
 
@@ -70,6 +81,7 @@ class Actor {
     this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
+    this.exSprite = 
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
@@ -172,17 +184,24 @@ function checkTimer(actor) {
   }
 }
 
-
 // Called when timer finishes
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
   actor.angle = 0;
+  idx = chrSprite.indexOf(actor.sprite);
+  actor.sprite = deathSprite[idx];
   actor.state = "EXPLODED"; 
   }
 
+function centerCanvas() {
+  let x = (windowWidth - width) / 2;
+  let y = (windowHeight - height) / 2;
+  canvas.position(x, y);
+}
 
 function setup() {
-  createCanvas(800, 800);
+  canvas = createCanvas(800, 800);
+  centerCanvas();
 
   character.resize(50, 50);
 
@@ -461,6 +480,8 @@ function mousePressed() {
       actor.state = "GRABBED";
       actor.splode();
       grabbedCharacter = actor;
+      idx = chrSprite.indexOf(grabbedCharacter.sprite);
+      grabbedCharacter.sprite = grabSprite[idx];
       pickup.play();
       break;
     }
@@ -472,7 +493,7 @@ function mouseReleased() {
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     const zone = zoneUnderActor(grabbedCharacter);
     if (zone) {
-      const idx = chrSprite.indexOf(grabbedCharacter.sprite); 
+      const idx = grabSprite.indexOf(grabbedCharacter.sprite); 
       const actorColor = colors[idx]; // "red","blue","purple","green"
       if (zone.color === actorColor) {
         grabbedCharacter.xspeed = 0;
@@ -483,10 +504,12 @@ function mouseReleased() {
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
+        grabbedCharacter.sprite = chrSprite[idx];
       }
     } else {
       // no zone is a normal release
       grabbedCharacter.state = "FREE";
+      grabbedCharacter.sprite = chrSprite[idx];
     }
     grabbedCharacter = null;
   }
