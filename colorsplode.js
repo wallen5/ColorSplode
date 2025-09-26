@@ -4,7 +4,7 @@ var playerX = 375;
 var playerY = 375;
 let time = 0;
 let score = 0;
-let canvas;
+//let canvas;
 
 let state = 0;
 let startButton;
