@@ -4,6 +4,7 @@ var playerX = 375;
 var playerY = 375;
 let time = 0;
 let score = 0;
+let canvas;
 
 let state = 0;
 let startButton;
@@ -11,6 +12,8 @@ let startButton;
 let compressor;
 
 let chrSprite =[]; //array of character sprits
+let grabSprite =[]; //array of grab animations
+let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
 
 // The mouse's 'grabbed' character
@@ -64,6 +67,14 @@ function preload(){
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
   chrSprite[3] = loadImage("images/greenpaintupdate.gif");
+  grabSprite[0] = loadImage("images/redpaintgrabbed.gif");
+  grabSprite[1] = loadImage("images/bluepaintgrabbed.gif");
+  grabSprite[2] = loadImage("images/purplepaintgrabbed.gif");
+  grabSprite[3] = loadImage("images/greenpaintgrabbed.gif");
+  deathSprite[0] = loadImage("images/redpaintdeath.gif");
+  deathSprite[1] = loadImage("images/bluepaintdeath.gif");
+  deathSprite[2] = loadImage("images/purplepaintdeath.gif");
+  deathSprite[3] = loadImage("images/greenpaintdeath.gif");
 }
 
 
@@ -77,6 +88,7 @@ class Actor {
     this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
+    this.exSprite = 
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
@@ -91,6 +103,9 @@ class Actor {
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
+
+    // actor particle array
+    this.particles = [];
   }
 
   setState(newState) {
@@ -110,6 +125,8 @@ class Actor {
         // Do nothing; actor is in a zone
       }
     }
+
+    
   } 
 
   //makes sure the mouse is over the character
@@ -117,6 +134,34 @@ class Actor {
     return mouseX > this.x && mouseX < this.x + this.size &&
            mouseY > this.y && mouseY < this.y + this.size;
     }
+
+  splode() {
+    let numParticles = 5;
+    let lifetime = 250; // ms
+
+    for (let i = 0; i < numParticles; i++) {
+      
+      let vx = random(-10, 10);
+      let vy = random(-10, 10);
+
+      let p = {
+        x: this.x + this.size/2,
+        y: this.y + this.size/2,
+        vx: vx,
+        vy: vy,
+        size: 8,
+        born: millis(),
+        color: this.sprite === chrSprite[0] ? color(255,0,0) :
+              this.sprite === chrSprite[1] ? color(0,0,255) :
+              this.sprite === chrSprite[2] ? color(160,0,255) :
+              this.sprite === chrSprite[3] ? color(0,200,0) : color(255)
+      };
+
+      // push particle into a actor array
+      this.particles.push(p);
+    }
+  }
+
 }
 
 // Checks the actors timer
@@ -146,18 +191,26 @@ function checkTimer(actor) {
   }
 }
 
-
 // Called when timer finishes
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
   actor.angle = 0;
-  actor.state = "EXPLODED";
+  idx = chrSprite.indexOf(actor.sprite);
+  actor.sprite = deathSprite[idx];
+  actor.state = "EXPLODED"; 
   state = 2; // triggers game over screen
-  }
+}
 
+// function centerCanvas() {
+//   let x = (windowWidth - width) / 2;
+//   let y = (windowHeight - height) / 2;
+//   canvas.position(x, y);
+// }
 
 function setup() {
   createCanvas(800, 800);
+  //canvas = createCanvas(800, 800);
+  //centerCanvas();
 
   character.resize(50, 50);
 
@@ -269,21 +322,37 @@ function gameMenu(){
 
   background(220);
 
-   drawColorZones();
+  drawColorZones();
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
 
   for (let actor of ourCharacters) {
-      actor.update();
+    actor.update();
 
-      push();
-      translate(actor.x + actor.size/2, actor.y + actor.size/2); // move to center
-      rotate(radians(actor.angle)); // use actor.angle
-      imageMode(CENTER);
-      image(actor.sprite, 0, 0, actor.size, actor.size);
-      pop();
+    push();
+    translate(actor.x + actor.size/2, actor.y + actor.size/2); // move to center
+    rotate(radians(actor.angle)); // use actor.angle
+    imageMode(CENTER);
+    image(actor.sprite, 0, 0, actor.size, actor.size);
+    pop();
+
+    // Draw the particles around the actor
+    for (let i = actor.particles.length-1; i >= 0; i--) {
+      let p = actor.particles[i];
+      fill(p.color);
+      noStroke();
+      circle(p.x, p.y, p.size);
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Fade and remove after set time is up
+      if (millis() - p.born > 1500) {
+        actor.particles.splice(i,1);
+      }
+    }
   }
+
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -525,7 +594,10 @@ function mousePressed() {
   for (let actor of ourCharacters){
     if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
+      actor.splode();
       grabbedCharacter = actor;
+      idx = chrSprite.indexOf(grabbedCharacter.sprite);
+      grabbedCharacter.sprite = grabSprite[idx];
       pickup.play();
       break;
     }
@@ -537,7 +609,7 @@ function mouseReleased() {
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     const zone = zoneUnderActor(grabbedCharacter);
     if (zone) {
-      const idx = chrSprite.indexOf(grabbedCharacter.sprite); 
+      const idx = grabSprite.indexOf(grabbedCharacter.sprite); 
       const actorColor = colors[idx]; // "red","blue","purple","green"
       if (zone.color === actorColor) {
         grabbedCharacter.xspeed = 0;
@@ -548,10 +620,12 @@ function mouseReleased() {
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
+        grabbedCharacter.sprite = chrSprite[idx];
       }
     } else {
       // no zone is a normal release
       grabbedCharacter.state = "FREE";
+      grabbedCharacter.sprite = chrSprite[idx];
     }
     grabbedCharacter = null;
   }
