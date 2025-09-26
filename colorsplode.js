@@ -4,7 +4,6 @@ var playerX = 375;
 var playerY = 375;
 let time = 0;
 let score = 0;
-//let canvas;
 
 let state = 0;
 let startButton;
@@ -193,16 +192,8 @@ function onTimerFinished(actor) {
   actor.state = "EXPLODED"; 
   }
 
-// function centerCanvas() {
-//   let x = (windowWidth - width) / 2;
-//   let y = (windowHeight - height) / 2;
-//   canvas.position(x, y);
-// }
-
 function setup() {
   createCanvas(800, 800);
-  //canvas = createCanvas(800, 800);
-  //centerCanvas();
 
   character.resize(50, 50);
 
