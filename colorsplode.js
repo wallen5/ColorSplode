@@ -84,6 +84,9 @@ class Actor {
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
+
+    // actor particle array
+    this.particles = [];
   }
 
   setState(newState) {
@@ -103,6 +106,8 @@ class Actor {
         // Do nothing; actor is in a zone
       }
     }
+
+    
   } 
 
   //makes sure the mouse is over the character
@@ -110,6 +115,34 @@ class Actor {
     return mouseX > this.x && mouseX < this.x + this.size &&
            mouseY > this.y && mouseY < this.y + this.size;
     }
+
+  splode() {
+    let numParticles = 5;
+    let lifetime = 250; // ms
+
+    for (let i = 0; i < numParticles; i++) {
+      
+      let vx = random(-10, 10);
+      let vy = random(-10, 10);
+
+      let p = {
+        x: this.x + this.size/2,
+        y: this.y + this.size/2,
+        vx: vx,
+        vy: vy,
+        size: 8,
+        born: millis(),
+        color: this.sprite === chrSprite[0] ? color(255,0,0) :
+              this.sprite === chrSprite[1] ? color(0,0,255) :
+              this.sprite === chrSprite[2] ? color(160,0,255) :
+              this.sprite === chrSprite[3] ? color(0,200,0) : color(255)
+      };
+
+      // push particle into a actor array
+      this.particles.push(p);
+    }
+  }
+
 }
 
 // Checks the actors timer
@@ -256,21 +289,37 @@ function gameMenu(){
 
   background(220);
 
-   drawColorZones();
+  drawColorZones();
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
 
   for (let actor of ourCharacters) {
-      actor.update();
+    actor.update();
 
-      push();
-      translate(actor.x + actor.size/2, actor.y + actor.size/2); // move to center
-      rotate(radians(actor.angle)); // use actor.angle
-      imageMode(CENTER);
-      image(actor.sprite, 0, 0, actor.size, actor.size);
-      pop();
+    push();
+    translate(actor.x + actor.size/2, actor.y + actor.size/2); // move to center
+    rotate(radians(actor.angle)); // use actor.angle
+    imageMode(CENTER);
+    image(actor.sprite, 0, 0, actor.size, actor.size);
+    pop();
+
+    // Draw the particles around the actor
+    for (let i = actor.particles.length-1; i >= 0; i--) {
+      let p = actor.particles[i];
+      fill(p.color);
+      noStroke();
+      circle(p.x, p.y, p.size);
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Fade and remove after set time is up
+      if (millis() - p.born > 1500) {
+        actor.particles.splice(i,1);
+      }
+    }
   }
+
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -410,6 +459,7 @@ function mousePressed() {
   for (let actor of ourCharacters){
     if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
+      actor.splode();
       grabbedCharacter = actor;
       pickup.play();
       break;
