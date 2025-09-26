@@ -193,15 +193,16 @@ function onTimerFinished(actor) {
   actor.state = "EXPLODED"; 
   }
 
-function centerCanvas() {
-  let x = (windowWidth - width) / 2;
-  let y = (windowHeight - height) / 2;
-  canvas.position(x, y);
-}
+// function centerCanvas() {
+//   let x = (windowWidth - width) / 2;
+//   let y = (windowHeight - height) / 2;
+//   canvas.position(x, y);
+// }
 
 function setup() {
-  canvas = createCanvas(800, 800);
-  centerCanvas();
+  createCanvas(800, 800);
+  //canvas = createCanvas(800, 800);
+  //centerCanvas();
 
   character.resize(50, 50);
 
