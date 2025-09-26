@@ -92,7 +92,7 @@ class Actor {
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
-    this.timer = 10.0;           // measured in seconds
+    this.timer = 14.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
 
     this.shakeThreshold = 3.0;   // how many seconds left to shake
