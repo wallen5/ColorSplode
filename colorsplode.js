@@ -24,6 +24,7 @@ let gamePaused = false;
 let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
+let restartButton;
 
 //Game Over Buttons
 let buttonCreated = false;
@@ -47,7 +48,7 @@ let spawnLogic = {
 };
 
 //zone vars
-let zoneX = 60, zoneY = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
+let zoneX = 50, zoneY1 = 100, zoneY2 = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
 
 // color zones
 const colors = ["red","blue","purple","green"];
@@ -93,6 +94,7 @@ class Actor {
     
     this.timer = 14.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
+    this.timeAlive = 0.0;        // Tracks how long the actor has been alive while the game is UNPAUSED
 
     this.shakeThreshold = 3.0;   // how many seconds left to shake
     this.angle = 0;              // current rotation angle
@@ -124,8 +126,6 @@ class Actor {
         // Do nothing; actor is in a zone
       }
     }
-
-    
   } 
 
   //makes sure the mouse is over the character
@@ -166,8 +166,9 @@ class Actor {
 // Checks the actors timer
 function checkTimer(actor) {
   
-  let elapsed = (millis() - actor.timerStart) / 1000.0;
-  let remaining = max(actor.timer - elapsed, 0);
+  actor.timeAlive += deltaTime / 1000.0; // Increments the timeAlive timer
+
+  let remaining = max(actor.timer - actor.timeAlive, 0);
   let t = remaining / actor.timer; // goes 1 to 0 over time
 
 
@@ -242,10 +243,10 @@ function setup() {
 function makeColorZones()
 {
   colorZones = [
-    { x: zoneX + 0*(zoneWidth+gap), y: 100, w: zoneWidth, h: zoneHeight, color: "red"    },
-    { x: zoneX + 0*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "blue"   },
-    { x: zoneX + 3*(zoneWidth+gap), y: zoneY, w: zoneWidth, h: zoneHeight, color: "purple" },
-    { x: zoneX + 3*(zoneWidth+gap), y: 100, w: zoneWidth, h: zoneHeight, color: "green"  },
+    { x: zoneX, y: zoneY1, w: zoneWidth, h: zoneHeight, color: "red"    },
+    { x: zoneX, y: zoneY2, w: zoneWidth, h: zoneHeight, color: "blue"   },
+    { x: width - zoneWidth - zoneX, y: zoneY2, w: zoneWidth, h: zoneHeight, color: "purple" },
+    { x: width - zoneWidth - zoneX, y: zoneY1, w: zoneWidth, h: zoneHeight, color: "green"  },
   ];
 }
 
@@ -361,7 +362,7 @@ function gameMenu(){
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(32);
-    text("Paused", width / 2, height / 2);
+    text("Paused", width / 2, height / 2 - 50);
     textSize(12);
 
     pop(); // restore settings
@@ -371,6 +372,10 @@ function gameMenu(){
     }
     if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
       pauseGame();
+    }
+    if(restartButton && restartButton.mouse.pressed())
+    {
+      restart();
     }
   }
   text("X: " + mouseX + " Y: " + mouseY, 10, 20);
@@ -443,7 +448,25 @@ function exit(){
   state = 0;
 }
 
+function restart(){
+  pauseGame(); // This will "unpause" the game
+
+  //remove characters and buttons
+  ourCharacters = [];
+
+  //display score
+  score = 0;
+
+  //reset spawn logic after quit
+  spawnLogic.timer = 50;
+  spawnLogic.timeToSpawn =  100;
+  spawnLogic.rate = 1;
+  spawnLogic.activeActors = 0;
+}
+
 function retry(){
+  gamePaused = false;
+
   //remove characters and buttons
   ourCharacters = [];
   buttonCreated = false;
@@ -526,7 +549,17 @@ function pauseGame(){
     resumeButton.height = 50;
     resumeButton.color = "lightgreen";
 
-    quitButton = new Sprite(400, 500);
+    push();
+    textSize(27);
+    restartButton = new Sprite(400, 500);
+    restartButton.text = "Restart";
+    restartButton.width = 200;
+    restartButton.height = 50;
+    restartButton.color = "lightgreen";
+
+    pop();
+
+    quitButton = new Sprite(400, 550);
     quitButton.text = "Quit";
     quitButton.width = 200;
     quitButton.height = 50;
@@ -542,6 +575,8 @@ function pauseGame(){
   else{ // Remove the resume button
     resumeButton.remove();
     resumeButton = null;
+    restartButton.remove();
+    restartButton = null;
     quitButton.remove();
     quitButton = null;
 
@@ -561,6 +596,8 @@ function quitGame(){
   resumeButton = null;
   pauseButton.remove();
   pauseButton = null;
+  restartButton.remove();
+  restartButton = null;
   gamePaused = false;
 
   levelMusic.stop();
@@ -638,8 +675,8 @@ function roamingMovement(actor) {
   actor.y += actor.yspeed;
 
   //make sure characters don't go off screen
-  if (actor.x < 0 || actor.x > width - actor.size) actor.xspeed *= -1;
-  if (actor.y < 0 || actor.y > height - actor.size) actor.yspeed *= -1;
+  if (actor.x < zoneX || actor.x > width - actor.size - zoneX) actor.xspeed *= -1;
+  if (actor.y < zoneY1 || actor.y > height - actor.size - (height - (zoneY2 + zoneHeight))) actor.yspeed *= -1;
 
   checkActorCollision(actor)
 }
@@ -678,8 +715,8 @@ function checkActorCollision(actor)
 }
 
 function grabbedMovement(actor) {
-  actor.x = constrain(mouseX - actor.size/2, 0, width - actor.size);
-  actor.y = constrain(mouseY - actor.size/2, 0, width - actor.size);
+  actor.x = constrain(mouseX - actor.size/2, zoneX, width - actor.size - zoneX);
+  actor.y = constrain(mouseY - actor.size/2, zoneY1, height - actor.size - (height - (zoneY2 + zoneHeight)));
 }
 
 // draw colored drop zones 
@@ -740,8 +777,8 @@ function spawnActor(){
 
   if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS){
     // position
-    let newX = random(0, width - 50);
-    let newY = random(0, height - 210);
+    let newX = random(zoneX + 1, width - zoneX - 61);
+    let newY = random(zoneY1 + 1, height - (height - zoneY2) - 61);
     
     // Loop to roll locations to randomize into
     let inZone = true;
@@ -756,9 +793,8 @@ function spawnActor(){
         // Rerolls the newX and newY if the spawn is invalid
         if(hit)
         {
-          print("Not Valid");
-          newX = random(0, width - 50);
-          newY = random(0, height - 210);
+          newX = random(zoneX + 1, width - zoneX - 61);
+          newY = random(zoneY1 + 1, height - (height - (zoneY2 + zoneHeight)) - 61);
           inZone = true;
           break; // break lets us reroll again
         }
