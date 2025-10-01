@@ -194,6 +194,13 @@ function checkTimer(actor) {
 // Called when timer finishes
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
+
+  mouseReleased();
+
+  if (actor.state === "SNAPPED") {
+    return;
+  }
+
   actor.angle = 0;
   idx = chrSprite.indexOf(actor.sprite);
   actor.sprite = deathSprite[idx];
@@ -393,8 +400,6 @@ function gameOver(){
   fill("red");
 
   myString = "Game Over!";
-  let x = 50; // Starting x position
-  let y = 110; // Starting y position
 
   colorFluctuation();
   fill(titleColor.r, titleColor.g, titleColor.b);
@@ -539,7 +544,7 @@ function pauseGame(){
 
   for(let actor of ourCharacters){
     if(actor.state === "GRABBED"){ // Ensures the player can't click, and then pause and move the enemy
-      actor.state = "FREE"
+      actor.state = "FREE";
     }
   }
   if(gamePaused){ // if game paused, draw the new buttons
