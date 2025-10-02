@@ -1,4 +1,20 @@
-// draw colored drop zones 
+//zone class
+class Zone{
+  constructor(x, y, w, h, color){
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.color = color;
+  }
+}
+
+
+// color zones
+const colors = ["red","blue","purple","green"];
+let colorZones = [];
+
+// draw colored drop zones
 function drawColorZones(){
   push();
   stroke(0);
@@ -13,7 +29,7 @@ function drawColorZones(){
   pop();
 }
 
-function zoneUnderActor(actor){
+function zoneUnderActor(actor){ 
 
   const centerX = actor.x + actor.size/2;
   const centerY = actor.y + actor.size/2;
@@ -28,7 +44,7 @@ function zoneUnderActor(actor){
   return null;
 }
 
-function zoneFill(colorName){
+function zoneFill(colorName){ 
   if (colorName === "red")    return color(255,180,180);
   if (colorName === "blue")   return color(180,180,255);
   if (colorName === "purple") return color(210,180,255);
@@ -36,14 +52,18 @@ function zoneFill(colorName){
   return color(230);
 }
 
+//zone vars -- temp until zones are randomized
+let zoneX = 50, zoneY1 = 100, zoneY2 = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
+
+
 // create 4 drop zones along the bottom
 function makeColorZones()
 {
   colorZones = [
-    { x: zoneX, y: zoneY1, w: zoneWidth, h: zoneHeight, color: "red"    },
-    { x: zoneX, y: zoneY2, w: zoneWidth, h: zoneHeight, color: "blue"   },
-    { x: width - zoneWidth - zoneX, y: zoneY2, w: zoneWidth, h: zoneHeight, color: "purple" },
-    { x: width - zoneWidth - zoneX, y: zoneY1, w: zoneWidth, h: zoneHeight, color: "green"  },
+    new Zone(zoneX, zoneY1, zoneWidth, zoneHeight, "red"),
+    new Zone(zoneX, zoneY2, zoneWidth, zoneHeight, "blue"),
+    new Zone(width - zoneWidth - zoneX, zoneY2, zoneWidth, zoneHeight, "purple"),
+    new Zone(width - zoneWidth - zoneX, zoneY1, zoneWidth, zoneHeight, "green")
   ];
 }
 
