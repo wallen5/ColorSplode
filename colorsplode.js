@@ -2,7 +2,9 @@ let time = 0;
 let score = 0;
 
 let state = 0;
-let startButton;
+let currentMode = null;
+let startButton1 //classic mode
+let startButton2; //roguelike mode
 
 let compressor;
 
@@ -73,11 +75,17 @@ function setup() {
   //start button
   textFont(myFont);
   textSize(12); // Sets a font size to keep text size consistent
-  startButton = new Sprite(400, 450);
-  startButton.text = "Play Game";
-  startButton.width = 120;
-  startButton.height = 50;
-  startButton.color = "lightgreen";
+  startButton1 = new Sprite(320, 450);
+  startButton1.text = "Play\n Classic Mode";
+  startButton1.width = 180;
+  startButton1.height = 50;
+  startButton1.color = "lightgreen";
+
+  startButton2 = new Sprite(520, 450);
+  startButton2.text = "Play\n Roguelike Mode";
+  startButton2.width = 200;
+  startButton2.height = 50;
+  startButton2.color = "lightgreen";
   background(220);
   
   compressor = new p5.Compressor();
@@ -108,11 +116,15 @@ function draw() {
   if(state == 0){ //start screen
     startMenu();
 
-  } if (state == 1){ //game screen
-      gameMenu();
+  } else if (state == 1){ //play classic mode
+      gameMenu1();
       spawnActor();
       spawnRate();
-  } if (state == 2){
+  } else if (state == 2){ //play roguelike mode
+      gameMenu2();
+      spawnActor();
+      spawnRate();
+  } else if (state == 3){ //gameover
       gameOver();
   }
 }
@@ -132,15 +144,22 @@ function startMenu(){
     
   text("ColorSplode", 250 , 350 );
 
-
-  if (startButton.mouse.pressing()){
-    startButton.remove();
+  currentMode = null;
+  if (startButton1.mouse.pressing() || startButton2.mouse.pressing()){
+    startButton1.remove();
+    startButton2.remove();
     pauseButton = new Sprite(750, 50);
     pauseButton.text = "||";
     pauseButton.width = 70;
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
-    state = 1;
+    if (startButton1.mouse.pressing()){
+      state = 1;
+      currentMode = "classic";
+    } else {
+      state = 2;
+      currentMode = "roguelike";
+    }
   
     
     menuMusic.stop();
@@ -150,7 +169,7 @@ function startMenu(){
 }
 
 
-function gameMenu(){
+function gameMenu1(){
 
   background(220);
 
@@ -170,32 +189,30 @@ function gameMenu(){
   }
   
   if (gamePaused) {
-    push(); // save current drawing settings
+    drawPauseMenu();
+  }
+}
 
-    // Creates the semi-transparent background for the pause menu
-    fill(0, 0, 0, 150);
-    noStroke();
-    rect(0, 0, width, height);
+function gameMenu2(){ //game menu for roguelike mode
 
-    // pause text
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(32);
-    text("Paused", width / 2, height / 2 - 50);
-    textSize(12);
+  background(220);
 
-    pop(); // restore settings
-    if(quitButton.mouse.pressed()){
-      state = 0;
-      quitGame();
-    }
-    if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
-      pauseGame();
-    }
-    if(restartButton && restartButton.mouse.pressed())
-    {
-      restart();
-    }
+  drawColorZones();
+
+  //update the displayed score
+  scoreDisplay.text = "Score:" + score;
+
+  for (let actor of ourCharacters) {
+    actor.update();
+    actor.draw();
+  }
+
+  if(pauseButton.mouse.pressed()){
+    pauseGame();
+  }
+  
+  if (gamePaused) {
+    drawPauseMenu();
   }
 }
 
@@ -314,7 +331,8 @@ function retry(){
   spawnLogic.activeActors = 0;
 
   //return to game screen
-  state = 1;
+  if (currentMode == "classic") state = 1;
+  if (currentMode == "roguelike") state = 2;
 
 }
 
@@ -332,11 +350,11 @@ function colorFluctuation(){
 
 function keyPressed() // Generic Keypress function
 {
-  if((keyCode === ESCAPE || key === 'p') && state == 1) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
+  if((keyCode === ESCAPE || key === 'p') && (state == 1 || state == 2) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
   {
     pauseGame();
   }
-  else if(state != 1)
+  else if(state == 0 || state == 3)
   {
     if (resumeButton) {
       resumeButton.remove();
@@ -396,6 +414,35 @@ function pauseGame(){
     levelMusic.rate(1.0, 0.2);
     compressor.threshold(-24);
     compressor.ratio(4);
+  }
+}
+
+function drawPauseMenu(){
+  push(); // save current drawing settings
+
+  // Creates the semi-transparent background for the pause menu
+  fill(0, 0, 0, 150);
+  noStroke();
+  rect(0, 0, width, height);
+
+  // pause text
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(32);
+  text("Paused", width / 2, height / 2 - 50);
+  textSize(12);
+
+  pop(); // restore settings
+  if(quitButton.mouse.pressed()){
+    state = 0;
+    quitGame();
+  }
+  if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
+    pauseGame();
+  }
+  if(restartButton && restartButton.mouse.pressed())
+  {
+    restart();
   }
 }
 
