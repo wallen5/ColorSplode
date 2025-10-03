@@ -259,6 +259,13 @@ function checkTimer(actor) {
 // Called when timer finishes
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
+  
+  mouseReleased();
+
+  if (actor.state === "SNAPPED") {
+    return;
+  }
+
   actor.angle = 0;
   idx = chrSprite.indexOf(actor.sprite);
   actor.sprite = deathSprite[idx];
