@@ -36,12 +36,6 @@ let titleColor = {
 };
 
 //Spawns. acts as namespace
-let spawnLogic = {
-  timer: 50,
-  timeToSpawn: 100,
-  rate: 1,
-  activeActors: 0
-};
 
 
 

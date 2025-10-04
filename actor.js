@@ -1,4 +1,4 @@
-class Object {
+class screenObject {
   constructor(){
     this.timer = 50;
     this.timeToSpawn = 100;
@@ -6,6 +6,20 @@ class Object {
     this.activeActors = 0;
   }
 }
+
+/*class screenObject extends Vent{
+  constructor(){
+
+  }
+}
+
+class screenObject extends Zone{
+  constructor(){
+  }
+}
+*/
+
+let spawnLogic = new screenObject;
 
 // A Class of Our Actors/Characters
 class Actor {
@@ -118,7 +132,6 @@ class Actor {
 // used for actor spawning
 
 function spawnActor(){
-  var Object spawnLogic;
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   const MAXACTORS = 10;
 
@@ -160,7 +173,6 @@ function spawnActor(){
 }
 
 function spawnRate(){
-  var Object spawnLogic;
                   //needs to be whole number
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
 
