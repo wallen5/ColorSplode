@@ -1,4 +1,4 @@
-class spawnLogic {
+class Object {
   constructor(){
     this.timer = 50;
     this.timeToSpawn = 100;
@@ -118,7 +118,7 @@ class Actor {
 // used for actor spawning
 
 function spawnActor(){
-
+  var Object spawnLogic;
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   const MAXACTORS = 10;
 
@@ -160,6 +160,7 @@ function spawnActor(){
 }
 
 function spawnRate(){
+  var Object spawnLogic;
                   //needs to be whole number
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
 
