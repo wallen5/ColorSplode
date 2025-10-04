@@ -1,3 +1,12 @@
+class spawnLogic {
+  constructor(){
+    this.timer = 50;
+    this.timeToSpawn = 100;
+    this.rate = 1;
+    this.activeActors = 0;
+  }
+}
+
 // A Class of Our Actors/Characters
 class Actor {
   constructor(x, y, sprite) {
@@ -7,7 +16,6 @@ class Actor {
     this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
-    this.exSprite = 
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
