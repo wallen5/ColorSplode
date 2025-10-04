@@ -7,17 +7,16 @@ class screenObject {
   }
 }
 
-/*class screenObject extends Vent{
-  constructor(){
-
-  }
-}
-
-class screenObject extends Zone{
+class Vent extends screenObject{
   constructor(){
   }
 }
-*/
+
+class Zone extends screenObject{
+  constructor(){
+  }
+}
+
 
 let spawnLogic = new screenObject;
 
