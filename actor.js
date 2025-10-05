@@ -14,7 +14,7 @@ class Actor {
     this.timerStart = millis();  // when the timer started
     this.timeAlive = 0.0;        // Tracks how long the actor has been alive while the game is UNPAUSED
 
-    this.shakeThreshold = 3.0;   // how many seconds left to shake
+    this.shakeThreshold = 5.0;   // how many seconds left to shake
     this.angle = 0;              // current rotation angle
     this.rotationSpeed = 80.0;  // how fast it rotates per frame
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
@@ -106,42 +106,43 @@ class Actor {
 }
 
 //SPAWN LOGIC
-// used for actor spawning
+// used for actor spawning with vents
 
 function spawnActor(){
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   const MAXACTORS = 10;
 
-  let activeVents = vents.filter(v => v.active);
+  let activeVents = vents.filter(v => v.active); // Will only choose from active vents
   if (activeVents.length === 0) return;
   
+  // Chooses a random active vent to spawn from
   let randomVent = random(activeVents);
   if (spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS) {
     let newX, newY;
 
+    // Makes sure coordinate for spawnpoint is at the right place
     switch(randomVent.wall){
     case "left":
-      newX = randomVent.x + 70;
-      newY = randomVent.y;
+      newX = randomVent.x + 130;
+      newY = randomVent.y + 40;
       break;
     case "top":
-      newX = randomVent.x;
-      newY = randomVent.y + 100;
+      newX = randomVent.x + 40;
+      newY = randomVent.y + 150;
       break;
     case "right":
-      newX = randomVent.x - 70;
-      newY = randomVent.y;
+      newX = randomVent.x;
+      newY = randomVent.y + 40;
       break;
     case "bottom":
-      newX = randomVent.x;
-      newY = randomVent.y - 70;
+      newX = randomVent.x + 40;
+      newY = randomVent.y;
       break;
     }
-    // random sprite
-    let randomSprite = random(chrSprite);
-    // Creates new actor. adds it to the array
-    ourCharacters.push(new Actor(newX, newY, randomSprite));
 
+    let randomSprite = random(chrSprite);
+    // Chooses and pushes a random bucket to be spawned
+    ourCharacters.push(new Actor(newX, newY, randomSprite));
     ++spawnLogic.activeActors;
   }
 }

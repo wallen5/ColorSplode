@@ -100,19 +100,23 @@ function randomizeZonePlacements()
   }));
 }
 
+// Vents
+
 let spawnLogic = new Vent;
 let vents = [];
 const wall = ["left","right","top","bottom"];
 
+// For now coords are set, could randomize later
 function makeVents(){
   vents = [
-    new Vent(0, 350, 100, 75, "left", false, ventLeft),
-    new Vent(350, 700, 75, 100, "bottom", false, ventBottom),
-    new Vent(700, 350, 100, 75, "right", false, ventRight),
-    new Vent(350, 0, 75, 100, "top", false, ventTop)
+    new Vent(-50, 350, 100, 75, "left", false, ventLeft),
+    new Vent(350, 650, 75, 100, "bottom", false, ventBottom),
+    new Vent(650, 350, 100, 75, "right", false, ventRight),
+    new Vent(350, -50, 75, 100, "top", false, ventTop)
   ];
 }
 
+// Draw the vents if active with correct sprite
 function drawVents() {
   for (let vent of vents) {
     let spriteToDraw;
@@ -120,14 +124,13 @@ function drawVents() {
     else if (vent.wall === "right") spriteToDraw = vent.sprite;
     else if (vent.wall === "top") spriteToDraw = vent.sprite;
     else if (vent.wall === "bottom") spriteToDraw = vent.sprite;
-    
-    imageMode(CENTER);
     if (vent.active == true){
       image(vent.sprite, vent.x + vent.w/2, vent.y + vent.h/2, vent.w, vent.h);
     }
   }
 }
 
+// Sets a random inactive vent to active
 function activateRandomVent(){
   let inactiveVents = vents.filter(vent => !vent.active);
   if (inactiveVents.length === 0) return;
@@ -136,6 +139,7 @@ function activateRandomVent(){
   randomVent.active = true;
 }
 
+// Closes every vent and resets gif, could change to selected vent later for items
 function closeAllVents(){
   for (let vent of vents) {
     vent.active = false;

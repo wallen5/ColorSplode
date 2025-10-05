@@ -1,5 +1,5 @@
 let time = 0;
-let spawnTime = 2;
+let spawnTime = 30;
 let score = 0;
 
 let state = 0;
@@ -57,10 +57,10 @@ function preload(){
   deathSprite[1] = loadImage("images/bluepaintdeath.gif");
   deathSprite[2] = loadImage("images/purplepaintdeath.gif");
   deathSprite[3] = loadImage("images/greenpaintdeath.gif");
-  ventTop = loadImage("images/ventTop.gif");
-  ventBottom = loadImage("images/ventBottom.gif");
-  ventRight = loadImage("images/ventRight.gif");
-  ventLeft = loadImage("images/ventLeft.gif");
+  ventTop = loadImage("images/ventTopUpdate.gif");
+  ventBottom = loadImage("images/ventBottomUpdate.gif");
+  ventRight = loadImage("images/ventRightUpdate.gif");
+  ventLeft = loadImage("images/ventLeftUpdate.gif");
 }
 
 function setup() {
@@ -96,6 +96,7 @@ function setup() {
 
   // Color zone spawn method (comment one in or out as needed)
   makeColorZones();
+  // Vent spawn method
   makeVents();
   //randomizeZonePlacements();
 }
@@ -159,6 +160,7 @@ function gameMenu(){
     actor.draw();
   }
 
+  stroke(0); // Makes sure buttons stay outlined
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -194,7 +196,7 @@ function gameMenu(){
   }
 
   if(!gamePaused){time++;}
-  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){
+  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
   }
 }
@@ -256,7 +258,6 @@ function exit(){
 
   //reset spawn logic after quit
   closeAllVents();
-
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
@@ -274,10 +275,10 @@ function restart(){
   //display score
   score = 0;
 
+  //reset spawn logic after quit
   time = 0;
   closeAllVents();
   activateRandomVent();
-  //reset spawn logic after quit
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
