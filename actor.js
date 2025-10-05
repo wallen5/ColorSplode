@@ -1,5 +1,17 @@
 class screenObject {
-  constructor(){
+  constructor(x, y, w, h, active = false, sprite = null){
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.sprite = sprite;
+    this.active = active;
+  }
+}
+
+class Vent extends screenObject{
+  constructor(x, y, w, h, active = false, sprite = null){
+    super(x, y, w, h, active, sprite);
     this.timer = 50;
     this.timeToSpawn = 100;
     this.rate = 1;
@@ -7,18 +19,15 @@ class screenObject {
   }
 }
 
-class Vent extends screenObject{
-  constructor(){
-  }
-}
-
+/*
 class Zone extends screenObject{
-  constructor(){
+  constructor(x, y){
+    super(x, y);
   }
 }
+*/
 
-
-let spawnLogic = new screenObject;
+let spawnLogic = new Vent;
 
 // A Class of Our Actors/Characters
 class Actor {
