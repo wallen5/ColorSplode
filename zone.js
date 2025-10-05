@@ -1,10 +1,31 @@
-//zone class
-class Zone{
-  constructor(x, y, w, h, color){
+//Class for objects on screen
+class screenObject {
+  constructor(x, y, w, h, active = false){
     this.x = x;
     this.y = y;
     this.w = w;
     this.h = h;
+    this.active = active;
+  }
+}
+
+//vent subclass
+class Vent extends screenObject{
+  constructor(x, y, w, h, wall, active = false, sprite = null){
+    super(x, y, w, h, active);
+    this.sprite = sprite;
+    this.timer = 50;
+    this.timeToSpawn = 100;
+    this.rate = 1;
+    this.activeActors = 0;
+    this.wall = wall;
+  }
+}
+
+//zone subclass
+class Zone extends screenObject{
+  constructor(x, y, w, h, color, active = true){
+    super(x, y, w, h, active);
     this.color = color;
   }
 }
@@ -77,4 +98,47 @@ function randomizeZonePlacements()
   h: zoneHeight,
   color: color
   }));
+}
+
+let spawnLogic = new Vent;
+let vents = [];
+const wall = ["left","right","top","bottom"];
+
+function makeVents(){
+  vents = [
+    new Vent(0, 350, 100, 75, "left", false, ventLeft),
+    new Vent(350, 700, 75, 100, "bottom", false, ventBottom),
+    new Vent(700, 350, 100, 75, "right", false, ventRight),
+    new Vent(350, 0, 75, 100, "top", false, ventTop)
+  ];
+}
+
+function drawVents() {
+  for (let vent of vents) {
+    let spriteToDraw;
+    if (vent.wall === "left") spriteToDraw = vent.sprite;
+    else if (vent.wall === "right") spriteToDraw = vent.sprite;
+    else if (vent.wall === "top") spriteToDraw = vent.sprite;
+    else if (vent.wall === "bottom") spriteToDraw = vent.sprite;
+    
+    imageMode(CENTER);
+    if (vent.active == true){
+      image(vent.sprite, vent.x + vent.w/2, vent.y + vent.h/2, vent.w, vent.h);
+    }
+  }
+}
+
+function activateRandomVent(){
+  let inactiveVents = vents.filter(vent => !vent.active);
+  if (inactiveVents.length === 0) return;
+
+  let randomVent = random(inactiveVents);
+  randomVent.active = true;
+}
+
+function closeAllVents(){
+  for (let vent of vents) {
+    vent.active = false;
+    vent.sprite.reset();
+  }
 }

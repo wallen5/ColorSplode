@@ -1,36 +1,3 @@
-class screenObject {
-  constructor(x, y, w, h, active = false, sprite = null){
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.sprite = sprite;
-    this.active = active;
-  }
-}
-
-class Vent extends screenObject{
-  constructor(x, y, w, h, spawnX, spawnY, active = false, sprite = null){
-    super(x, y, w, h, active, sprite);
-    this.timer = 50;
-    this.timeToSpawn = 100;
-    this.rate = 1;
-    this.activeActors = 0;
-    this.spawnX = spawnX;
-    this.spawnY = spawnY;
-  }
-}
-
-/*
-class Zone extends screenObject{
-  constructor(x, y){
-    super(x, y);
-  }
-}
-*/
-
-let spawnLogic = new Vent;
-
 // A Class of Our Actors/Characters
 class Actor {
   constructor(x, y, sprite) {
@@ -145,18 +112,38 @@ function spawnActor(){
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   const MAXACTORS = 10;
 
-  let randomVent = random(openVents);
-  if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS && randomVent.active == true){
-    let newX = randomVent.spawnX;
-    let newY = randomVent.spawnY;
-  }
+  let activeVents = vents.filter(v => v.active);
+  if (activeVents.length === 0) return;
+  
+  let randomVent = random(activeVents);
+  if (spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS) {
+    let newX, newY;
+
+    switch(randomVent.wall){
+    case "left":
+      newX = randomVent.x + 70;
+      newY = randomVent.y;
+      break;
+    case "top":
+      newX = randomVent.x;
+      newY = randomVent.y + 100;
+      break;
+    case "right":
+      newX = randomVent.x - 70;
+      newY = randomVent.y;
+      break;
+    case "bottom":
+      newX = randomVent.x;
+      newY = randomVent.y - 70;
+      break;
+    }
     // random sprite
     let randomSprite = random(chrSprite);
-    
     // Creates new actor. adds it to the array
     ourCharacters.push(new Actor(newX, newY, randomSprite));
 
     ++spawnLogic.activeActors;
+  }
 }
 
 function spawnRate(){

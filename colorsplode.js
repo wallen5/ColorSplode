@@ -1,8 +1,10 @@
 let time = 0;
+let spawnTime = 2;
 let score = 0;
 
 let state = 0;
 let startButton;
+let ventSprite;
 
 let compressor;
 
@@ -35,10 +37,6 @@ let titleColor = {
   b: 0
 };
 
-//Spawns. acts as namespace
-
-
-
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
@@ -59,6 +57,10 @@ function preload(){
   deathSprite[1] = loadImage("images/bluepaintdeath.gif");
   deathSprite[2] = loadImage("images/purplepaintdeath.gif");
   deathSprite[3] = loadImage("images/greenpaintdeath.gif");
+  ventTop = loadImage("images/ventTop.gif");
+  ventBottom = loadImage("images/ventBottom.gif");
+  ventRight = loadImage("images/ventRight.gif");
+  ventLeft = loadImage("images/ventLeft.gif");
 }
 
 function setup() {
@@ -94,6 +96,7 @@ function setup() {
 
   // Color zone spawn method (comment one in or out as needed)
   makeColorZones();
+  makeVents();
   //randomizeZonePlacements();
 }
 
@@ -101,7 +104,6 @@ function setup() {
 function draw() {
   if(state == 0){ //start screen
     startMenu();
-
   } if (state == 1){ //game screen
       gameMenu();
       spawnActor();
@@ -126,7 +128,6 @@ function startMenu(){
     
   text("ColorSplode", 250 , 350 );
 
-
   if (startButton.mouse.pressing()){
     startButton.remove();
     pauseButton = new Sprite(750, 50);
@@ -135,8 +136,7 @@ function startMenu(){
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
     state = 1;
-  
-    
+    activateRandomVent();
     menuMusic.stop();
     levelMusic.loop();
     drawScore();
@@ -149,6 +149,7 @@ function gameMenu(){
   background(220);
 
   drawColorZones();
+  drawVents();
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
@@ -177,7 +178,7 @@ function gameMenu(){
     textSize(32);
     text("Paused", width / 2, height / 2 - 50);
     textSize(12);
-
+    
     pop(); // restore settings
     if(quitButton.mouse.pressed()){
       state = 0;
@@ -190,6 +191,11 @@ function gameMenu(){
     {
       restart();
     }
+  }
+
+  if(!gamePaused){time++;}
+  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){
+    activateRandomVent();
   }
 }
 
@@ -237,7 +243,7 @@ function gameOver(){
   }
 }
 
-function exit(){
+function exit(){ 
   ourCharacters = [];
   buttonCreated = false;
   exitButton.remove();
@@ -249,10 +255,13 @@ function exit(){
   score = 0;
 
   //reset spawn logic after quit
+  closeAllVents();
+
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
+  time = 0;
 
   setup();
   state = 0;
@@ -260,13 +269,14 @@ function exit(){
 
 function restart(){
   pauseGame(); // This will "unpause" the game
-
   //remove characters and buttons
   ourCharacters = [];
-
   //display score
   score = 0;
 
+  time = 0;
+  closeAllVents();
+  activateRandomVent();
   //reset spawn logic after quit
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
@@ -302,6 +312,9 @@ function retry(){
   drawScore();
 
   //reset spawn logic after quit
+  time = 0;
+  closeAllVents();
+  activateRandomVent();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
@@ -409,11 +422,13 @@ function quitGame(){
   scoreDisplay.remove()
   scoreDisplay = null;
   score = 0;
+  time = 0;
 
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
 
   //reset spawn logic after quit
+  closeAllVents();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
