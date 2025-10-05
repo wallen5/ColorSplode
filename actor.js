@@ -148,9 +148,8 @@ function spawnActor(){
   let randomVent = random(openVents);
   if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS && randomVent.active == true){
     let newX = randomVent.spawnX;
-    let newY = randomVent.;
+    let newY = randomVent.spawnY;
   }
-
     // random sprite
     let randomSprite = random(chrSprite);
     
