@@ -10,12 +10,14 @@ class screenObject {
 }
 
 class Vent extends screenObject{
-  constructor(x, y, w, h, active = false, sprite = null){
+  constructor(x, y, w, h, spawnX, spawnY, active = false, sprite = null){
     super(x, y, w, h, active, sprite);
     this.timer = 50;
     this.timeToSpawn = 100;
     this.rate = 1;
     this.activeActors = 0;
+    this.spawnX = spawnX;
+    this.spawnY = spawnY;
   }
 }
 
@@ -143,31 +145,11 @@ function spawnActor(){
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   const MAXACTORS = 10;
 
-  if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS){
-    // position
-    let newX = random(zoneX + 1, width - zoneX - 61);
-    let newY = random(zoneY1 + 1, height - (height - zoneY2) - 61);
-    
-    // Loop to roll locations to randomize into
-    let inZone = true;
-    while(inZone)
-    {
-      inZone = false;
-      for(let zone of colorZones)
-      {
-        // Treats our actors as a circle to make spawning more precise
-        let hit = collideRectCircle(zone.x, zone.y, zone.w, zone.h, newX + 60/2, newY + 60/2, 60);
-
-        // Rerolls the newX and newY if the spawn is invalid
-        if(hit)
-        {
-          newX = random(zoneX + 1, width - zoneX - 61);
-          newY = random(zoneY1 + 1, height - (height - (zoneY2 + zoneHeight)) - 61);
-          inZone = true;
-          break; // break lets us reroll again
-        }
-      }
-    }
+  let randomVent = random(openVents);
+  if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS && randomVent.active == true){
+    let newX = randomVent.spawnX;
+    let newY = randomVent.;
+  }
 
     // random sprite
     let randomSprite = random(chrSprite);
@@ -176,8 +158,6 @@ function spawnActor(){
     ourCharacters.push(new Actor(newX, newY, randomSprite));
 
     ++spawnLogic.activeActors;
-  }
-
 }
 
 function spawnRate(){
