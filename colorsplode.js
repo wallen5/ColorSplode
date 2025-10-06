@@ -1,10 +1,12 @@
 let time = 0;
+let spawnTime = 30;
 let score = 0;
 
 let state = 0;
 let currentMode = null;
 let startButton1 //classic mode
 let startButton2; //roguelike mode
+let ventSprite;
 
 let compressor;
 
@@ -37,16 +39,6 @@ let titleColor = {
   b: 0
 };
 
-//Spawns. acts as namespace
-let spawnLogic = {
-  timer: 50,
-  timeToSpawn: 100,
-  rate: 1,
-  activeActors: 0
-};
-
-
-
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
@@ -67,6 +59,10 @@ function preload(){
   deathSprite[1] = loadImage("images/bluepaintdeath.gif");
   deathSprite[2] = loadImage("images/purplepaintdeath.gif");
   deathSprite[3] = loadImage("images/greenpaintdeath.gif");
+  ventTop = loadImage("images/ventTopUpdate.gif");
+  ventBottom = loadImage("images/ventBottomUpdate.gif");
+  ventRight = loadImage("images/ventRightUpdate.gif");
+  ventLeft = loadImage("images/ventLeftUpdate.gif");
 }
 
 function setup() {
@@ -108,6 +104,8 @@ function setup() {
 
   // Color zone spawn method (comment one in or out as needed)
   makeColorZones();
+  // Vent spawn method
+  makeVents();
   //randomizeZonePlacements();
 }
 
@@ -115,7 +113,6 @@ function setup() {
 function draw() {
   if(state == 0){ //start screen
     startMenu();
-
   } else if (state == 1){ //play classic mode
       gameMenu1();
       spawnActor();
@@ -174,6 +171,7 @@ function gameMenu1(){
   background(220);
 
   drawColorZones();
+  drawVents();
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
@@ -183,6 +181,7 @@ function gameMenu1(){
     actor.draw();
   }
 
+  stroke(0); // Makes sure buttons stay outlined
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -213,6 +212,37 @@ function gameMenu2(){ //game menu for roguelike mode
   
   if (gamePaused) {
     drawPauseMenu();
+    push(); // save current drawing settings
+
+    // Creates the semi-transparent background for the pause menu
+    fill(0, 0, 0, 150);
+    noStroke();
+    rect(0, 0, width, height);
+
+    // pause text
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(32);
+    text("Paused", width / 2, height / 2 - 50);
+    textSize(12);
+    
+    pop(); // restore settings
+    if(quitButton.mouse.pressed()){
+      state = 0;
+      quitGame();
+    }
+    if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
+      pauseGame();
+    }
+    if(restartButton && restartButton.mouse.pressed())
+    {
+      restart();
+    }
+  }
+
+  if(!gamePaused){time++;}
+  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
+    activateRandomVent();
   }
 }
 
@@ -260,7 +290,7 @@ function gameOver(){
   }
 }
 
-function exit(){
+function exit(){ 
   ourCharacters = [];
   buttonCreated = false;
   exitButton.remove();
@@ -272,10 +302,12 @@ function exit(){
   score = 0;
 
   //reset spawn logic after quit
+  closeAllVents();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
+  time = 0;
 
   setup();
   state = 0;
@@ -283,14 +315,15 @@ function exit(){
 
 function restart(){
   pauseGame(); // This will "unpause" the game
-
   //remove characters and buttons
   ourCharacters = [];
-
   //display score
   score = 0;
 
   //reset spawn logic after quit
+  time = 0;
+  closeAllVents();
+  activateRandomVent();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
@@ -325,6 +358,9 @@ function retry(){
   drawScore();
 
   //reset spawn logic after quit
+  time = 0;
+  closeAllVents();
+  activateRandomVent();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
@@ -462,11 +498,13 @@ function quitGame(){
   scoreDisplay.remove()
   scoreDisplay = null;
   score = 0;
+  time = 0;
 
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
 
   //reset spawn logic after quit
+  closeAllVents();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
