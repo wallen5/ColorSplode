@@ -266,5 +266,5 @@ function onTimerFinished(actor) {
   idx = chrSprite.indexOf(actor.sprite);
   actor.sprite = deathSprite[idx];
   actor.state = "EXPLODED"; 
-  state = 2; // triggers game over screen
+  state = 3; // triggers game over screen
 }
