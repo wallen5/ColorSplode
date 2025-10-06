@@ -167,23 +167,42 @@ function spawnRate(){
 
 //random character movement
 function roamingMovement(actor) {
-  if (frameCount % 120 === 0) {
-    //random x and y speeds 
-    actor.xspeed = random(-2, 2);
-    actor.yspeed = random(-2, 2);
+  if (actor.xspeed === undefined) actor.xspeed = random(-1, 1);
+  if (actor.yspeed === undefined) actor.yspeed = random(-1, 1); //identify speed
+  let velocity = createVector(actor.xspeed, actor.yspeed); //create velocity from speed
+  if (velocity.mag() < 0.1) {
+    velocity = p5.Vector.random2D().mult(1); //if actor still, nudge
   }
-
+  let jitter = p5.Vector.random2D().mult(0.2);
+  velocity.add(jitter);
+  velocity.setMag(actor.maxSpeed || 2); //max speed
   
-  actor.prevX = actor.x;
-  actor.prevY = actor.y
-  actor.x += actor.xspeed;
-  actor.y += actor.yspeed;
+  actor.prevX = actor.x; //save coordinate
+  actor.prevY = actor.y;
 
-  //make sure characters don't go off screen
-  if (actor.x < zoneX || actor.x > width - actor.size - zoneX) actor.xspeed *= -1;
-  if (actor.y < zoneY1 || actor.y > height - actor.size - (height - (zoneY2 + zoneHeight))) actor.yspeed *= -1;
+  actor.x += velocity.x;//update coordinates
+  actor.y += velocity.y;
 
-  checkActorCollision(actor)
+  actor.xspeed = velocity.x;
+  actor.yspeed = velocity.y; //velocity transfer, probably an easier way to do this
+  
+  if (actor.x < zoneX) {
+    actor.x = zoneX;
+    actor.xspeed *= -1;
+  }
+  if (actor.x > width - actor.size - zoneX) {
+    actor.x = width - actor.size - zoneX;
+    actor.xspeed *= -1;
+  }
+  if (actor.y < zoneY1) {
+    actor.y = zoneY1;
+    actor.yspeed *= -1;
+  }
+  if (actor.y > height - actor.size - (height - (zoneY2 + zoneHeight))) {
+    actor.y = height - actor.size - (height - (zoneY2 + zoneHeight));
+    actor.yspeed *= -1;
+  }
+  checkActorCollision(actor);
 }
 
 function checkActorCollision(actor)

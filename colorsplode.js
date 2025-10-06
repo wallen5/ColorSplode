@@ -172,6 +172,7 @@ function gameMenu1(){
 
   drawColorZones();
   drawVents();
+ 
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
@@ -182,6 +183,7 @@ function gameMenu1(){
   }
 
   stroke(0); // Makes sure buttons stay outlined
+  activateRandomVent();
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
