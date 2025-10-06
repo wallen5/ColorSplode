@@ -156,9 +156,9 @@ function spawnRate(){
 
     //spawn rate starts to slow down.
     if (spawnLogic.rate < 2){
-      spawnLogic.rate += 0.05; 
+      spawnLogic.rate += 0.025; 
     } else {
-      spawnLogic.rate += 0.0125;
+      spawnLogic.rate += 0.05;
     }
   }
 

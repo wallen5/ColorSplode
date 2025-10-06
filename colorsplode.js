@@ -1,5 +1,5 @@
 let time = 0;
-let spawnTime = 30;
+let spawnTime = 20;
 let score = 0;
 
 let state = 0;
@@ -153,6 +153,7 @@ function startMenu(){
     if (startButton1.mouse.pressing()){
       state = 1;
       currentMode = "classic";
+      activateRandomVent();
     } else {
       state = 2;
       currentMode = "roguelike";
@@ -189,6 +190,11 @@ function gameMenu1(){
   
   if (gamePaused) {
     drawPauseMenu();
+  }
+
+  if(!gamePaused){time++;}
+  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
+    activateRandomVent();
   }
 }
 
