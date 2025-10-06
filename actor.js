@@ -7,7 +7,6 @@ class Actor {
     this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
-    this.exSprite = 
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
@@ -15,7 +14,7 @@ class Actor {
     this.timerStart = millis();  // when the timer started
     this.timeAlive = 0.0;        // Tracks how long the actor has been alive while the game is UNPAUSED
 
-    this.shakeThreshold = 3.0;   // how many seconds left to shake
+    this.shakeThreshold = 5.0;   // how many seconds left to shake
     this.angle = 0;              // current rotation angle
     this.rotationSpeed = 80.0;  // how fast it rotates per frame
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
@@ -107,48 +106,45 @@ class Actor {
 }
 
 //SPAWN LOGIC
-// used for actor spawning
+// used for actor spawning with vents
 
 function spawnActor(){
-
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   const MAXACTORS = 10;
 
-  if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS){
-    // position
-    let newX = random(zoneX + 1, width - zoneX - 61);
-    let newY = random(zoneY1 + 1, height - (height - zoneY2) - 61);
-    
-    // Loop to roll locations to randomize into
-    let inZone = true;
-    while(inZone)
-    {
-      inZone = false;
-      for(let zone of colorZones)
-      {
-        // Treats our actors as a circle to make spawning more precise
-        let hit = collideRectCircle(zone.x, zone.y, zone.w, zone.h, newX + 60/2, newY + 60/2, 60);
+  let activeVents = vents.filter(v => v.active); // Will only choose from active vents
+  if (activeVents.length === 0) return;
+  
+  // Chooses a random active vent to spawn from
+  let randomVent = random(activeVents);
+  if (spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS) {
+    let newX, newY;
 
-        // Rerolls the newX and newY if the spawn is invalid
-        if(hit)
-        {
-          newX = random(zoneX + 1, width - zoneX - 61);
-          newY = random(zoneY1 + 1, height - (height - (zoneY2 + zoneHeight)) - 61);
-          inZone = true;
-          break; // break lets us reroll again
-        }
-      }
+    // Makes sure coordinate for spawnpoint is at the right place
+    switch(randomVent.wall){
+    case "left":
+      newX = randomVent.x + 130;
+      newY = randomVent.y + 40;
+      break;
+    case "top":
+      newX = randomVent.x + 40;
+      newY = randomVent.y + 150;
+      break;
+    case "right":
+      newX = randomVent.x;
+      newY = randomVent.y + 40;
+      break;
+    case "bottom":
+      newX = randomVent.x + 40;
+      newY = randomVent.y;
+      break;
     }
 
-    // random sprite
     let randomSprite = random(chrSprite);
-    
-    // Creates new actor. adds it to the array
+    // Chooses and pushes a random bucket to be spawned
     ourCharacters.push(new Actor(newX, newY, randomSprite));
-
     ++spawnLogic.activeActors;
   }
-
 }
 
 function spawnRate(){
