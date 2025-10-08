@@ -265,22 +265,29 @@ function gameOver(){
   textStyle("bold");
   fill("red");
 
-  myString = "Game Over!";
-
   colorFluctuation();
   fill(titleColor.r, titleColor.g, titleColor.b);
   text("Game Over!", 195 , 350 );
   scoreDisplay.text = "Score:" + score;
 
+  stroke("black");
+  strokeWeight(7.5);
+  textSize(30);
+  fill("white");
+  let x = 300;
+  let y = 400;
+  text("Score: " + score, x , y );
+
   if (!buttonCreated){
+    strokeWeight(5);
     textSize(20);
-    retryButton = new Sprite(400, 425);
+    retryButton = new Sprite(400, 450);
     retryButton.text = "Retry";
     retryButton.width = 120;
     retryButton.height = 50;
     retryButton.color = "lightred";
 
-    exitButton = new Sprite(400, 485);
+    exitButton = new Sprite(400, 515);
     exitButton.text = "Quit";
     exitButton.width = 120;
     exitButton.height = 50;
@@ -290,10 +297,12 @@ function gameOver(){
   }
 
   if (retryButton.mouse.pressing()){
+    scoreDisplay.remove();
     retry();
   }
 
   if (exitButton.mouse.pressing()){
+    scoreDisplay.remove();
     exit();
   }
 }
@@ -570,4 +579,11 @@ function drawScore(){
   scoreDisplay.width = 250;
   scoreDisplay.height = 50;
   scoreDisplay.color = "lightgreen";
+}
+
+function drawScoreAtPos(x,y){
+  scoreDisplay = new Sprite(x, y);
+  scoreDisplay.text = "Score:" + score;
+  scoreDisplay.width = 250;
+  scoreDisplay.height = 50;
 }
