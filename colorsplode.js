@@ -31,7 +31,6 @@ let buttonCreated = false;
 let retryButton;
 let exitButton;
 let drawGameOver = false;
-let cursorImg;
 
 //start menu text. acts as namespace
 let titleColor = {
@@ -64,7 +63,6 @@ function preload(){
   ventBottom = loadImage("images/ventBottomUpdate.gif");
   ventRight = loadImage("images/ventRightUpdate.gif");
   ventLeft = loadImage("images/ventLeftUpdate.gif");
-  cursorImg = loadImage("images/handCursor.png");
 }
 
 function setup() {
@@ -119,34 +117,19 @@ function draw() {
   cursor("images/pointerHand.png", 10, 10);
   
   if(state == 0){ //start screen
-    mouseOverButton(startButton1, "green", "lightgreen");
-    mouseOverButton(startButton2, "green", "lightgreen");
     startMenu();
+    
   } else if (state == 1){ //play classic mode
       gameMenu1();
       spawnActor();
       spawnRate();
-
-      if(mouseIsPressed === true){
-        cursor("images/fistCursor.png", 10, 10);
-      } else if (gamePaused){
-        cursor("images/pointerHand.png", 10, 10);
-      } else{
-        cursor("images/handCursor.png", 10, 10);
-      }
+      setGameCusor();
 
   } else if (state == 2){ //play roguelike mode
       gameMenu2();
       spawnActor();
       spawnRate();
-
-      if(mouseIsPressed === true){
-        cursor("images/fistCursor.png", 10, 10);
-      } else if (gamePaused){
-        cursor("images/pointerHand.png", 10, 10);
-      } else{
-        cursor("images/handCursor.png", 10, 10);
-      }
+      setGameCusor();
   } else if (state == 3){ //gameover
       gameOver();
   }
@@ -168,6 +151,10 @@ function startMenu(){
   text("ColorSplode", 250 , 350 );
 
   currentMode = null;
+
+  //button colors
+  mouseOverButton(startButton1, "green", "lightgreen");
+  mouseOverButton(startButton2, "green", "lightgreen");
 
   if (startButton1.mouse.pressing() || startButton2.mouse.pressing()){
     startButton1.remove();
@@ -632,4 +619,14 @@ function drawScoreAtPos(x,y){
   scoreDisplay.text = "Score:" + score;
   scoreDisplay.width = 250;
   scoreDisplay.height = 50;
+}
+
+function setGameCusor(){
+  if(mouseIsPressed === true){
+    cursor("images/fistCursor.png", 10, 10);
+  } else if (gamePaused){
+    cursor("images/pointerHand.png", 10, 10);
+  } else{
+    cursor("images/handCursor.png", 10, 10);
+  }
 }
