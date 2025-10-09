@@ -109,6 +109,8 @@ class Actor {
 // used for actor spawning with vents
 
 function spawnActor(){
+  if (spawnLogic.rate <= 0) return; //checks if a bucket has exploded and stops spawning
+
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   const MAXACTORS = 10;
 
@@ -271,19 +273,34 @@ function checkTimer(actor) {
   }
 }
 
-// Called when timer finishes
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
-  
+
   mouseReleased();
 
-  if (actor.state === "SNAPPED") {
-    return;
-  }
+  if (actor.state === "SNAPPED" || actor.state === "EXPLODED") return;
 
-  actor.angle = 0;
+  //stop spawning
+  spawnLogic.rate = 0;
+
+  //first bucket explodes
+  actor.state = "EXPLODED";
+  actor.splode();
   idx = chrSprite.indexOf(actor.sprite);
-  actor.sprite = deathSprite[idx];
-  actor.state = "EXPLODED"; 
-  state = 3; // triggers game over screen
+  if (idx >= 0) actor.sprite = deathSprite[idx];
+
+  //explode all buckets not sorted
+  setTimeout(() => {
+    for (let a of ourCharacters) {
+      if (a !== actor && a.state !== "EXPLODED") {
+        idx = chrSprite.indexOf(a.sprite);
+        a.splode();
+        if (idx >= 0) a.sprite = deathSprite[idx];
+        a.state = "EXPLODED";
+      }
+    }
+  }, 550); 
+
+  //delays gameover so death animation plays
+  setTimeout(() => state = 3, 2000);
 }
