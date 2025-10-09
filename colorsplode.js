@@ -31,6 +31,7 @@ let buttonCreated = false;
 let retryButton;
 let exitButton;
 let drawGameOver = false;
+let cursorImg;
 
 //start menu text. acts as namespace
 let titleColor = {
@@ -63,6 +64,7 @@ function preload(){
   ventBottom = loadImage("images/ventBottomUpdate.gif");
   ventRight = loadImage("images/ventRightUpdate.gif");
   ventLeft = loadImage("images/ventLeftUpdate.gif");
+  cursorImg = loadImage("images/handCursor.png");
 }
 
 function setup() {
@@ -111,6 +113,7 @@ function setup() {
 
 
 function draw() {
+  cursor("images/handCursor.png", 10, 10);
   if(state == 0){ //start screen
     startMenu();
   } else if (state == 1){ //play classic mode
