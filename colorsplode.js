@@ -111,14 +111,11 @@ function setup() {
 
 
 function draw() {
-  
-  
- 
   cursor("images/pointerHand.png", 10, 10);
   
   if(state == 0){ //start screen
     startMenu();
-    
+
   } else if (state == 1){ //play classic mode
       gameMenu1();
       spawnActor();
