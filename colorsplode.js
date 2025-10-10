@@ -111,16 +111,22 @@ function setup() {
 
 
 function draw() {
+  cursor("images/pointerHand.png", 10, 10);
+  
   if(state == 0){ //start screen
     startMenu();
+
   } else if (state == 1){ //play classic mode
       gameMenu1();
       spawnActor();
       spawnRate();
+      setGameCusor();
+
   } else if (state == 2){ //play roguelike mode
       gameMenu2();
       spawnActor();
       spawnRate();
+      setGameCusor();
   } else if (state == 3){ //gameover
       gameOver();
   }
@@ -143,6 +149,11 @@ function startMenu(){
 
   currentMode = null;
 
+
+  //button colors
+  mouseOverButton(startButton1, "green", "lightgreen");
+  mouseOverButton(startButton2, "green", "lightgreen");
+
   if (startButton1.mouse.pressing()){
     state = 1;
     currentMode = "classic";
@@ -162,7 +173,7 @@ function startMenu(){
     pauseButton.width = 70;
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
-    
+
     menuMusic.stop();
     levelMusic.loop();
     drawScore();
@@ -184,9 +195,13 @@ function gameMenu1(){
     actor.update();
     actor.draw();
   }
-
+  
   stroke(0); // Makes sure buttons stay outlined
- 
+
+  //change color if cursor over pause button
+  mouseOverButton(pauseButton, "green", "lightgreen");
+
+
   if(pauseButton.mouse.pressed()){
     pauseGame();
   }
@@ -207,6 +222,9 @@ function gameMenu2(){ //game menu for roguelike mode
 
   drawColorZones();
   drawVents();
+
+  //change color if cursor over pause button
+  mouseOverButton(pauseButton, "green", "lightgreen");
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
@@ -244,36 +262,55 @@ function gameOver(){
   textStyle("bold");
   fill("red");
 
-  myString = "Game Over!";
-
   colorFluctuation();
   fill(titleColor.r, titleColor.g, titleColor.b);
   text("Game Over!", 195 , 350 );
   scoreDisplay.text = "Score:" + score;
 
+  stroke("black");
+  strokeWeight(7.5);
+  textSize(30);
+  fill("white");
+  let x = 300;
+  let y = 400;
+  text("Score: " + score, x , y );
+
   if (!buttonCreated){
+    strokeWeight(5);
     textSize(20);
-    retryButton = new Sprite(400, 425);
+    retryButton = new Sprite(400, 450);
     retryButton.text = "Retry";
     retryButton.width = 120;
     retryButton.height = 50;
-    retryButton.color = "lightred";
 
-    exitButton = new Sprite(400, 485);
+    exitButton = new Sprite(400, 515);
     exitButton.text = "Quit";
     exitButton.width = 120;
     exitButton.height = 50;
-    exitButton.color = "lightred";
 
     buttonCreated = true;
   }
+ 
+  //change button color when mouse hovers over
+  mouseOverButton(retryButton, "green", "lightgreen");
+  mouseOverButton(exitButton, "green", "lightgreen");
 
   if (retryButton.mouse.pressing()){
+    scoreDisplay.remove();
     retry();
   }
 
   if (exitButton.mouse.pressing()){
+    scoreDisplay.remove();
     exit();
+  }
+}
+
+function mouseOverButton(button1, hoverColor, defualtColor){ 
+  if(button1.mouse.hovering()){
+     button1.color = hoverColor;
+  } else{
+    button1.color = defualtColor;
   }
 }
 
@@ -453,6 +490,11 @@ function drawPauseMenu(){
   text("Paused", width / 2, height / 2 - 50);
   textSize(12);
 
+  // changes color of button when mouse hovers over
+  mouseOverButton(quitButton, "green", "lightgreen");
+  mouseOverButton(restartButton, "green", "lightgreen");
+  mouseOverButton(resumeButton, "green", "lightgreen");
+
   pop(); // restore settings
   if(quitButton.mouse.pressed()){
     state = 0;
@@ -548,3 +590,22 @@ function drawScore(){
   scoreDisplay.height = 50;
   scoreDisplay.color = "lightgreen";
 }
+
+
+function drawScoreAtPos(x,y){
+  scoreDisplay = new Sprite(x, y);
+  scoreDisplay.text = "Score:" + score;
+  scoreDisplay.width = 250;
+  scoreDisplay.height = 50;
+}
+
+function setGameCusor(){
+  if(mouseIsPressed === true){
+    cursor("images/fistCursor.png", 10, 10);
+  } else if (gamePaused){
+    cursor("images/pointerHand.png", 10, 10);
+  } else{
+    cursor("images/handCursor.png", 10, 10);
+  }
+}
+
