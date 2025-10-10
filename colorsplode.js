@@ -163,6 +163,7 @@ function startMenu(){
     state = 2;
     currentMode = "roguelike";
     activateRandomVent();
+    let player = new Player;
   }
 
   if (currentMode != null){
@@ -247,6 +248,7 @@ function gameMenu2(){ //game menu for roguelike mode
   if(!gamePaused){time++;}
   if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
+    player.addItem("magnet");
   }
 }
 
