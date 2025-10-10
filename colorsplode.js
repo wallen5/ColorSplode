@@ -1,5 +1,5 @@
 let time = 0;
-let spawnTime = 20;
+let spawnTime = 5;
 let score = 0;
 
 let state = 0;
@@ -9,6 +9,8 @@ let startButton2; //roguelike mode
 let ventSprite;
 
 let compressor;
+
+let allItems;
 
 let chrSprite =[]; //array of character sprits
 let grabSprite =[]; //array of grab animations
@@ -109,9 +111,7 @@ function setup() {
   makeVents();
   //randomizeZonePlacements();
 
-  const allItems = {
-    magnet: new Item("magnet", magnet, "Buckets slowly move towards the mouse"),
-  };
+  allItems = {magnet: new Item("magnet", magnet, "Buckets slowly move towards the mouse")};
 
   player = new Player();
 }

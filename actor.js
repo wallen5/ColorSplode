@@ -185,6 +185,25 @@ function roamingMovement(actor) {
   actor.x += velocity.x;//update coordinates
   actor.y += velocity.y;
 
+  if (player.hasItem("magnet")) {
+    const magnetRange = 80; 
+    const magnetStrength = 10.0; 
+
+    let mouseVector = createVector(mouseX, mouseY);
+    let actorVector = createVector(actor.x + actor.size/2, actor.y + actor.size/2);
+
+    let toMouse = p5.Vector.sub(mouseVector, actorVector);
+    let distance = toMouse.mag();
+        
+    if ((distance < magnetRange) && (distance > 12)) {
+        // pull actor toward mouse
+        // second condition gives the magnet a nice bounce-back, not jittery
+        toMouse.setMag(magnetStrength);
+        actor.xspeed += toMouse.x;
+        actor.yspeed += toMouse.y;
+    }  
+  }
+
   actor.xspeed = velocity.x;
   actor.yspeed = velocity.y; //velocity transfer, probably an easier way to do this
   
