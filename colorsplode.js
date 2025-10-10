@@ -149,11 +149,23 @@ function startMenu(){
 
   currentMode = null;
 
+
   //button colors
   mouseOverButton(startButton1, "green", "lightgreen");
   mouseOverButton(startButton2, "green", "lightgreen");
 
-  if (startButton1.mouse.pressing() || startButton2.mouse.pressing()){
+  if (startButton1.mouse.pressing()){
+    state = 1;
+    currentMode = "classic";
+    activateRandomVent();
+  } 
+  if (startButton2.mouse.pressing()) {
+    state = 2;
+    currentMode = "roguelike";
+    activateRandomVent();
+  }
+
+  if (currentMode != null){
     startButton1.remove();
     startButton2.remove();
     pauseButton = new Sprite(750, 50);
@@ -161,15 +173,7 @@ function startMenu(){
     pauseButton.width = 70;
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
-    if (startButton1.mouse.pressing()){
-      state = 1;
-      currentMode = "classic";
-      activateRandomVent();
-    } else {
-      state = 2;
-      currentMode = "roguelike";
-    }
-  
+
     menuMusic.stop();
     levelMusic.loop();
     drawScore();
@@ -184,7 +188,6 @@ function gameMenu1(){
   drawColorZones();
   drawVents();
  
-
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
 
@@ -192,11 +195,12 @@ function gameMenu1(){
     actor.update();
     actor.draw();
   }
-
+  
   stroke(0); // Makes sure buttons stay outlined
 
   //change color if cursor over pause button
   mouseOverButton(pauseButton, "green", "lightgreen");
+
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -217,6 +221,7 @@ function gameMenu2(){ //game menu for roguelike mode
   background(220);
 
   drawColorZones();
+  drawVents();
 
   //change color if cursor over pause button
   mouseOverButton(pauseButton, "green", "lightgreen");
@@ -229,38 +234,14 @@ function gameMenu2(){ //game menu for roguelike mode
     actor.draw();
   }
 
+  stroke(0);
+
   if(pauseButton.mouse.pressed()){
     pauseGame();
   }
   
   if (gamePaused) {
     drawPauseMenu();
-    push(); // save current drawing settings
-
-    // Creates the semi-transparent background for the pause menu
-    fill(0, 0, 0, 150);
-    noStroke();
-    rect(0, 0, width, height);
-
-    // pause text
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(32);
-    text("Paused", width / 2, height / 2 - 50);
-    textSize(12);
-    
-    pop(); // restore settings
-    if(quitButton.mouse.pressed()){
-      state = 0;
-      quitGame();
-    }
-    if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
-      pauseGame();
-    }
-    if(restartButton && restartButton.mouse.pressed())
-    {
-      restart();
-    }
   }
 
   if(!gamePaused){time++;}
@@ -270,6 +251,7 @@ function gameMenu2(){ //game menu for roguelike mode
 }
 
 function gameOver(){
+
   pauseButton.remove();
   scoreDisplay.remove();
 
@@ -431,13 +413,11 @@ function keyPressed() // Generic Keypress function
   if((keyCode === ESCAPE || key === 'p') && (state == 1 || state == 2)) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
   {
     pauseGame();
-  }
-  else if(state == 0 || state == 3)
-  {
+  } else if(state == 0 || state == 3){
     if (resumeButton) {
       resumeButton.remove();
       resumeButton = null;
-  }
+    }
   }
 }
 
