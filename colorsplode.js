@@ -591,6 +591,7 @@ function drawScore(){
   scoreDisplay.color = "lightgreen";
 }
 
+
 function drawScoreAtPos(x,y){
   scoreDisplay = new Sprite(x, y);
   scoreDisplay.text = "Score:" + score;
@@ -607,3 +608,4 @@ function setGameCusor(){
     cursor("images/handCursor.png", 10, 10);
   }
 }
+
