@@ -289,18 +289,4 @@ function onTimerFinished(actor) {
   idx = chrSprite.indexOf(actor.sprite);
   if (idx >= 0) actor.sprite = deathSprite[idx];
 
-  //explode all buckets not sorted
-  setTimeout(() => {
-    for (let a of ourCharacters) {
-      if (a !== actor && a.state !== "EXPLODED") {
-        idx = chrSprite.indexOf(a.sprite);
-        a.splode();
-        if (idx >= 0) a.sprite = deathSprite[idx];
-        a.state = "EXPLODED";
-      }
-    }
-  }, 550); 
-
-  //delays gameover so death animation plays
-  setTimeout(() => state = 3, 2000);
 }
