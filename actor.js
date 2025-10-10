@@ -280,6 +280,9 @@ function onTimerFinished(actor) {
 
   if (actor.state === "SNAPPED" || actor.state === "EXPLODED") return;
 
+  //stop spawning
+  spawnLogic.rate = 0;
+
   //first bucket explodes
   actor.state = "EXPLODED";
   actor.splode();
