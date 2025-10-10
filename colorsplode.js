@@ -39,6 +39,23 @@ let titleColor = {
   b: 0
 };
 
+class Player {
+  constructor(){
+    this.health = 3;
+    this.startHealth = 3;
+  }
+
+  DrawHealth(){
+    for(let i = 0; i < this.health; ++i){
+      fill(255, 0, 0); // Set the fill color to red
+      circle(300 + (i * 35), 50, 30);
+    }
+  }
+
+}
+
+let player = new Player;
+
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
@@ -176,12 +193,22 @@ function gameMenu1(){
 
   drawColorZones();
   drawVents();
+
+  player.DrawHealth();
+  // Player death
+  if(player.health <= 0){
+    gameEnd();
+  }
  
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
 
   for (let actor of ourCharacters) {
     actor.update();
+    if(actor.state == "EXPLODED"){ 
+      player.health -= 1;
+      actor.state = "CHECKED_EXPLODED";
+    }
     actor.draw();
   }
 
@@ -213,6 +240,7 @@ function gameMenu2(){ //game menu for roguelike mode
 
   for (let actor of ourCharacters) {
     actor.update();
+    if(actor.state == "EXPLODED"){ gameEnd(); }
     actor.draw();
   }
 
@@ -233,6 +261,8 @@ function gameMenu2(){ //game menu for roguelike mode
 }
 
 function gameOver(){
+
+  player.health = player.startHealth;
 
   pauseButton.remove();
   scoreDisplay.remove();
@@ -301,6 +331,9 @@ function exit(){
 }
 
 function restart(){
+
+  player.health = player.startHealth;
+
   pauseGame(); // This will "unpause" the game
   //remove characters and buttons
   ourCharacters = [];
@@ -318,6 +351,9 @@ function restart(){
 }
 
 function retry(){
+
+  player.health = player.startHealth;
+
   gamePaused = false;
 
   //remove characters and buttons
@@ -469,6 +505,9 @@ function drawPauseMenu(){
 
 // Quits the game, resets game state
 function quitGame(){
+
+  player.health = player.startHealth;
+
   quitButton.remove();
   quitButton = null;
   resumeButton.remove();
@@ -547,4 +586,21 @@ function drawScore(){
   scoreDisplay.width = 250;
   scoreDisplay.height = 50;
   scoreDisplay.color = "lightgreen";
+}
+
+function gameEnd(){
+  //explode all buckets not sorted
+    setTimeout(() => {
+      for (let a of ourCharacters) {
+        if (a !== actor && a.state !== "EXPLODED" || a.state !== "CHECKED_EXPLODED") {
+          idx = chrSprite.indexOf(a.sprite);
+          a.splode();
+          if (idx >= 0) a.sprite = deathSprite[idx];
+          a.state = "EXPLODED";
+        }
+      }
+    }, 550); 
+
+    //delays gameover so death animation plays
+    setTimeout(() => state = 3, 1000);
 }
