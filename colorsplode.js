@@ -8,7 +8,6 @@ let startButton1 //classic mode
 let startButton2; //roguelike mode
 
 let player;
-let spillFocus = null;
 
 let ventSprite;
 
@@ -42,33 +41,6 @@ let retryButton;
 let exitButton;
 let drawGameOver = false;
 
-// Some QOL Stuff
-class SpillFocus {
-  constructor(targetActor) {
-    this.actor = targetActor;
-    this.radius = max(width, height) * 1.5; // start big
-    this.minRadius = 50; // shrink down to this
-    this.active = true;
-  }
-
-  update() {
-    if (!this.active) return;
-    this.radius = lerp(this.radius, this.minRadius, 0.05);
-  }
-
-draw() {
-  push();
-  fill(0, 220); // semi-transparent black
-  noStroke();
-  rect(0, 0, width, height);
-
-  // Cut out the shrinking circle
-  erase();
-  circle(this.actor.x + this.actor.size/2, this.actor.y + this.actor.size/2, this.radius);
-  noErase();
-  pop();
-  }
-}
 //start menu text. acts as namespace
 let titleColor = {
   r: 250,
@@ -177,17 +149,6 @@ function draw() {
       gameOver();
   }
     
-  if (spillFocus && !spillFocus.finished) {
-    spillFocus.update();
-    spillFocus.draw();
-
-      if (abs(spillFocus.radius - spillFocus.minRadius) < 1) {
-        spillFocus.active = false;
-        spillFocus = null;
-        state = 3; // trigger game over screen
-    }
-
-    }
   
 }
 
@@ -243,27 +204,6 @@ function gameMenu1(){
     actor.update();
     actor.draw();
   }
-
-
-
-  if (spillFocus && !gamePaused) {
-    spillFocus.update();
-
-    push();
-    noStroke();
-    fill(0, 220);           // semi-transparent black
-    rect(0, 0, width, height); // cover everything
-
-    erase();                // start cutout
-    circle(
-      spillFocus.actor.x + spillFocus.actor.size / 2,
-      spillFocus.actor.y + spillFocus.actor.size / 2,
-      spillFocus.radius
-    );
-    noErase();
-    pop();
-    }  
-
 
   stroke(0); // Makes sure buttons stay outlined
  

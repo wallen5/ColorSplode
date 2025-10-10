@@ -326,11 +326,8 @@ function onTimerFinished(actor) {
 
   }
   closeAllVents();
-  spillFocus = new SpillFocus(actor);
-  /*setTimeout(() => {
-    spillFocus = null; // remove cinematic overlay
-    state = 3;         // trigger game over screen
-  }, 2000);*/ // 2 seconds delay
+  state = 3;
+
 }
 
 
