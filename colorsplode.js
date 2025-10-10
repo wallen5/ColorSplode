@@ -6,6 +6,10 @@ let state = 0;
 let currentMode = null;
 let startButton1 //classic mode
 let startButton2; //roguelike mode
+
+let player;
+let spillFocus = null;
+
 let ventSprite;
 
 let compressor;
@@ -14,6 +18,12 @@ let chrSprite =[]; //array of character sprits
 let grabSprite =[]; //array of grab animations
 let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
+
+
+let itemSprites = {};
+let items = [];
+
+let allItems = {};
 
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
@@ -32,6 +42,33 @@ let retryButton;
 let exitButton;
 let drawGameOver = false;
 
+// Some QOL Stuff
+class SpillFocus {
+  constructor(targetActor) {
+    this.actor = targetActor;
+    this.radius = max(width, height) * 1.5; // start big
+    this.minRadius = 50; // shrink down to this
+    this.active = true;
+  }
+
+  update() {
+    if (!this.active) return;
+    this.radius = lerp(this.radius, this.minRadius, 0.05);
+  }
+
+draw() {
+  push();
+  fill(0, 220); // semi-transparent black
+  noStroke();
+  rect(0, 0, width, height);
+
+  // Cut out the shrinking circle
+  erase();
+  circle(this.actor.x + this.actor.size/2, this.actor.y + this.actor.size/2, this.radius);
+  noErase();
+  pop();
+  }
+}
 //start menu text. acts as namespace
 let titleColor = {
   r: 250,
@@ -63,12 +100,15 @@ function preload(){
   ventBottom = loadImage("images/ventBottomUpdate.gif");
   ventRight = loadImage("images/ventRightUpdate.gif");
   ventLeft = loadImage("images/ventLeftUpdate.gif");
+
+  itemSprites.magnet = loadImage("images/sponge.png");
+  itemSprites.sponge = loadImage("images/sponge.png");
 }
 
 function setup() {
   createCanvas(800, 800);
 
-  //start button
+  // Start buttons
   textFont(myFont);
   textSize(12); // Sets a font size to keep text size consistent
   startButton1 = new Sprite(320, 450);
@@ -82,41 +122,53 @@ function setup() {
   startButton2.width = 200;
   startButton2.height = 50;
   startButton2.color = "lightgreen";
+
   background(220);
-  
+
   compressor = new p5.Compressor();
-  pickup.setVolume(0.2) ;
+  pickup.setVolume(0.2);
   menuMusic.setVolume(0.01);
   levelMusic.setVolume(0.05);
   pauseSound.setVolume(0.02);
   menuMusic.play();
-  
 
   levelMusic.disconnect();
   levelMusic.connect(compressor);
   compressor.connect();
 
-  //normal compressor settings
+  // Normal compressor settings
   compressor.threshold(-24);
   compressor.ratio(4);
   compressor.attack(0.003);
   compressor.release(0.25);
 
-  // Color zone spawn method (comment one in or out as needed)
+  // Color zone spawn method
   makeColorZones();
   // Vent spawn method
   makeVents();
   //randomizeZonePlacements();
+
+  // Player & Items
+  const allItems = {
+    sponge: new Item("sponge", itemSprites.sponge, "Darts around the map\nPauses buckets"),
+    magnet: new Item("magnet", itemSprites.magnet, "Buckets slowly move towards the mouse"),
+  };
+
+  player = new Player();
+  player.addItem(allItems.magnet);
 }
 
 
 function draw() {
+
+
   if(state == 0){ //start screen
     startMenu();
   } else if (state == 1){ //play classic mode
       gameMenu1();
       spawnActor();
       spawnRate();
+
   } else if (state == 2){ //play roguelike mode
       gameMenu2();
       spawnActor();
@@ -124,6 +176,19 @@ function draw() {
   } else if (state == 3){ //gameover
       gameOver();
   }
+    
+  if (spillFocus && !spillFocus.finished) {
+    spillFocus.update();
+    spillFocus.draw();
+
+      if (abs(spillFocus.radius - spillFocus.minRadius) < 1) {
+        spillFocus.active = false;
+        spillFocus = null;
+        state = 3; // trigger game over screen
+    }
+
+    }
+  
 }
 
 
@@ -174,17 +239,37 @@ function gameMenu1(){
   drawColorZones();
   drawVents();
  
-
-  //update the displayed score
-  scoreDisplay.text = "Score:" + score;
-
   for (let actor of ourCharacters) {
     actor.update();
     actor.draw();
   }
 
+
+
+  if (spillFocus && !gamePaused) {
+    spillFocus.update();
+
+    push();
+    noStroke();
+    fill(0, 220);           // semi-transparent black
+    rect(0, 0, width, height); // cover everything
+
+    erase();                // start cutout
+    circle(
+      spillFocus.actor.x + spillFocus.actor.size / 2,
+      spillFocus.actor.y + spillFocus.actor.size / 2,
+      spillFocus.radius
+    );
+    noErase();
+    pop();
+    }  
+
+
   stroke(0); // Makes sure buttons stay outlined
  
+   //update the displayed score
+  scoreDisplay.text = "Score:" + score;
+
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -571,3 +656,4 @@ function drawScore(){
   scoreDisplay.height = 50;
   scoreDisplay.color = "lightgreen";
 }
+
