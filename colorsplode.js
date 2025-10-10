@@ -63,6 +63,7 @@ function preload(){
   ventBottom = loadImage("images/ventBottomUpdate.gif");
   ventRight = loadImage("images/ventRightUpdate.gif");
   ventLeft = loadImage("images/ventLeftUpdate.gif");
+  magnet = loadImage("images/Magnet.png")
 }
 
 function setup() {
@@ -107,6 +108,12 @@ function setup() {
   // Vent spawn method
   makeVents();
   //randomizeZonePlacements();
+
+  const allItems = {
+    magnet: new Item("magnet", magnet, "Buckets slowly move towards the mouse"),
+  };
+
+  player = new Player();
 }
 
 
@@ -163,7 +170,6 @@ function startMenu(){
     state = 2;
     currentMode = "roguelike";
     activateRandomVent();
-    let player = new Player;
   }
 
   if (currentMode != null){
@@ -248,7 +254,7 @@ function gameMenu2(){ //game menu for roguelike mode
   if(!gamePaused){time++;}
   if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
-    player.addItem("magnet");
+    player.addItem(allItems.magnet);
   }
 }
 
