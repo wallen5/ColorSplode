@@ -128,6 +128,11 @@ function setup() {
 
 
 function draw() {
+
+  if (grabbedCharacter && grabbedCharacter.state === "EXPLODED" || grabbedCharacter.state === "CHECKED_EXPLODED") {
+    releaseGrabbedCharacter();
+  }
+
   if(state == 0){ //start screen
     startMenu();
   } else if (state == 1){ //play classic mode
@@ -589,6 +594,10 @@ function drawScore(){
 }
 
 function gameEnd(){
+  
+  //stop spawning
+  spawnLogic.rate = 0;
+
   //explode all buckets not sorted
     setTimeout(() => {
       for (let a of ourCharacters) {
