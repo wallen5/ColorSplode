@@ -28,12 +28,17 @@ let retryButton;
 let exitButton;
 let drawGameOver = false;
 
+
+
 //start menu text. acts as namespace
 let titleColor = {
   r: 250,
   g: 0,
   b: 0
 };
+
+
+
 
 //Spawns. acts as namespace
 let spawnLogic = {
@@ -43,6 +48,8 @@ let spawnLogic = {
   activeActors: 0
 };
 
+// Level Stuff
+let currentLevel;
 
 
 function preload(){
@@ -99,8 +106,27 @@ function setup() {
   compressor.release(0.25);
 
   // Color zone spawn method (comment one in or out as needed)
-  makeColorZones();
+  //makeColorZones();
   //randomizeZonePlacements();
+
+  // Define missing zone variables for makeColorZones()
+  // Initialize global zone placement variables defined in zone.js (defaults match zone.js)
+  zoneX = 50;
+  zoneY1 = 100;
+  zoneY2 = 620;
+  zoneWidth = 150;
+  zoneHeight = 150;
+
+  currentLevel = new Level(
+    0, 
+    1, 
+    15, 
+    [], 
+    [] // empty zones for now
+  );
+  makeColorZones();
+  randomColorZone(currentLevel);
+  
 }
 
 
@@ -153,7 +179,6 @@ function startMenu(){
 function gameMenu(){
 
   background(220);
-
   drawColorZones();
 
   //update the displayed score

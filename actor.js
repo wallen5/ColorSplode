@@ -7,7 +7,7 @@ class Actor {
     this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
-    this.exSprite = 
+  this.exSprite = null;
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
@@ -124,7 +124,8 @@ function spawnActor(){
     while(inZone)
     {
       inZone = false;
-      for(let zone of colorZones)
+      // Use currentLevel.colorZones which holds the active zones
+      for(let zone of (currentLevel && currentLevel.colorZones ? currentLevel.colorZones : []))
       {
         // Treats our actors as a circle to make spawning more precise
         let hit = collideRectCircle(zone.x, zone.y, zone.w, zone.h, newX + 60/2, newY + 60/2, 60);
@@ -133,7 +134,8 @@ function spawnActor(){
         if(hit)
         {
           newX = random(zoneX + 1, width - zoneX - 61);
-          newY = random(zoneY1 + 1, height - (height - (zoneY2 + zoneHeight)) - 61);
+          // use zoneHeight variable if available
+          newY = random(zoneY1 + 1, height - (height - (zoneY2 + (typeof zoneHeight !== 'undefined' ? zoneHeight : 150))) - 61);
           inZone = true;
           break; // break lets us reroll again
         }
@@ -192,11 +194,10 @@ function roamingMovement(actor) {
 
 function checkActorCollision(actor)
 {
-  for(let zone of colorZones)
-  {
+  for (let zone of (currentLevel && currentLevel.colorZones ? currentLevel.colorZones : [])) {
     // Collision works as follows: check the top left corner of rect 1, and top left corner of rect 2
     // Because our buckets are a square, you simply use actor.size for both the width and height
-    hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
+    let hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
     if(hit)
     {
       // came from the left?
