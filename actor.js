@@ -1,12 +1,13 @@
 // A Class of Our Actors/Characters
 class Actor {
-  constructor(x, y, sprite) {
+  constructor(x, y, sprite, color) {
     this.x = x;
     this.y = y;
     this.prevX = x; // Needed for "bouncing" collision detection
     this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
+    this.color = color;
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
@@ -54,6 +55,7 @@ class Actor {
     image(this.sprite, 0, 0, this.size, this.size);
     pop();
 
+    this.paintTrail();
     // Draw the particles around the actor
     for (let i = this.particles.length-1; i >= 0; i--) {
       let p = this.particles[i];
@@ -67,6 +69,26 @@ class Actor {
       if (millis() - p.born > 1500) {
         this.particles.splice(i,1);
       }
+    }
+  }
+
+  paintTrail(){
+    if(this.state != "GRABBED" && this.state != "SNAPPED")
+    {
+      let scaleFactor = paintLayer.width / width;
+      let px = (this.x + this.size / 2) * scaleFactor;
+      let py = (this.y + this.size / 2) * scaleFactor;
+      let pPrevX = (this.prevX + this.size / 2) * scaleFactor;
+      let pPrevY = (this.prevY + this.size / 2) * scaleFactor;
+
+      // Growth curve for stroke weight
+      let lifeProgress = constrain(this.timeAlive / this.timer, 0, 1);
+      let growthCurve = pow(lifeProgress, 3);
+      let weight = map(growthCurve, 0, 1, 1, 6); // smaller range, since layer is scaled up later
+
+      paintLayer.stroke(this.color);
+      paintLayer.strokeWeight(weight);
+      paintLayer.line(pPrevX, pPrevY, px, py);
     }
   }
 
@@ -142,9 +164,17 @@ function spawnActor(){
       break;
     }
 
-    let randomSprite = random(chrSprite);
+    let randIndex = int(random(0, chrSprite.length));
+    let randColor;
+    if(randIndex == 0) randColor = color(255, 0, 0)
+    if(randIndex == 1) randColor = color(0, 0, 255)
+    if(randIndex == 2) randColor = color(128, 0, 128)
+    if(randIndex == 3) randColor = color(0, 255, 0);
+
+    randColor = lerpColor(randColor, color(255,255,255), 0.7); // Gives the colors a pastel look
+
     // Chooses and pushes a random bucket to be spawned
-    ourCharacters.push(new Actor(newX, newY, randomSprite));
+    ourCharacters.push(new Actor(newX, newY, chrSprite[randIndex], randColor));
     ++spawnLogic.activeActors;
   }
 }
