@@ -17,13 +17,13 @@ class Actor {
 
     this.shakeThreshold = 5.0;   // how many seconds left to shake
     this.angle = 0;              // current rotation angle
-    this.rotationSpeed = 80.0;  // how fast it rotates per frame
+    this.rotationSpeed = 100;  // how fast it rotates per frame
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
     this.rotationMax = 360;      // seems like a lot, but looks good (?)
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
-
+    
     // actor particle array
     this.particles = [];
   }
@@ -59,14 +59,17 @@ class Actor {
     // Draw the particles around the actor
     for (let i = this.particles.length-1; i >= 0; i--) {
       let p = this.particles[i];
+      p.vy += 0.25; // particle gravity
+      p.size *= 0.99 // smaller over time
       fill(p.color);
       noStroke();
       circle(p.x, p.y, p.size);
       p.x += p.vx;
       p.y += p.vy;
+      
 
       // Fade and remove after set time is up
-      if (millis() - p.born > 1500) {
+      if (millis() - p.born > 1000) {
         this.particles.splice(i,1);
       }
     }
@@ -99,20 +102,20 @@ class Actor {
     }
 
   splode() {
-    let numParticles = 5;
+    let numParticles = 6;
     let lifetime = 250; // ms
 
     for (let i = 0; i < numParticles; i++) {
       
       let vx = random(-10, 10);
-      let vy = random(-10, 10);
+      let vy = random(-10, 1);
 
       let p = {
         x: this.x + this.size/2,
         y: this.y + this.size/2,
         vx: vx,
         vy: vy,
-        size: 8,
+        size: 6,
         born: millis(),
         color: this.sprite === chrSprite[0] ? color(255,0,0) :
               this.sprite === chrSprite[1] ? color(0,0,255) :
@@ -199,12 +202,18 @@ function spawnRate(){
 
 //random character movement
 function roamingMovement(actor) {
+  
   if (actor.xspeed === undefined) actor.xspeed = random(-1, 1);
   if (actor.yspeed === undefined) actor.yspeed = random(-1, 1); //identify speed
+  
+
   let velocity = createVector(actor.xspeed, actor.yspeed); //create velocity from speed
   if (velocity.mag() < 0.1) {
+
+
     velocity = p5.Vector.random2D().mult(1); //if actor still, nudge
   }
+
   let jitter = p5.Vector.random2D().mult(0.2);
   velocity.add(jitter);
   velocity.setMag(actor.maxSpeed || 2); //max speed
@@ -215,9 +224,32 @@ function roamingMovement(actor) {
   actor.x += velocity.x;//update coordinates
   actor.y += velocity.y;
 
+  
+
   actor.xspeed = velocity.x;
   actor.yspeed = velocity.y; //velocity transfer, probably an easier way to do this
   
+      // Magnet PowerUp
+  if (player && player.hasItem("magnet")) {
+    const magnetRange = 80; 
+    const magnetStrength = 10.0; 
+
+    let mouseVector = createVector(mouseX, mouseY);
+    let actorVector = createVector(actor.x + actor.size/2, actor.y + actor.size/2);
+
+    let toMouse = p5.Vector.sub(mouseVector, actorVector);
+    let distance = toMouse.mag();
+        
+    if ((distance < magnetRange) && (distance > 12)) {
+        // pull actor toward mouse
+        // second condition gives the magnet a nice bounce-back, not jittery
+        toMouse.setMag(magnetStrength);
+        actor.xspeed += toMouse.x;
+        actor.yspeed += toMouse.y;
+    }  
+  }
+
+
   if (actor.x < zoneX) {
     actor.x = zoneX;
     actor.xspeed *= -1;
@@ -234,6 +266,7 @@ function roamingMovement(actor) {
     actor.y = height - actor.size - (height - (zoneY2 + zoneHeight));
     actor.yspeed *= -1;
   }
+
   checkActorCollision(actor);
 }
 
@@ -290,15 +323,14 @@ function checkTimer(actor) {
   }
   
   if (remaining <= actor.shakeThreshold) {
-  let speedMultiplier = 1 / (t + 0.05);  // tweak 0.1 to control max speed
-  speedMultiplier = constrain(speedMultiplier, 0, 7);  // never shake faster than 7x normal
-  actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
-    
+    let speedMultiplier = 1 / (t + 0.05);  // tweak to control max speed
+    speedMultiplier = constrain(speedMultiplier, 0, 8);  // never shake faster than 8x normal
+    actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
 
-  let flipThreshold = actor.rotationMax * (1 + (1 - t) * 2);  
-  if (abs(actor.angle) > flipThreshold) {
-    actor.rotationDirection *= -1.0;
-    actor.angle = constrain(actor.angle, -flipThreshold, flipThreshold);
+    let flipThreshold = actor.rotationMax * (1 + (1 - t) * 2);  
+    if (abs(actor.angle) > flipThreshold) {
+      actor.rotationDirection *= -1.0;
+      actor.angle = constrain(actor.angle, -flipThreshold, flipThreshold);
     }
   }
 }
@@ -317,20 +349,10 @@ function onTimerFinished(actor) {
   actor.state = "EXPLODED";
   actor.splode();
   idx = chrSprite.indexOf(actor.sprite);
-  if (idx >= 0) actor.sprite = deathSprite[idx];
-
-  //explode all buckets not sorted
-  setTimeout(() => {
-    for (let a of ourCharacters) {
-      if (a !== actor && a.state !== "EXPLODED") {
-        idx = chrSprite.indexOf(a.sprite);
-        a.splode();
-        if (idx >= 0) a.sprite = deathSprite[idx];
-        a.state = "EXPLODED";
-      }
-    }
-  }, 550); 
-
-  //delays gameover so death animation plays
-  setTimeout(() => state = 3, 2000);
+  actor.sprite = deathSprite[idx];
+  actor.state = "EXPLODED"; 
+  state = 3; // triggers game over screen
 }
+
+
+

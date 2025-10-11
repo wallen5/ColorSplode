@@ -6,6 +6,9 @@ let state = 0;
 let currentMode = null;
 let startButton1 //classic mode
 let startButton2; //roguelike mode
+
+let player;
+
 let ventSprite;
 
 let compressor;
@@ -14,6 +17,12 @@ let chrSprite =[]; //array of character sprites
 let grabSprite =[]; //array of grab animations
 let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
+
+
+let itemSprites = {};
+let items = [];
+
+let allItems = {};
 
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
@@ -66,6 +75,9 @@ function preload(){
   ventBottom = loadImage("images/ventBottomUpdate.gif");
   ventRight = loadImage("images/ventRightUpdate.gif");
   ventLeft = loadImage("images/ventLeftUpdate.gif");
+
+  itemSprites.magnet = loadImage("images/sponge.png");
+  itemSprites.sponge = loadImage("images/sponge.png");
 }
 
 function setup() {
@@ -74,7 +86,7 @@ function setup() {
   paintLayer.background(255);
   paintLayer.noSmooth();
 
-  //start button
+  // Start buttons
   textFont(myFont);
   textSize(12); // Sets a font size to keep text size consistent
   startButton1 = new Sprite(320, 450);
@@ -88,31 +100,40 @@ function setup() {
   startButton2.width = 200;
   startButton2.height = 50;
   startButton2.color = "lightgreen";
+
   background(220);
-  
+
   compressor = new p5.Compressor();
-  pickup.setVolume(0.2) ;
+  pickup.setVolume(0.2);
   menuMusic.setVolume(0.01);
   levelMusic.setVolume(0.05);
   pauseSound.setVolume(0.02);
   menuMusic.play();
-  
 
   levelMusic.disconnect();
   levelMusic.connect(compressor);
   compressor.connect();
 
-  //normal compressor settings
+  // Normal compressor settings
   compressor.threshold(-24);
   compressor.ratio(4);
   compressor.attack(0.003);
   compressor.release(0.25);
 
-  // Color zone spawn method (comment one in or out as needed)
+  // Color zone spawn method
   makeColorZones();
   // Vent spawn method
   makeVents();
   //randomizeZonePlacements();
+
+  // Player & Items
+  const allItems = {
+    sponge: new Item("sponge", itemSprites.sponge, "Darts around the map\nPauses buckets"),
+    magnet: new Item("magnet", itemSprites.magnet, "Buckets slowly move towards the mouse"),
+  };
+
+  player = new Player();
+  player.addItem(allItems.magnet);
 }
 
 
@@ -137,6 +158,8 @@ function draw() {
   } else if (state == 3){ //gameover
       gameOver();
   }
+    
+  
 }
 
 
