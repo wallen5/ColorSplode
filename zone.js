@@ -1,10 +1,31 @@
-//zone class
-class Zone{
-  constructor(x, y, w, h, color){
+//Class for objects on screen
+class screenObject {
+  constructor(x, y, w, h, active = false){
     this.x = x;
     this.y = y;
     this.w = w;
     this.h = h;
+    this.active = active;
+  }
+}
+
+//vent subclass
+class Vent extends screenObject{
+  constructor(x, y, w, h, wall, active = false, sprite = null){
+    super(x, y, w, h, active);
+    this.sprite = sprite;
+    this.timer = 50;
+    this.timeToSpawn = 100;
+    this.rate = 1;
+    this.activeActors = 0;
+    this.wall = wall;
+  }
+}
+
+//zone subclass
+class Zone extends screenObject{
+  constructor(x, y, w, h, color, active = true){
+    super(x, y, w, h, active);
     this.color = color;
   }
 }
@@ -77,4 +98,51 @@ function randomizeZonePlacements()
   h: zoneHeight,
   color: color
   }));
+}
+
+// Vents
+
+let spawnLogic = new Vent;
+let vents = [];
+const wall = ["left","right","top","bottom"];
+
+// For now coords are set, could randomize later
+function makeVents(){
+  vents = [
+    new Vent(-50, 350, 100, 75, "left", false, ventLeft),
+    new Vent(350, 650, 75, 100, "bottom", false, ventBottom),
+    new Vent(650, 350, 100, 75, "right", false, ventRight),
+    new Vent(350, -50, 75, 100, "top", false, ventTop)
+  ];
+}
+
+// Draw the vents if active with correct sprite
+function drawVents() {
+  for (let vent of vents) {
+    let spriteToDraw;
+    if (vent.wall === "left") spriteToDraw = vent.sprite;
+    else if (vent.wall === "right") spriteToDraw = vent.sprite;
+    else if (vent.wall === "top") spriteToDraw = vent.sprite;
+    else if (vent.wall === "bottom") spriteToDraw = vent.sprite;
+    if (vent.active == true){
+      image(vent.sprite, vent.x + vent.w/2, vent.y + vent.h/2, vent.w, vent.h);
+    }
+  }
+}
+
+// Sets a random inactive vent to active
+function activateRandomVent(){
+  let inactiveVents = vents.filter(vent => !vent.active);
+  if (inactiveVents.length === 0) return;
+
+  let randomVent = random(inactiveVents);
+  randomVent.active = true;
+}
+
+// Closes every vent and resets gif, could change to selected vent later for items
+function closeAllVents(){
+  for (let vent of vents) {
+    vent.active = false;
+    vent.sprite.reset();
+  }
 }

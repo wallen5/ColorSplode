@@ -7,7 +7,7 @@ class Actor {
     this.prevY = y;
     this.size = 50;
     this.sprite = sprite;
-  this.exSprite = null;
+    this.exSprite = null;
     this.xspeed = random(-2,2);
     this.yspeed = random(-2,2);
     
@@ -15,7 +15,7 @@ class Actor {
     this.timerStart = millis();  // when the timer started
     this.timeAlive = 0.0;        // Tracks how long the actor has been alive while the game is UNPAUSED
 
-    this.shakeThreshold = 3.0;   // how many seconds left to shake
+    this.shakeThreshold = 5.0;   // how many seconds left to shake
     this.angle = 0;              // current rotation angle
     this.rotationSpeed = 80.0;  // how fast it rotates per frame
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
@@ -107,50 +107,47 @@ class Actor {
 }
 
 //SPAWN LOGIC
-// used for actor spawning
+// used for actor spawning with vents
 
 function spawnActor(){
+  if (spawnLogic.rate <= 0) return; //checks if a bucket has exploded and stops spawning
 
   let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   const MAXACTORS = 10;
 
-  if(spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS){
-    // position
-    let newX = random(zoneX + 1, width - zoneX - 61);
-    let newY = random(zoneY1 + 1, height - (height - zoneY2) - 61);
-    
-    // Loop to roll locations to randomize into
-    let inZone = true;
-    while(inZone)
-    {
-      inZone = false;
-      // Use currentLevel.colorZones which holds the active zones
-      for(let zone of (currentLevel && currentLevel.colorZones ? currentLevel.colorZones : []))
-      {
-        // Treats our actors as a circle to make spawning more precise
-        let hit = collideRectCircle(zone.x, zone.y, zone.w, zone.h, newX + 60/2, newY + 60/2, 60);
+  let activeVents = vents.filter(v => v.active); // Will only choose from active vents
+  if (activeVents.length === 0) return;
+  
+  // Chooses a random active vent to spawn from
+  let randomVent = random(activeVents);
+  if (spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS) {
+    let newX, newY;
 
-        // Rerolls the newX and newY if the spawn is invalid
-        if(hit)
-        {
-          newX = random(zoneX + 1, width - zoneX - 61);
-          // use zoneHeight variable if available
-          newY = random(zoneY1 + 1, height - (height - (zoneY2 + (typeof zoneHeight !== 'undefined' ? zoneHeight : 150))) - 61);
-          inZone = true;
-          break; // break lets us reroll again
-        }
-      }
+    // Makes sure coordinate for spawnpoint is at the right place
+    switch(randomVent.wall){
+    case "left":
+      newX = randomVent.x + 130;
+      newY = randomVent.y + 40;
+      break;
+    case "top":
+      newX = randomVent.x + 40;
+      newY = randomVent.y + 150;
+      break;
+    case "right":
+      newX = randomVent.x;
+      newY = randomVent.y + 40;
+      break;
+    case "bottom":
+      newX = randomVent.x + 40;
+      newY = randomVent.y;
+      break;
     }
 
-    // random sprite
     let randomSprite = random(chrSprite);
-    
-    // Creates new actor. adds it to the array
+    // Chooses and pushes a random bucket to be spawned
     ourCharacters.push(new Actor(newX, newY, randomSprite));
-
     ++spawnLogic.activeActors;
   }
-
 }
 
 function spawnRate(){
@@ -162,9 +159,9 @@ function spawnRate(){
 
     //spawn rate starts to slow down.
     if (spawnLogic.rate < 2){
-      spawnLogic.rate += 0.05; 
+      spawnLogic.rate += 0.025; 
     } else {
-      spawnLogic.rate += 0.0125;
+      spawnLogic.rate += 0.05;
     }
   }
 
@@ -173,23 +170,42 @@ function spawnRate(){
 
 //random character movement
 function roamingMovement(actor) {
-  if (frameCount % 120 === 0) {
-    //random x and y speeds 
-    actor.xspeed = random(-2, 2);
-    actor.yspeed = random(-2, 2);
+  if (actor.xspeed === undefined) actor.xspeed = random(-1, 1);
+  if (actor.yspeed === undefined) actor.yspeed = random(-1, 1); //identify speed
+  let velocity = createVector(actor.xspeed, actor.yspeed); //create velocity from speed
+  if (velocity.mag() < 0.1) {
+    velocity = p5.Vector.random2D().mult(1); //if actor still, nudge
   }
-
+  let jitter = p5.Vector.random2D().mult(0.2);
+  velocity.add(jitter);
+  velocity.setMag(actor.maxSpeed || 2); //max speed
   
-  actor.prevX = actor.x;
-  actor.prevY = actor.y
-  actor.x += actor.xspeed;
-  actor.y += actor.yspeed;
+  actor.prevX = actor.x; //save coordinate
+  actor.prevY = actor.y;
 
-  //make sure characters don't go off screen
-  if (actor.x < zoneX || actor.x > width - actor.size - zoneX) actor.xspeed *= -1;
-  if (actor.y < zoneY1 || actor.y > height - actor.size - (height - (zoneY2 + zoneHeight))) actor.yspeed *= -1;
+  actor.x += velocity.x;//update coordinates
+  actor.y += velocity.y;
 
-  checkActorCollision(actor)
+  actor.xspeed = velocity.x;
+  actor.yspeed = velocity.y; //velocity transfer, probably an easier way to do this
+  
+  if (actor.x < zoneX) {
+    actor.x = zoneX;
+    actor.xspeed *= -1;
+  }
+  if (actor.x > width - actor.size - zoneX) {
+    actor.x = width - actor.size - zoneX;
+    actor.xspeed *= -1;
+  }
+  if (actor.y < zoneY1) {
+    actor.y = zoneY1;
+    actor.yspeed *= -1;
+  }
+  if (actor.y > height - actor.size - (height - (zoneY2 + zoneHeight))) {
+    actor.y = height - actor.size - (height - (zoneY2 + zoneHeight));
+    actor.yspeed *= -1;
+  }
+  checkActorCollision(actor);
 }
 
 function checkActorCollision(actor)
@@ -257,12 +273,34 @@ function checkTimer(actor) {
   }
 }
 
-// Called when timer finishes
 function onTimerFinished(actor) {
   console.log("Timer finished for actor!");
-  actor.angle = 0;
+
+  mouseReleased();
+
+  if (actor.state === "SNAPPED" || actor.state === "EXPLODED") return;
+
+  //stop spawning
+  spawnLogic.rate = 0;
+
+  //first bucket explodes
+  actor.state = "EXPLODED";
+  actor.splode();
   idx = chrSprite.indexOf(actor.sprite);
-  actor.sprite = deathSprite[idx];
-  actor.state = "EXPLODED"; 
-  state = 2; // triggers game over screen
+  if (idx >= 0) actor.sprite = deathSprite[idx];
+
+  //explode all buckets not sorted
+  setTimeout(() => {
+    for (let a of ourCharacters) {
+      if (a !== actor && a.state !== "EXPLODED") {
+        idx = chrSprite.indexOf(a.sprite);
+        a.splode();
+        if (idx >= 0) a.sprite = deathSprite[idx];
+        a.state = "EXPLODED";
+      }
+    }
+  }, 550); 
+
+  //delays gameover so death animation plays
+  setTimeout(() => state = 3, 2000);
 }

@@ -1,8 +1,12 @@
 let time = 0;
+let spawnTime = 20;
 let score = 0;
 
 let state = 0;
-let startButton;
+let currentMode = null;
+let startButton1 //classic mode
+let startButton2; //roguelike mode
+let ventSprite;
 
 let compressor;
 
@@ -72,6 +76,10 @@ function preload(){
   deathSprite[1] = loadImage("images/bluepaintdeath.gif");
   deathSprite[2] = loadImage("images/purplepaintdeath.gif");
   deathSprite[3] = loadImage("images/greenpaintdeath.gif");
+  ventTop = loadImage("images/ventTopUpdate.gif");
+  ventBottom = loadImage("images/ventBottomUpdate.gif");
+  ventRight = loadImage("images/ventRightUpdate.gif");
+  ventLeft = loadImage("images/ventLeftUpdate.gif");
 }
 
 function setup() {
@@ -80,11 +88,17 @@ function setup() {
   //start button
   textFont(myFont);
   textSize(12); // Sets a font size to keep text size consistent
-  startButton = new Sprite(400, 450);
-  startButton.text = "Play Game";
-  startButton.width = 120;
-  startButton.height = 50;
-  startButton.color = "lightgreen";
+  startButton1 = new Sprite(320, 450);
+  startButton1.text = "Play\n Classic Mode";
+  startButton1.width = 180;
+  startButton1.height = 50;
+  startButton1.color = "lightgreen";
+
+  startButton2 = new Sprite(520, 450);
+  startButton2.text = "Play\n Roguelike Mode";
+  startButton2.width = 200;
+  startButton2.height = 50;
+  startButton2.color = "lightgreen";
   background(220);
   
   compressor = new p5.Compressor();
@@ -131,14 +145,23 @@ function setup() {
 
 
 function draw() {
+  cursor("images/pointerHand.png", 10, 10);
+  
   if(state == 0){ //start screen
     startMenu();
 
-  } if (state == 1){ //game screen
-      gameMenu();
+  } else if (state == 1){ //play classic mode
+      gameMenu1();
       spawnActor();
       spawnRate();
-  } if (state == 2){
+      setGameCusor();
+
+  } else if (state == 2){ //play roguelike mode
+      gameMenu2();
+      spawnActor();
+      spawnRate();
+      setGameCusor();
+  } else if (state == 3){ //gameover
       gameOver();
   }
 }
@@ -158,17 +181,33 @@ function startMenu(){
     
   text("ColorSplode", 250 , 350 );
 
+  currentMode = null;
 
-  if (startButton.mouse.pressing()){
-    startButton.remove();
+
+  //button colors
+  mouseOverButton(startButton1, "green", "lightgreen");
+  mouseOverButton(startButton2, "green", "lightgreen");
+
+  if (startButton1.mouse.pressing()){
+    state = 1;
+    currentMode = "classic";
+    activateRandomVent();
+  } 
+  if (startButton2.mouse.pressing()) {
+    state = 2;
+    currentMode = "roguelike";
+    activateRandomVent();
+  }
+
+  if (currentMode != null){
+    startButton1.remove();
+    startButton2.remove();
     pauseButton = new Sprite(750, 50);
     pauseButton.text = "||";
     pauseButton.width = 70;
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
-    state = 1;
-  
-    
+
     menuMusic.stop();
     levelMusic.loop();
     drawScore();
@@ -176,10 +215,49 @@ function startMenu(){
 }
 
 
-function gameMenu(){
+function gameMenu1(){
 
   background(220);
   drawColorZones();
+  drawVents();
+ 
+  //update the displayed score
+  scoreDisplay.text = "Score:" + score;
+
+  for (let actor of ourCharacters) {
+    actor.update();
+    actor.draw();
+  }
+  
+  stroke(0); // Makes sure buttons stay outlined
+
+  //change color if cursor over pause button
+  mouseOverButton(pauseButton, "green", "lightgreen");
+
+
+  if(pauseButton.mouse.pressed()){
+    pauseGame();
+  }
+  
+  if (gamePaused) {
+    drawPauseMenu();
+  }
+
+  if(!gamePaused){time++;}
+  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
+    activateRandomVent();
+  }
+}
+
+function gameMenu2(){ //game menu for roguelike mode
+
+  background(220);
+
+  drawColorZones();
+  drawVents();
+
+  //change color if cursor over pause button
+  mouseOverButton(pauseButton, "green", "lightgreen");
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
@@ -189,42 +267,24 @@ function gameMenu(){
     actor.draw();
   }
 
+  stroke(0);
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
   }
   
   if (gamePaused) {
-    push(); // save current drawing settings
+    drawPauseMenu();
+  }
 
-    // Creates the semi-transparent background for the pause menu
-    fill(0, 0, 0, 150);
-    noStroke();
-    rect(0, 0, width, height);
-
-    // pause text
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(32);
-    text("Paused", width / 2, height / 2 - 50);
-    textSize(12);
-
-    pop(); // restore settings
-    if(quitButton.mouse.pressed()){
-      state = 0;
-      quitGame();
-    }
-    if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
-      pauseGame();
-    }
-    if(restartButton && restartButton.mouse.pressed())
-    {
-      restart();
-    }
+  if(!gamePaused){time++;}
+  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
+    activateRandomVent();
   }
 }
 
 function gameOver(){
+
   pauseButton.remove();
   scoreDisplay.remove();
 
@@ -235,42 +295,59 @@ function gameOver(){
   textStyle("bold");
   fill("red");
 
-  myString = "Game Over!";
-  let x = 50; // Starting x position
-  let y = 110; // Starting y position
-
   colorFluctuation();
   fill(titleColor.r, titleColor.g, titleColor.b);
   text("Game Over!", 195 , 350 );
   scoreDisplay.text = "Score:" + score;
 
+  stroke("black");
+  strokeWeight(7.5);
+  textSize(30);
+  fill("white");
+  let x = 300;
+  let y = 400;
+  text("Score: " + score, x , y );
+
   if (!buttonCreated){
+    strokeWeight(5);
     textSize(20);
-    retryButton = new Sprite(400, 425);
+    retryButton = new Sprite(400, 450);
     retryButton.text = "Retry";
     retryButton.width = 120;
     retryButton.height = 50;
-    retryButton.color = "lightred";
 
-    exitButton = new Sprite(400, 485);
+    exitButton = new Sprite(400, 515);
     exitButton.text = "Quit";
     exitButton.width = 120;
     exitButton.height = 50;
-    exitButton.color = "lightred";
 
     buttonCreated = true;
   }
+ 
+  //change button color when mouse hovers over
+  mouseOverButton(retryButton, "green", "lightgreen");
+  mouseOverButton(exitButton, "green", "lightgreen");
 
   if (retryButton.mouse.pressing()){
+    scoreDisplay.remove();
     retry();
   }
 
   if (exitButton.mouse.pressing()){
+    scoreDisplay.remove();
     exit();
   }
 }
 
-function exit(){
+function mouseOverButton(button1, hoverColor, defualtColor){ 
+  if(button1.mouse.hovering()){
+     button1.color = hoverColor;
+  } else{
+    button1.color = defualtColor;
+  }
+}
+
+function exit(){ 
   ourCharacters = [];
   buttonCreated = false;
   exitButton.remove();
@@ -282,10 +359,12 @@ function exit(){
   score = 0;
 
   //reset spawn logic after quit
+  closeAllVents();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
+  time = 0;
 
   setup();
   state = 0;
@@ -293,14 +372,15 @@ function exit(){
 
 function restart(){
   pauseGame(); // This will "unpause" the game
-
   //remove characters and buttons
   ourCharacters = [];
-
   //display score
   score = 0;
 
   //reset spawn logic after quit
+  time = 0;
+  closeAllVents();
+  activateRandomVent();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
@@ -335,13 +415,17 @@ function retry(){
   drawScore();
 
   //reset spawn logic after quit
+  time = 0;
+  closeAllVents();
+  activateRandomVent();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
 
   //return to game screen
-  state = 1;
+  if (currentMode == "classic") state = 1;
+  if (currentMode == "roguelike") state = 2;
 
 }
 
@@ -359,16 +443,14 @@ function colorFluctuation(){
 
 function keyPressed() // Generic Keypress function
 {
-  if((keyCode === ESCAPE || key === 'p') && state == 1) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
+  if((keyCode === ESCAPE || key === 'p') && (state == 1 || state == 2)) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
   {
     pauseGame();
-  }
-  else if(state != 1)
-  {
+  } else if(state == 0 || state == 3){
     if (resumeButton) {
       resumeButton.remove();
       resumeButton = null;
-  }
+    }
   }
 }
 
@@ -377,7 +459,7 @@ function pauseGame(){
 
   for(let actor of ourCharacters){
     if(actor.state === "GRABBED"){ // Ensures the player can't click, and then pause and move the enemy
-      actor.state = "FREE"
+      actor.state = "FREE";
     }
   }
   if(gamePaused){ // if game paused, draw the new buttons
@@ -426,6 +508,40 @@ function pauseGame(){
   }
 }
 
+function drawPauseMenu(){
+  push(); // save current drawing settings
+
+  // Creates the semi-transparent background for the pause menu
+  fill(0, 0, 0, 150);
+  noStroke();
+  rect(0, 0, width, height);
+
+  // pause text
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(32);
+  text("Paused", width / 2, height / 2 - 50);
+  textSize(12);
+
+  // changes color of button when mouse hovers over
+  mouseOverButton(quitButton, "green", "lightgreen");
+  mouseOverButton(restartButton, "green", "lightgreen");
+  mouseOverButton(resumeButton, "green", "lightgreen");
+
+  pop(); // restore settings
+  if(quitButton.mouse.pressed()){
+    state = 0;
+    quitGame();
+  }
+  if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
+    pauseGame();
+  }
+  if(restartButton && restartButton.mouse.pressed())
+  {
+    restart();
+  }
+}
+
 // Quits the game, resets game state
 function quitGame(){
   quitButton.remove();
@@ -442,11 +558,13 @@ function quitGame(){
   scoreDisplay.remove()
   scoreDisplay = null;
   score = 0;
+  time = 0;
 
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
 
   //reset spawn logic after quit
+  closeAllVents();
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
@@ -505,3 +623,22 @@ function drawScore(){
   scoreDisplay.height = 50;
   scoreDisplay.color = "lightgreen";
 }
+
+
+function drawScoreAtPos(x,y){
+  scoreDisplay = new Sprite(x, y);
+  scoreDisplay.text = "Score:" + score;
+  scoreDisplay.width = 250;
+  scoreDisplay.height = 50;
+}
+
+function setGameCusor(){
+  if(mouseIsPressed === true){
+    cursor("images/fistCursor.png", 10, 10);
+  } else if (gamePaused){
+    cursor("images/pointerHand.png", 10, 10);
+  } else{
+    cursor("images/handCursor.png", 10, 10);
+  }
+}
+
