@@ -33,7 +33,6 @@ class Zone extends screenObject{
 
 // color zones
 const colors = ["red","blue","purple","green"];
-let colorZones = [];
 
 // draw colored drop zones
 function drawColorZones(){
@@ -42,10 +41,12 @@ function drawColorZones(){
   strokeWeight(3);
   textAlign(CENTER, CENTER);
   textSize(14);
-  for (let z of colorZones){
-    fill(zoneFill(z.color));
-    rect(z.x, z.y, z.w, z.h);
-    fill(0);
+  if (currentLevel && currentLevel.colorZones) {
+    for (let z of currentLevel.colorZones){
+      fill(zoneFill(z.color));
+      rect(z.x, z.y, z.w, z.h);
+      fill(0);
+      }
   }
   pop();
 }
@@ -54,7 +55,7 @@ function zoneUnderActor(actor){
 
   const centerX = actor.x + actor.size/2;
   const centerY = actor.y + actor.size/2;
-  for (let z of colorZones){
+  for (let z of currentLevel.colorZones){
     if (centerX >= z.x && centerX <= z.x + z.w && centerY >= z.y && centerY <= z.y + z.h){
       --spawnLogic.activeActors;
       return z;
@@ -78,9 +79,8 @@ let zoneX = 50, zoneY1 = 100, zoneY2 = 620, zoneWidth = 150, zoneHeight = 150, g
 
 
 // create 4 drop zones along the bottom
-function makeColorZones()
-{
-  colorZones = [
+function makeColorZones() {
+  currentLevel.colorZones = [
     new Zone(zoneX, zoneY1, zoneWidth, zoneHeight, "red"),
     new Zone(zoneX, zoneY2, zoneWidth, zoneHeight, "blue"),
     new Zone(width - zoneWidth - zoneX, zoneY2, zoneWidth, zoneHeight, "purple"),
@@ -91,7 +91,7 @@ function makeColorZones()
 // Sets random X and Y for color zones for testing (Could expand on this if we want to implement this as a feature later on)
 function randomizeZonePlacements()
 {
-  colorZones = colors.map(color => ({ 
+  currentLevel.colorZones = colors.map(color => new Zone({ 
   x: random(0, width - zoneWidth), 
   y: random(0, height - zoneHeight), 
   w: zoneWidth,
