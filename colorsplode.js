@@ -42,6 +42,12 @@ let titleColor = {
   b: 0
 };
 
+
+
+// Level Stuff
+let currentLevel;
+
+
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
@@ -109,10 +115,27 @@ function setup() {
   compressor.release(0.25);
 
   // Color zone spawn method (comment one in or out as needed)
-  makeColorZones();
-  // Vent spawn method
-  makeVents();
+  //makeColorZones();
   //randomizeZonePlacements();
+
+  // Define missing zone variables for makeColorZones()
+  // Initialize global zone placement variables defined in zone.js (defaults match zone.js)
+  zoneX = 50;
+  zoneY1 = 100;
+  zoneY2 = 620;
+  zoneWidth = 150;
+  zoneHeight = 150;
+
+  currentLevel = new Level(
+    0, 
+    1, 
+    15, 
+    [], 
+    [] // empty zones for now
+  );
+  makeColorZones();
+  makeVents();
+  
 }
 
 
@@ -170,6 +193,7 @@ function startMenu(){
     state = 2;
     currentMode = "roguelike";
     activateRandomVent();
+    randomColorZone(currentLevel);
   }
 
   if (currentMode != null){
@@ -207,7 +231,6 @@ function gameMenu1(){
 
   //change color if cursor over pause button
   mouseOverButton(pauseButton, "green", "lightgreen");
-
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -355,6 +378,7 @@ function restart(){
   time = 0;
   closeAllVents();
   activateRandomVent();
+  randomColorZone(currentLevel);
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;

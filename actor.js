@@ -239,11 +239,10 @@ function roamingMovement(actor) {
 
 function checkActorCollision(actor)
 {
-  for(let zone of colorZones)
-  {
+  for (let zone of (currentLevel && currentLevel.colorZones ? currentLevel.colorZones : [])) {
     // Collision works as follows: check the top left corner of rect 1, and top left corner of rect 2
     // Because our buckets are a square, you simply use actor.size for both the width and height
-    hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
+    let hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
     if(hit)
     {
       // came from the left?
