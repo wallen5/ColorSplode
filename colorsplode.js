@@ -32,8 +32,6 @@ let retryButton;
 let exitButton;
 let drawGameOver = false;
 
-
-
 //start menu text. acts as namespace
 let titleColor = {
   r: 250,
@@ -42,15 +40,6 @@ let titleColor = {
 };
 
 
-
-
-//Spawns. acts as namespace
-let spawnLogic = {
-  timer: 50,
-  timeToSpawn: 100,
-  rate: 1,
-  activeActors: 0
-};
 
 // Level Stuff
 let currentLevel;
@@ -139,7 +128,7 @@ function setup() {
     [] // empty zones for now
   );
   makeColorZones();
-  randomColorZone(currentLevel);
+  makeVents();
   
 }
 
@@ -197,6 +186,7 @@ function startMenu(){
     state = 2;
     currentMode = "roguelike";
     activateRandomVent();
+    randomColorZone(currentLevel);
   }
 
   if (currentMode != null){
@@ -233,7 +223,6 @@ function gameMenu1(){
 
   //change color if cursor over pause button
   mouseOverButton(pauseButton, "green", "lightgreen");
-
 
   if(pauseButton.mouse.pressed()){
     pauseGame();
@@ -381,6 +370,7 @@ function restart(){
   time = 0;
   closeAllVents();
   activateRandomVent();
+  randomColorZone(currentLevel);
   spawnLogic.timer = 50;
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;

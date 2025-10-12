@@ -91,7 +91,7 @@ function makeColorZones() {
 // Sets random X and Y for color zones for testing (Could expand on this if we want to implement this as a feature later on)
 function randomizeZonePlacements()
 {
-  currentLevel.colorZones = colors.map(color => ({ 
+  currentLevel.colorZones = colors.map(color => new Zone({ 
   x: random(0, width - zoneWidth), 
   y: random(0, height - zoneHeight), 
   w: zoneWidth,

@@ -35,6 +35,14 @@ function randomColorZone(level) {
         new Zone(width - 150 - 50, 100, 150, 150, "purple")
         ];
         break;
+    case 2:
+        level.colorZones = [
+        new Zone(50, 100, 150, 150, "purple"),
+        new Zone(50, 620, 150, 150, "red"),
+        new Zone(width - 150 - 50, 620, 150, 150, "green"),
+        new Zone(width - 150 - 50, 100, 150, 150, "blue")
+        ];
+        break;
         
     default:
         level.colorZones = [
