@@ -1,5 +1,5 @@
 let time = 0;
-let spawnTime = 5;
+let spawnTime = 25;
 let score = 0;
 
 let state = 0;
@@ -10,7 +10,9 @@ let ventSprite;
 
 let compressor;
 
+// Items arrays
 let allItems;
+let levelChoices;
 
 let chrSprite =[]; //array of character sprits
 let grabSprite =[]; //array of grab animations
@@ -27,6 +29,14 @@ let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 let restartButton;
+let chooseButton1;
+let chooseButton2;
+let chooseButton3;
+
+//Level Up Buttons
+let levelUpActive = false;
+let levelUpTriggered = {};
+let levelUpTrigger = [1, 30, 60, 100, 200];
 
 //Game Over Buttons
 let buttonCreated = false;
@@ -40,6 +50,11 @@ let titleColor = {
   g: 0,
   b: 0
 };
+
+// Vars for flashing screen
+let flashScreen = false;
+let flashTimer = 0;
+let flashDuration = 200;
 
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -65,7 +80,11 @@ function preload(){
   ventBottom = loadImage("images/ventBottomUpdate.gif");
   ventRight = loadImage("images/ventRightUpdate.gif");
   ventLeft = loadImage("images/ventLeftUpdate.gif");
-  magnet = loadImage("images/Magnet.png")
+  levelUpChoice = loadImage("images/levelChoice.png");
+  magnet = loadImage("images/Magnet.png");
+  freeze = loadImage("images/Freeze.png");
+  totem = loadImage("images/TotemOfUndying.png");
+  placeholder = loadImage("images/Placeholder.png");
 }
 
 function setup() {
@@ -111,7 +130,17 @@ function setup() {
   makeVents();
   //randomizeZonePlacements();
 
-  allItems = {magnet: new Item("magnet", magnet, "Buckets slowly move towards the mouse")};
+  allItems = [
+      new Item("Magnet", magnet, "Buckets move slowly towards the mouse"), 
+      new Item("Freeze", freeze, "Hovering over a bucket freezes it for a short time"),
+      //new Item("Yarn Ball", placeholder, "Unfinished: Control the meow thing"),
+      //new Item("Mixer", placeholder, "Unfinished: Combine two colors"),
+      new Item("Blatant Copyright", totem, "Revive...like in Minecraft"),
+      //new Item("Paint Remover", placeholder, "Unfinished: Heal after x buckets placed"),
+      //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
+      //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
+    ];
+
 
   player = new Player();
 }
@@ -134,6 +163,8 @@ function draw() {
       spawnActor();
       spawnRate();
       setGameCusor();
+      player.drawInventory();
+      player.checkTotem();
   } else if (state == 3){ //gameover
       gameOver();
   }
@@ -198,6 +229,7 @@ function gameMenu1(){
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
 
+    
   for (let actor of ourCharacters) {
     actor.update();
     actor.draw();
@@ -218,7 +250,7 @@ function gameMenu1(){
   }
 
   if(!gamePaused){time++;}
-  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
+  if(time == 60 * spawnTime  || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime ){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
   }
 }
@@ -236,10 +268,31 @@ function gameMenu2(){ //game menu for roguelike mode
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
 
+
   for (let actor of ourCharacters) {
-    actor.update();
-    actor.draw();
+  // Freeze powerup
+  if (actor.isMouseOver() && !actor.frozen && player.hasItem("Freeze")) {
+    actor.frozen = true;
+    actor.freezeTimer = 120;    // The amount of time they are frozen for (Need to be careful with this for balance, it prevents explosion)
   }
+  if (actor.frozen) {
+    actor.freezeTimer--;
+    if (actor.freezeTimer <= 0) {
+      actor.frozen = false;
+    }
+  }
+  if (!actor.frozen || actor.state === "GRABBED") {
+    actor.update();
+  }
+  push();
+  if (actor.frozen) {
+    tint(150, 150, 255); // light blue tint to frozen buckets
+  } else {
+    noTint();
+  }
+  actor.draw();
+  pop();
+ }
 
   stroke(0);
 
@@ -251,11 +304,21 @@ function gameMenu2(){ //game menu for roguelike mode
     drawPauseMenu();
   }
 
-  if(!gamePaused){time++;}
-  if(time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime){ //spawnTime is the interval at which a new vent spawns
-    activateRandomVent();
-    player.addItem(allItems.magnet);
+  for (let s of levelUpTrigger) {  // Level ups trigger based on the arrays, can alter when they happen
+    if (score >= s && !levelUpTriggered[s]) {
+        levelUp();
+        levelUpTriggered[s] = true;
+    }
   }
+
+  if(levelUpActive){
+    drawLevelMenu();
+  }
+
+  if(!gamePaused && !levelUpActive){time++;}
+  if(!levelUpActive && (time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime)){ //spawnTime is the interval at which a new vent spawns
+    activateRandomVent();
+  } 
 }
 
 function gameOver(){
@@ -324,6 +387,8 @@ function mouseOverButton(button1, hoverColor, defualtColor){
 
 function exit(){ 
   ourCharacters = [];
+  levelUpTriggered = {};
+  player.inventory = [];
   buttonCreated = false;
   exitButton.remove();
   retryButton.remove();
@@ -332,6 +397,7 @@ function exit(){
   scoreDisplay.remove()
   scoreDisplay = null;
   score = 0;
+  time = 0;
 
   //reset spawn logic after quit
   closeAllVents();
@@ -349,8 +415,11 @@ function restart(){
   pauseGame(); // This will "unpause" the game
   //remove characters and buttons
   ourCharacters = [];
+  levelUpTriggered = {};
+  player.inventory = [];
   //display score
   score = 0;
+  time = 0;
 
   //reset spawn logic after quit
   time = 0;
@@ -360,6 +429,17 @@ function restart(){
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
+
+  allItems = [
+      new Item("Magnet", magnet, "Buckets move slowly towards the mouse"), 
+      new Item("Freeze", freeze, "Hovering over a bucket freezes it for a short time"),
+      //new Item("Yarn Ball", placeholder, "Unfinished: Control the meow thing"),
+      //new Item("Mixer", placeholder, "Unfinished: Combine two colors"),
+      new Item("Blatant Copyright", totem, "Unfinished: Revive...like in Minecraft"),
+      //new Item("Paint Remover", placeholder, "Unfinished: Heal after x buckets placed"),
+      //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
+      //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
+    ];
 }
 
 function retry(){
@@ -367,6 +447,8 @@ function retry(){
 
   //remove characters and buttons
   ourCharacters = [];
+  levelUpTriggered = {};
+  player.inventory = [];
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
@@ -491,6 +573,8 @@ function drawPauseMenu(){
   noStroke();
   rect(0, 0, width, height);
 
+  
+
   // pause text
   fill(255);
   textAlign(CENTER, CENTER);
@@ -517,6 +601,124 @@ function drawPauseMenu(){
   }
 }
 
+function levelUp(){
+  levelUpActive = !levelUpActive; 
+
+  for(let actor of ourCharacters){
+    if(actor.state === "GRABBED"){
+      actor.state = "FREE";
+    }
+  }
+
+  if(levelUpActive){
+    levelChoices = [random(allItems), random(allItems), random(allItems)];
+
+    push();
+    textSize(15);
+    chooseButton1 = new Sprite(150, 500);
+    chooseButton1.text = "Choose";
+    chooseButton1.width = 100;
+    chooseButton1.height = 30;
+    chooseButton1.color = "red";
+
+    chooseButton2 = new Sprite(400, 500);
+    chooseButton2.text = "Choose";
+    chooseButton2.width = 100;
+    chooseButton2.height = 30;
+    chooseButton2.color = "green";
+
+    chooseButton3 = new Sprite(650, 500);
+    chooseButton3.text = "Choose";
+    chooseButton3.width = 100;
+    chooseButton3.height = 30;
+    chooseButton3.color = "blue";
+
+    pop();
+
+    pauseSound.play();
+    levelMusic.setVolume(0.005, 0.2); 
+    levelMusic.rate(0.85, 0.2);
+    compressor.threshold(-50);
+    compressor.ratio(10);
+
+    if (pauseButton) {
+      pauseButton.remove();
+    }
+  }
+  else{
+    chooseButton1.remove();
+    chooseButton1 = null;
+    chooseButton2.remove();
+    chooseButton2 = null;
+    chooseButton3.remove();
+    chooseButton3 = null;
+
+    pauseSound.play();
+    levelMusic.setVolume(0.05, 0.2); 
+    levelMusic.rate(1.0, 0.2);
+    compressor.threshold(-24);
+    compressor.ratio(4);
+
+    pauseButton = new Sprite(750, 50);
+    pauseButton.text = "||";
+    pauseButton.width = 70;
+    pauseButton.height = 50;
+    pauseButton.color = "lightgreen";
+  }
+}
+
+function drawLevelMenu(){
+  push();
+
+  // Creates the semi-transparent background for the level menu
+  fill(0, 0, 0, 150);
+  noStroke();
+  rect(0, 0, width, height);
+
+  image(levelUpChoice, 0, 0);
+
+  image(levelChoices[0].sprite, 120, 250);
+  image(levelChoices[1].sprite, 370, 250);
+  image(levelChoices[2].sprite, 610, 250);
+
+  fill(0);
+
+  textSize(15)
+  text(levelChoices[0].name, 70, 220, 150);
+  text(levelChoices[1].name, 320, 220, 150);
+  text(levelChoices[2].name, 570, 220, 150);
+
+  textSize(12);
+  text(levelChoices[0].description, 70, 370, 180);
+  text(levelChoices[1].description, 320, 370, 180);
+  text(levelChoices[2].description, 570, 370, 180);
+
+
+
+  // changes color of button when mouse hovers over
+  mouseOverButton(chooseButton1, "pink", "red");
+  mouseOverButton(chooseButton2, "lightgreen", "green");
+  mouseOverButton(chooseButton3, "lightblue", "blue");
+
+  pop(); // restore settings
+  if(chooseButton1.mouse.pressed()){
+    player.addItem(levelChoices[0]);
+    allItems.splice(allItems.indexOf(levelChoices[0]), 1);
+    levelUp();
+  }
+  if(chooseButton2 && chooseButton2.mouse.pressed()){
+    player.addItem(levelChoices[1]);
+    allItems.splice(allItems.indexOf(levelChoices[1]), 1);
+    levelUp();
+  }
+  if(chooseButton3 && chooseButton3.mouse.pressed()){
+    player.addItem(levelChoices[2]);
+    allItems.splice(allItems.indexOf(levelChoices[2]), 1);
+    levelUp();
+  }
+}
+
+
 // Quits the game, resets game state
 function quitGame(){
   quitButton.remove();
@@ -537,6 +739,8 @@ function quitGame(){
 
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
+  levelUpTriggered = {};
+  player.inventory = [];
 
   //reset spawn logic after quit
   closeAllVents();
@@ -561,7 +765,6 @@ function mousePressed() {
       break;
     }
   }
-
 }
 
 function mouseReleased() {

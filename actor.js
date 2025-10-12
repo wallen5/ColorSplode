@@ -33,7 +33,7 @@ class Actor {
 
   // Update the position of the character
   update() {
-    if(!gamePaused){ // If the game ISN'T Paused then we update their movement
+    if(!gamePaused && !levelUpActive){ // If the game ISN'T Paused then we update their movement
       if (this.state === "FREE") {
         checkTimer(this);
         roamingMovement(this);
@@ -119,7 +119,7 @@ function spawnActor(){
   
   // Chooses a random active vent to spawn from
   let randomVent = random(activeVents);
-  if (spawnLogic.timer == Math.round(rate) && !gamePaused && spawnLogic.activeActors <= MAXACTORS) {
+  if (spawnLogic.timer == Math.round(rate) && !gamePaused && !levelUpActive && spawnLogic.activeActors <= MAXACTORS) {
     let newX, newY;
 
     // Makes sure coordinate for spawnpoint is at the right place
@@ -169,12 +169,18 @@ function spawnRate(){
 
 //random character movement
 function roamingMovement(actor) {
+  
   if (actor.xspeed === undefined) actor.xspeed = random(-1, 1);
   if (actor.yspeed === undefined) actor.yspeed = random(-1, 1); //identify speed
+  
+
   let velocity = createVector(actor.xspeed, actor.yspeed); //create velocity from speed
   if (velocity.mag() < 0.1) {
+
+
     velocity = p5.Vector.random2D().mult(1); //if actor still, nudge
   }
+
   let jitter = p5.Vector.random2D().mult(0.2);
   velocity.add(jitter);
   velocity.setMag(actor.maxSpeed || 2); //max speed
@@ -185,9 +191,15 @@ function roamingMovement(actor) {
   actor.x += velocity.x;//update coordinates
   actor.y += velocity.y;
 
-  if (player.hasItem("magnet")) {
-    const magnetRange = 80; 
-    const magnetStrength = 10.0; 
+  
+
+  actor.xspeed = velocity.x;
+  actor.yspeed = velocity.y; //velocity transfer, probably an easier way to do this
+  
+      // Magnet PowerUp
+  if (player && player.hasItem("Magnet")) {
+    const magnetRange = 150; 
+    const magnetStrength = 30.0; 
 
     let mouseVector = createVector(mouseX, mouseY);
     let actorVector = createVector(actor.x + actor.size/2, actor.y + actor.size/2);
@@ -204,9 +216,7 @@ function roamingMovement(actor) {
     }  
   }
 
-  actor.xspeed = velocity.x;
-  actor.yspeed = velocity.y; //velocity transfer, probably an easier way to do this
-  
+
   if (actor.x < zoneX) {
     actor.x = zoneX;
     actor.xspeed *= -1;
@@ -223,9 +233,9 @@ function roamingMovement(actor) {
     actor.y = height - actor.size - (height - (zoneY2 + zoneHeight));
     actor.yspeed *= -1;
   }
+
   checkActorCollision(actor);
 }
-
 function checkActorCollision(actor)
 {
   for(let zone of colorZones)
@@ -274,8 +284,26 @@ function checkTimer(actor) {
 
 
   if (remaining <= 0) {
-    onTimerFinished(actor);
-    return;
+    // Totem Powerup
+    if(player.hasItem("Blatant Copyright")){
+      mouseReleased();
+      idx = chrSprite.indexOf(actor.sprite); // The actor that would explode shows their death sprite
+      if (idx >= 0) actor.sprite = deathSprite[idx];  
+      actor.state = "EXPLODED";
+
+      for (let i = ourCharacters.length - 1; i >= 0; i--) {  // Every other actor gets removed when the totem explodes (Can change later)
+        if (ourCharacters[i] != actor && ourCharacters[i].state != "SNAPPED") {
+          ourCharacters.splice(i, 1);
+          spawnLogic.activeActors--;
+        }
+      }
+      player.removeItem("Blatant Copyright");
+      flashScreen = true;   // Makes a cool flashing screen effect
+      flashTimer = millis();
+    } else {
+      onTimerFinished(actor);
+      return;
+    }
   }
   
   if (remaining <= actor.shakeThreshold) {
@@ -321,5 +349,6 @@ function onTimerFinished(actor) {
   }, 550); 
 
   //delays gameover so death animation plays
+
   setTimeout(() => state = 3, 2000);
 }
