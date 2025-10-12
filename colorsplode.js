@@ -106,10 +106,10 @@ function setup() {
   startButton1.color = "lightgreen";
 
   startButton2 = new Sprite(520, 450);
-  startButton2.text = "Play\n Roguelike Mode";
+  startButton2.text = "Play\n Rougelike Mode";
   startButton2.width = 200;
   startButton2.height = 50;
-  startButton2.color = "lightgreen";
+  startButton2.color = "red";
   background(220);
   
   compressor = new p5.Compressor();
@@ -197,7 +197,7 @@ function startMenu(){
 
   //button colors
   mouseOverButton(startButton1, "green", "lightgreen");
-  mouseOverButton(startButton2, "green", "lightgreen");
+  mouseOverButton(startButton2, "darkred", "red");
 
   if (startButton1.mouse.pressing()){
     state = 1;
