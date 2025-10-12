@@ -44,6 +44,9 @@ let retryButton;
 let exitButton;
 let drawGameOver = false;
 
+// Paint trail layer
+let paintLayer;
+
 //start menu text. acts as namespace
 let titleColor = {
   r: 250,
@@ -89,6 +92,9 @@ function preload(){
 
 function setup() {
   createCanvas(800, 800);
+  paintLayer = createGraphics(200, 200);
+  paintLayer.background(255);
+  paintLayer.noSmooth();
 
   //start button
   textFont(myFont);
@@ -157,6 +163,7 @@ function draw() {
       spawnActor();
       spawnRate();
       setGameCusor();
+      
 
   } else if (state == 2){ //play roguelike mode
       gameMenu2();
@@ -222,10 +229,10 @@ function startMenu(){
 function gameMenu1(){
 
   background(220);
-
+  image(paintLayer, 0, 0, width, height);
   drawColorZones();
   drawVents();
- 
+  
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
 
@@ -258,7 +265,7 @@ function gameMenu1(){
 function gameMenu2(){ //game menu for roguelike mode
 
   background(220);
-
+  image(paintLayer, 0, 0, width, height);
   drawColorZones();
   drawVents();
 
@@ -483,7 +490,7 @@ function retry(){
   //return to game screen
   if (currentMode == "classic") state = 1;
   if (currentMode == "roguelike") state = 2;
-
+  paintLayer.background(255);
 }
 
 function colorFluctuation(){
