@@ -230,7 +230,6 @@ function startMenu(){
     pauseButton.width = 70;
     pauseButton.height = 50;
     pauseButton.color = "lightgreen";
-
     menuMusic.stop();
     levelMusic.loop();
     drawScore();
@@ -449,7 +448,7 @@ function restart(){
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
 
-  background(255);
+  paintLayer.background(255);
 
   makeItems();
 }
