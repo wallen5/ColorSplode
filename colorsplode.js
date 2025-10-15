@@ -93,6 +93,7 @@ function preload(){
   freeze = loadImage("images/Freeze.png");
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
+  // nuke = loadImage(images/);
 }
 
 function setup() {
@@ -183,6 +184,7 @@ function draw() {
       setGameCusor();
       player.drawInventory();
       player.checkTotem();
+      dropBomb();
   } else if (state == 3){ //gameover
       gameOver();
   }
