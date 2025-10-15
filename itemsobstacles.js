@@ -11,6 +11,8 @@ class Player {
 
     constructor() {
         this.inventory = [];
+        this.health = 3;
+        this.startHealth = 3;
     }
 
 
@@ -35,6 +37,15 @@ class Player {
         rect(0, 0, width, height);
       } else {
         flashScreen = false;
+      }
+    }
+  }
+
+  drawHealth(){
+    for(let i = 0; i < this.health; ++i){
+      if(player.health >= 1){
+        fill(255, 0, 0);
+        circle(370 + (i * 37), 750, 30);
       }
     }
   }

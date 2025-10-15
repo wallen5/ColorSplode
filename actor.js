@@ -314,7 +314,7 @@ function checkTimer(actor) {
 
   if (remaining <= 0) {
     // Totem Powerup
-    if(player.hasItem("Blatant Copyright")){
+    if(player.hasItem("Blatant Copyright") && player.health < 1){
       mouseReleased();
       idx = chrSprite.indexOf(actor.sprite); // The actor that would explode shows their death sprite
       if (idx >= 0) actor.sprite = deathSprite[idx];  
@@ -329,7 +329,14 @@ function checkTimer(actor) {
       player.removeItem("Blatant Copyright");
       flashScreen = true;   // Makes a cool flashing screen effect
       flashTimer = millis();
+    } else if(player.health >= 2){
+      player.health--;
+      mouseReleased();
+      idx = chrSprite.indexOf(actor.sprite);
+      if (idx >= 0) actor.sprite = deathSprite[idx];  
+      actor.state = "EXPLODED";
     } else {
+      player.health--;
       onTimerFinished(actor);
       return;
     }

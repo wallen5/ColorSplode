@@ -174,7 +174,6 @@ function draw() {
       spawnActor();
       spawnRate();
       setGameCusor();
-      
 
   } else if (state == 2){ //play roguelike mode
       gameMenu2();
@@ -214,12 +213,16 @@ function startMenu(){
     state = 1;
     currentMode = "classic";
     activateRandomVent();
+    player.startHealth = 0;
+    player.health = player.startHealth;
   } 
   if (startButton2.mouse.pressing()) {
     state = 2;
     currentMode = "roguelike";
     activateRandomVent();
     randomColorZone(currentLevel);
+    player.startHealth = 3;
+    player.health = player.startHealth;
   }
 
   if (currentMode != null){
@@ -278,6 +281,7 @@ function gameMenu2(){ //game menu for roguelike mode
   image(paintLayer, 0, 0, width, height);
   drawColorZones();
   drawVents();
+  player.drawHealth();
 
   //change color if cursor over pause button
   mouseOverButton(pauseButton, "green", "lightgreen");
@@ -406,6 +410,7 @@ function exit(){
   ourCharacters = [];
   levelUpTriggered = {};
   player.inventory = [];
+  player.health = player.startHealth;
   buttonCreated = false;
   exitButton.remove();
   retryButton.remove();
@@ -460,6 +465,7 @@ function retry(){
   ourCharacters = [];
   levelUpTriggered = {};
   player.inventory = [];
+  player.health = player.startHealth;
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
@@ -754,6 +760,7 @@ function quitGame(){
   ourCharacters = []; // Removes all enemies to prevent duplicates
   levelUpTriggered = {};
   player.inventory = [];
+  player.health = player.startHealth;
 
   //reset spawn logic after quit
   closeAllVents();
