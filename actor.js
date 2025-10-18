@@ -187,13 +187,12 @@ function spawnRate(){
     spawnLogic.timer = 0;
 
     //spawn rate starts to slow down.
-    if (spawnLogic.rate < 2){
-      spawnLogic.rate += 0.025; 
-    } else {
-      spawnLogic.rate += 0.05;
+    if (spawnLogic.rate < 1.5){
+      spawnLogic.rate += spawnRateIncrease; 
+    } else if(spawnLogic.rate < 2) {
+      spawnLogic.rate += (spawnRateIncrease / 2);
     }
   }
-
   ++spawnLogic.timer;
 }
 
@@ -268,7 +267,7 @@ function roamingMovement(actor) {
 }
 function checkActorCollision(actor)
 {
-  for (let zone of (currentLevel && currentLevel.colorZones ? currentLevel.colorZones : [])) {
+  for (let zone of (levelSet[currentLevel] && levelSet[currentLevel].colorZones ? levelSet[currentLevel].colorZones : [])) {
     // Collision works as follows: check the top left corner of rect 1, and top left corner of rect 2
     // Because our buckets are a square, you simply use actor.size for both the width and height
     let hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
@@ -314,7 +313,7 @@ function checkTimer(actor) {
 
   if (remaining <= 0) {
     // Totem Powerup
-    if(player.hasItem("Blatant Copyright")){
+    if(player.hasItem("Blatant Copyright") && player.health < 2){
       mouseReleased();
       idx = chrSprite.indexOf(actor.sprite); // The actor that would explode shows their death sprite
       if (idx >= 0) actor.sprite = deathSprite[idx];  
@@ -329,7 +328,14 @@ function checkTimer(actor) {
       player.removeItem("Blatant Copyright");
       flashScreen = true;   // Makes a cool flashing screen effect
       flashTimer = millis();
+    } else if(player.health >= 2){
+      player.health--;
+      mouseReleased();
+      idx = chrSprite.indexOf(actor.sprite);
+      if (idx >= 0) actor.sprite = deathSprite[idx];  
+      actor.state = "EXPLODED";
     } else {
+      player.health--;
       onTimerFinished(actor);
       return;
     }

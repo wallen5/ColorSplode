@@ -11,6 +11,8 @@ class Player {
 
     constructor() {
         this.inventory = [];
+        this.health = 3;
+        this.startHealth = 3;
     }
 
 
@@ -35,6 +37,18 @@ class Player {
         rect(0, 0, width, height);
       } else {
         flashScreen = false;
+      }
+    }
+  }
+
+  drawHealth(){
+    if(this.hasItem("Heart Canister") && this.startHealth == 3){
+      this.health++;
+      this.startHealth++;
+    }
+    for(let i = 0; i < this.health; ++i){
+      if(player.health >= 1){
+        image(heart, 350 - ((this.health - 3) * 15) + (i * 35), 765, 30, 30);
       }
     }
   }
@@ -66,5 +80,6 @@ function makeItems(){
     //new Item("Paint Remover", placeholder, "Unfinished: Heal after x buckets placed"),
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
+    new Item("Heart Canister", heart, "Start each level with an extra heart")
   ];
 }
