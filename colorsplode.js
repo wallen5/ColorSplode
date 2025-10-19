@@ -68,6 +68,9 @@ let currentVents = 1;
 let maxVents = 4;
 let spawnRateIncrease = 0.05;
 
+// Score combo stuff
+let currentColor;
+let currentCombo = 0;
 
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -106,6 +109,8 @@ function setup() {
   paintLayer = createGraphics(200, 200);
   paintLayer.background(255);
   paintLayer.noSmooth();
+
+  currentColor = color(0)
 
   //start button
   textFont(myFont);
@@ -458,6 +463,8 @@ function restart(){
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
+  currentColor = color(0);
+  currentCombo = 0;
 
   paintLayer.background(255);
 
@@ -476,6 +483,9 @@ function retry(){
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
+
+  currentColor = color(0);
+  currentCombo = 0;
 
   //set style
   stroke("black");
@@ -802,11 +812,20 @@ function mouseReleased() {
       const idx = grabSprite.indexOf(grabbedCharacter.sprite); 
       const actorColor = colors[idx]; // "red","blue","purple","green"
       if (zone.color === actorColor) {
+        if(currentColor.toString() == grabbedCharacter.color.toString())
+        {
+          currentCombo += 1;
+        }
+        else
+        {
+          currentColor = grabbedCharacter.color;
+          currentCombo = 1;
+        }
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
         //update score if character is in correct color zone
-        score += 1;
+        score += 1 * currentCombo;
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
