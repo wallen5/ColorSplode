@@ -133,6 +133,9 @@ function levelTransition(){
 
   pauseButton.remove();
   scoreDisplay.remove();
+  comboDisplay.remove();
+  currentColor = color(0);
+  currentCombo = 0;
 
   if(!transitionCreated){
     quitButton = new Sprite(400, 550);

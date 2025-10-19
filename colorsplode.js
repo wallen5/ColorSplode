@@ -68,6 +68,9 @@ let currentVents = 1;
 let maxVents = 4;
 let spawnRateIncrease = 0.05;
 
+// Score combo stuff
+let currentColor;
+let currentCombo = 0;
 
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -106,6 +109,8 @@ function setup() {
   paintLayer = createGraphics(200, 200);
   paintLayer.background(255);
   paintLayer.noSmooth();
+
+  currentColor = color(0)
 
   //start button
   textFont(myFont);
@@ -250,6 +255,7 @@ function gameMenu1(){
   
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
+  comboDisplay.text = "Combo:" + currentCombo
 
     
   for (let actor of ourCharacters) {
@@ -283,16 +289,13 @@ function gameMenu2(){ //game menu for roguelike mode
   drawColorZones();
   drawVents();
   player.drawHealth();
-
-  if(score == levelSet[currentLevel].scoreThreshold){
-    state = 4;
-  }
   
   //change color if cursor over pause button
   mouseOverButton(pauseButton, "green", "lightgreen");
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
+  comboDisplay.text = "Combo:" + currentCombo;
 
 
   for (let actor of ourCharacters) {
@@ -341,6 +344,10 @@ function gameMenu2(){ //game menu for roguelike mode
     drawLevelMenu();
   }
 
+  if(score >= levelSet[currentLevel].scoreThreshold && !levelUpActive){
+    state = 4;
+  }
+
   if(!gamePaused && !levelUpActive){time++;}
   if(!levelUpActive && (time == 60 * spawnTime * currentVents) && currentVents < maxVents){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
@@ -351,6 +358,7 @@ function gameOver(){
 
   pauseButton.remove();
   scoreDisplay.remove();
+  comboDisplay.remove();
 
   background(gameOverBG);
   stroke("black");
@@ -424,6 +432,8 @@ function exit(){
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
+  comboDisplay.remove();
+  comboDisplay = null;
   score = 0;
   time = 0;
 
@@ -458,6 +468,8 @@ function restart(){
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
+  currentColor = color(0);
+  currentCombo = 0;
 
   paintLayer.background(255);
 
@@ -477,6 +489,8 @@ function retry(){
   retryButton.remove();
   exitButton.remove();
 
+  
+
   //set style
   stroke("black");
   strokeWeight(5);
@@ -492,6 +506,8 @@ function retry(){
   pauseButton.color = "lightgreen";
 
   //display score
+  currentColor = color(0);
+  currentCombo = 0;
   score = 0;
   drawScore();
 
@@ -760,6 +776,8 @@ function quitGame(){
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
+  comboDisplay.remove();
+  comboDisplay = null;
   score = 0;
   time = 0;
 
@@ -802,11 +820,21 @@ function mouseReleased() {
       const idx = grabSprite.indexOf(grabbedCharacter.sprite); 
       const actorColor = colors[idx]; // "red","blue","purple","green"
       if (zone.color === actorColor) {
+        if(currentColor.toString() == grabbedCharacter.color.toString())
+        {
+          currentCombo += 1;
+        }
+        else
+        {
+          currentColor = grabbedCharacter.color;
+          currentCombo = 1;
+          comboDisplay.color = currentColor;
+        }
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
         //update score if character is in correct color zone
-        score += 1;
+        score += 1 * currentCombo;
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
@@ -828,6 +856,12 @@ function drawScore(){
   scoreDisplay.width = 250;
   scoreDisplay.height = 50;
   scoreDisplay.color = "lightgreen";
+
+  comboDisplay = new Sprite(550, 50);
+  comboDisplay.text = "Combo:" + currentCombo;
+  comboDisplay.width = 250;
+  comboDisplay.height = 50;
+  comboDisplay.color = "white";
 }
 
 

@@ -73,7 +73,8 @@ class Actor {
   }
 
   paintTrail(){
-    if(this.state != "GRABBED" && this.state != "SNAPPED")
+    let remaining = max(this.timer - this.timeAlive, 0);
+    if(this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2))
     {
       let scaleFactor = paintLayer.width / width;
       let px = (this.x + this.size / 2) * scaleFactor;
