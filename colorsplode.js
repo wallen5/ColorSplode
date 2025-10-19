@@ -255,6 +255,7 @@ function gameMenu1(){
   
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
+  comboDisplay.text = "Combo:" + currentCombo
 
     
   for (let actor of ourCharacters) {
@@ -288,16 +289,13 @@ function gameMenu2(){ //game menu for roguelike mode
   drawColorZones();
   drawVents();
   player.drawHealth();
-
-  if(score == levelSet[currentLevel].scoreThreshold){
-    state = 4;
-  }
   
   //change color if cursor over pause button
   mouseOverButton(pauseButton, "green", "lightgreen");
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
+  comboDisplay.text = "Combo:" + currentCombo;
 
 
   for (let actor of ourCharacters) {
@@ -346,6 +344,10 @@ function gameMenu2(){ //game menu for roguelike mode
     drawLevelMenu();
   }
 
+  if(score >= levelSet[currentLevel].scoreThreshold && !levelUpActive){
+    state = 4;
+  }
+
   if(!gamePaused && !levelUpActive){time++;}
   if(!levelUpActive && (time == 60 * spawnTime * currentVents) && currentVents < maxVents){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
@@ -356,6 +358,7 @@ function gameOver(){
 
   pauseButton.remove();
   scoreDisplay.remove();
+  comboDisplay.remove();
 
   background(gameOverBG);
   stroke("black");
@@ -429,6 +432,8 @@ function exit(){
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
+  comboDisplay.remove();
+  comboDisplay = null;
   score = 0;
   time = 0;
 
@@ -484,8 +489,7 @@ function retry(){
   retryButton.remove();
   exitButton.remove();
 
-  currentColor = color(0);
-  currentCombo = 0;
+  
 
   //set style
   stroke("black");
@@ -502,6 +506,8 @@ function retry(){
   pauseButton.color = "lightgreen";
 
   //display score
+  currentColor = color(0);
+  currentCombo = 0;
   score = 0;
   drawScore();
 
@@ -770,6 +776,8 @@ function quitGame(){
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
+  comboDisplay.remove();
+  comboDisplay = null;
   score = 0;
   time = 0;
 
@@ -820,6 +828,7 @@ function mouseReleased() {
         {
           currentColor = grabbedCharacter.color;
           currentCombo = 1;
+          comboDisplay.color = currentColor;
         }
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
@@ -847,6 +856,12 @@ function drawScore(){
   scoreDisplay.width = 250;
   scoreDisplay.height = 50;
   scoreDisplay.color = "lightgreen";
+
+  comboDisplay = new Sprite(550, 50);
+  comboDisplay.text = "Combo:" + currentCombo;
+  comboDisplay.width = 250;
+  comboDisplay.height = 50;
+  comboDisplay.color = "white";
 }
 
 
