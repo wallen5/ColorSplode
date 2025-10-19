@@ -264,7 +264,9 @@ function roamingMovement(actor) {
   }
 
   checkActorCollision(actor);
+  checkActorToActorCollisions();
 }
+
 function checkActorCollision(actor)
 {
   for (let zone of (levelSet[currentLevel] && levelSet[currentLevel].colorZones ? levelSet[currentLevel].colorZones : [])) {
@@ -292,6 +294,48 @@ function checkActorCollision(actor)
       else if (actor.prevY >= zone.y + zone.h) {
         actor.y = zone.y + zone.h;
         actor.yspeed *= -1;
+      }
+    }
+  }
+}
+
+//check for actor on actor collision
+function checkActorToActorCollisions() {
+  for (let i = 0; i < ourCharacters.length; i++) {
+    let actor1 = ourCharacters[i];
+    if (actor1.state !== "FREE") continue;
+
+    for (let j = i + 1; j < ourCharacters.length; j++) {
+      let actor2 = ourCharacters[j];
+      if (actor2.state !== "FREE") continue;
+
+      //distance between actor centers
+      let xDist = (actor2.x + actor2.size/2) - (actor1.x + actor1.size/2);
+      let yDist = (actor2.y + actor2.size/2) - (actor1.y + actor1.size/2);
+      let dist = Math.sqrt(xDist * xDist + yDist * yDist);
+      let minDist = (actor1.size + actor2.size) / 2; //min distance before overlap
+
+      if (dist < minDist && dist > 0) {
+        //normalize the direction
+        let impactX = xDist / dist;
+        let impactY = yDist / dist;
+
+        //separate the actors
+        let overlap = 0.5 * (minDist - dist);
+        actor1.x -= impactX * overlap;
+        actor1.y -= impactY * overlap;
+        actor2.x += impactX * overlap;
+        actor2.y += impactY * overlap;
+
+        //return speed to actor
+        let relXSpeed = (actor1.xspeed - actor2.xspeed);
+        let relYSpeed = (actor1.yspeed - actor2.yspeed);
+        let bounceFactor = 2 * (impactX * relXSpeed + impactY * relYSpeed) / 2;
+
+        actor1.xspeed -= bounceFactor * impactX;
+        actor1.yspeed -= bounceFactor * impactY;
+        actor2.xspeed += bounceFactor * impactX;
+        actor2.yspeed += bounceFactor * impactY;
       }
     }
   }
