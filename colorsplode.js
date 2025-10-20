@@ -344,7 +344,7 @@ function gameMenu2(){ //game menu for roguelike mode
     drawLevelMenu();
   }
 
-  if(score >= levelSet[currentLevel].scoreThreshold && !levelUpActive){
+  if(score >= levelSet[currentLevel].scoreThreshold && !levelUpActive && state != 0){
     state = 4;
   }
 
@@ -779,6 +779,7 @@ function quitGame(){
   comboDisplay.remove();
   comboDisplay = null;
   score = 0;
+  currentCombo = 0;
   time = 0;
 
 
