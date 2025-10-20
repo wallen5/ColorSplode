@@ -5,6 +5,8 @@ let state = 0;
 let startButton;
 
 let compressor;
+let pickupSounds = [];
+
 
 let chrSprite =[]; //array of character sprits
 let grabSprite =[]; //array of grab animations
@@ -52,7 +54,9 @@ function preload(){
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
-  pickup = loadSound('sounds/pickup.wav');
+  pickupSounds.push(loadSound('sounds/pickup.wav'));
+  pickupSounds.push(loadSound('sounds/pickup2.wav'));
+  pickupSounds.push(loadSound('sounds/pickup3.wav'));
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
@@ -81,12 +85,14 @@ function setup() {
   background(220);
   
   compressor = new p5.Compressor();
-  pickup.setVolume(0.2) ;
   menuMusic.setVolume(0.01);
   levelMusic.setVolume(0.05);
   pauseSound.setVolume(0.02);
   menuMusic.play();
-  
+  for (let s of pickupSounds) {
+    s.setVolume(0.2);
+  }
+
 
   levelMusic.disconnect();
   levelMusic.connect(compressor);
@@ -437,7 +443,8 @@ function mousePressed() {
       grabbedCharacter = actor;
       idx = chrSprite.indexOf(grabbedCharacter.sprite);
       grabbedCharacter.sprite = grabSprite[idx];
-      pickup.play();
+      let randomPickup = random(pickupSounds);
+      randomPickup.play();
       break;
     }
   }
