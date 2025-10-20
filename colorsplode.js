@@ -98,6 +98,7 @@ function preload(){
   ventLeft = loadImage("images/ventLeftUpdate.gif");
   levelUpChoice = loadImage("images/levelChoice.png");
   magnet = loadImage("images/Magnet.png");
+  thinner = loadImage("images/paint_thinner.png")
   freeze = loadImage("images/Freeze.png");
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
@@ -313,12 +314,15 @@ function gameMenu2(){ //game menu for roguelike mode
   if (!actor.frozen || actor.state === "GRABBED") {
     actor.update();
   }
+  
+
   push();
   if (actor.frozen) {
     tint(150, 150, 255); // light blue tint to frozen buckets
   } else {
-    noTint();
+    tint(255,255,255,actor.opacity); // update opacity
   }
+  
   actor.draw();
   pop();
   }
