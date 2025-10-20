@@ -310,12 +310,15 @@ function gameMenu2(){ //game menu for roguelike mode
   if (!actor.frozen || actor.state === "GRABBED") {
     actor.update();
   }
+  
+
   push();
   if (actor.frozen) {
     tint(150, 150, 255); // light blue tint to frozen buckets
   } else {
-    noTint();
+    tint(255,255,255,actor.opacity); // update opacity
   }
+  
   actor.draw();
   pop();
   }

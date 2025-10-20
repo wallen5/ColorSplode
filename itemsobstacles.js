@@ -80,6 +80,7 @@ function makeItems(){
     //new Item("Paint Remover", placeholder, "Unfinished: Heal after x buckets placed"),
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
+    new Item("Paint Thinner", magnet, "Sploded Buckets remove nearby buckets"),
     new Item("Heart Canister", heart, "Start each level with an extra heart")
   ];
 }

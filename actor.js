@@ -21,6 +21,9 @@ class Actor {
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
     this.rotationMax = 360;      // seems like a lot, but looks good (?)
 
+    this.opacity = 255;
+
+
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
 
@@ -98,7 +101,13 @@ class Actor {
            mouseY > this.y && mouseY < this.y + this.size;
     }
 
+  
+  fadeAway() {
+    
+  }
+  
   splode() {
+
     let numParticles = 5;
     let lifetime = 250; // ms
 
@@ -334,6 +343,23 @@ function checkTimer(actor) {
       idx = chrSprite.indexOf(actor.sprite);
       if (idx >= 0) actor.sprite = deathSprite[idx];  
       actor.state = "EXPLODED";
+
+        if (player.hasItem("Paint Thinner")) {
+    console.log("has thinner")
+      for (let char of ourCharacters) {
+      if (char != actor) {
+        let distToActor = abs(dist(actor.x, actor.y, char.x, char.y));
+        if (distToActor < 300) {
+            char.angle = 0;
+            char.timer = 25; // Much Longer Timer
+            console.log("Time After:", char.timeAlive);
+          }
+        }
+      }
+    }
+
+
+
     } else {
       player.health--;
       onTimerFinished(actor);
