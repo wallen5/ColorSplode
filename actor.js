@@ -349,7 +349,7 @@ function checkTimer(actor) {
       for (let char of ourCharacters) {
       if (char != actor) {
         let distToActor = abs(dist(actor.x, actor.y, char.x, char.y));
-        if (distToActor < 300) {
+        if (distToActor < 600) {
             char.angle = 0;
             char.timer = 25; // Much Longer Timer
             console.log("Time After:", char.timeAlive);

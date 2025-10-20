@@ -95,6 +95,7 @@ function preload(){
   ventLeft = loadImage("images/ventLeftUpdate.gif");
   levelUpChoice = loadImage("images/levelChoice.png");
   magnet = loadImage("images/Magnet.png");
+  thinner = loadImage("images/paint_thinner.png")
   freeze = loadImage("images/Freeze.png");
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
