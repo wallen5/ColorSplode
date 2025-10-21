@@ -77,7 +77,7 @@ function makeItems(){
     //new Item("Yarn Ball", placeholder, "Unfinished: Control the meow thing"),
     //new Item("Mixer", placeholder, "Unfinished: Combine two colors"),
     new Item("Blatant Copyright", totem, "Revive...like in Minecraft"),
-    //new Item("Paint Remover", placeholder, "Unfinished: Heal after x buckets placed"),
+    new Item("Paint Scraper", scraper, "Heal after achieving a Combo of 5+"),
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
     new Item("Paint Thinner", thinner, "Sploded Buckets remove nearby buckets"),
