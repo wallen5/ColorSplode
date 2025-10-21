@@ -452,7 +452,10 @@ function onTimerFinished(actor) {
       if (a !== actor && a.state !== "EXPLODED" && a.state !== "SNAPPED") {
         idx = chrSprite.indexOf(a.sprite);
         a.splode();
-        if (idx >= 0) a.sprite = deathSprite[idx];
+        if (idx >= 0){
+           a.sprite = deathSprite[idx];
+           a.sprite.reset();
+        }
         a.state = "EXPLODED";
       }
     }
