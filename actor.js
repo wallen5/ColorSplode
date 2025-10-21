@@ -21,6 +21,9 @@ class Actor {
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
     this.rotationMax = 360;      // seems like a lot, but looks good (?)
 
+    this.opacity = 255;
+
+
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
 
@@ -73,7 +76,8 @@ class Actor {
   }
 
   paintTrail(){
-    if(this.state != "GRABBED" && this.state != "SNAPPED")
+    let remaining = max(this.timer - this.timeAlive, 0);
+    if(this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2))
     {
       let scaleFactor = paintLayer.width / width;
       let px = (this.x + this.size / 2) * scaleFactor;
@@ -98,7 +102,13 @@ class Actor {
            mouseY > this.y && mouseY < this.y + this.size;
     }
 
+  
+  fadeAway() {
+    
+  }
+  
   splode() {
+
     let numParticles = 5;
     let lifetime = 250; // ms
 
@@ -187,13 +197,12 @@ function spawnRate(){
     spawnLogic.timer = 0;
 
     //spawn rate starts to slow down.
-    if (spawnLogic.rate < 2){
-      spawnLogic.rate += 0.025; 
-    } else {
-      spawnLogic.rate += 0.05;
+    if (spawnLogic.rate < 1.5){
+      spawnLogic.rate += spawnRateIncrease; 
+    } else if(spawnLogic.rate < 2) {
+      spawnLogic.rate += (spawnRateIncrease / 2);
     }
   }
-
   ++spawnLogic.timer;
 }
 
@@ -265,10 +274,12 @@ function roamingMovement(actor) {
   }
 
   checkActorCollision(actor);
+  checkActorToActorCollisions();
 }
+
 function checkActorCollision(actor)
 {
-  for (let zone of (currentLevel && currentLevel.colorZones ? currentLevel.colorZones : [])) {
+  for (let zone of (levelSet[currentLevel] && levelSet[currentLevel].colorZones ? levelSet[currentLevel].colorZones : [])) {
     // Collision works as follows: check the top left corner of rect 1, and top left corner of rect 2
     // Because our buckets are a square, you simply use actor.size for both the width and height
     let hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
@@ -298,6 +309,48 @@ function checkActorCollision(actor)
   }
 }
 
+//check for actor on actor collision
+function checkActorToActorCollisions() {
+  for (let i = 0; i < ourCharacters.length; i++) {
+    let actor1 = ourCharacters[i];
+    if (actor1.state !== "FREE") continue;
+
+    for (let j = i + 1; j < ourCharacters.length; j++) {
+      let actor2 = ourCharacters[j];
+      if (actor2.state !== "FREE") continue;
+
+      //distance between actor centers
+      let xDist = (actor2.x + actor2.size/2) - (actor1.x + actor1.size/2);
+      let yDist = (actor2.y + actor2.size/2) - (actor1.y + actor1.size/2);
+      let dist = Math.sqrt(xDist * xDist + yDist * yDist);
+      let minDist = (actor1.size + actor2.size) / 2; //min distance before overlap
+
+      if (dist < minDist && dist > 0) {
+        //normalize the direction
+        let impactX = xDist / dist;
+        let impactY = yDist / dist;
+
+        //separate the actors
+        let overlap = 0.5 * (minDist - dist);
+        actor1.x -= impactX * overlap;
+        actor1.y -= impactY * overlap;
+        actor2.x += impactX * overlap;
+        actor2.y += impactY * overlap;
+
+        //return speed to actor
+        let relXSpeed = (actor1.xspeed - actor2.xspeed);
+        let relYSpeed = (actor1.yspeed - actor2.yspeed);
+        let bounceFactor = 2 * (impactX * relXSpeed + impactY * relYSpeed) / 2;
+
+        actor1.xspeed -= bounceFactor * impactX;
+        actor1.yspeed -= bounceFactor * impactY;
+        actor2.xspeed += bounceFactor * impactX;
+        actor2.yspeed += bounceFactor * impactY;
+      }
+    }
+  }
+}
+
 function grabbedMovement(actor) {
   actor.x = constrain(mouseX - actor.size/2, zoneX, width - actor.size - zoneX);
   actor.y = constrain(mouseY - actor.size/2, zoneY1, height - actor.size - (height - (zoneY2 + zoneHeight)));
@@ -314,7 +367,7 @@ function checkTimer(actor) {
 
   if (remaining <= 0) {
     // Totem Powerup
-    if(player.hasItem("Blatant Copyright")){
+    if(player.hasItem("Blatant Copyright") && player.health < 2){
       mouseReleased();
       idx = chrSprite.indexOf(actor.sprite); // The actor that would explode shows their death sprite
       if (idx >= 0) actor.sprite = deathSprite[idx];  
@@ -329,7 +382,31 @@ function checkTimer(actor) {
       player.removeItem("Blatant Copyright");
       flashScreen = true;   // Makes a cool flashing screen effect
       flashTimer = millis();
+    } else if(player.health >= 2){
+      player.health--;
+      mouseReleased();
+      idx = chrSprite.indexOf(actor.sprite);
+      if (idx >= 0) actor.sprite = deathSprite[idx];  
+      actor.state = "EXPLODED";
+
+        if (player.hasItem("Paint Thinner")) {
+    console.log("has thinner")
+      for (let char of ourCharacters) {
+      if (char != actor) {
+        let distToActor = abs(dist(actor.x, actor.y, char.x, char.y));
+        if (distToActor < 600) {
+            char.angle = 0;
+            char.timer = 25; // Much Longer Timer
+            console.log("Time After:", char.timeAlive);
+          }
+        }
+      }
+    }
+
+
+
     } else {
+      player.health--;
       onTimerFinished(actor);
       return;
     }

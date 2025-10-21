@@ -32,11 +32,13 @@ let restartButton;
 let chooseButton1;
 let chooseButton2;
 let chooseButton3;
+let nextLevelButton;
+let transitionCreated = false;
 
 //Level Up Buttons
 let levelUpActive = false;
 let levelUpTriggered = {};
-let levelUpTrigger = [15, 30, 60, 100, 200];
+let levelUpTrigger = [29, 39, 49, 100, 200];
 
 //Game Over Buttons
 let buttonCreated = false;
@@ -61,8 +63,14 @@ let flashDuration = 200;
 
 
 // Level Stuff
-let currentLevel;
+let currentLevel = 0;
+let currentVents = 1;
+let maxVents = 4;
+let spawnRateIncrease = 0.05;
 
+// Score combo stuff
+let currentColor;
+let currentCombo = 0;
 
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -90,10 +98,11 @@ function preload(){
   ventLeft = loadImage("images/ventLeftUpdate.gif");
   levelUpChoice = loadImage("images/levelChoice.png");
   magnet = loadImage("images/Magnet.png");
+  thinner = loadImage("images/paint_thinner.png")
   freeze = loadImage("images/Freeze.png");
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
-  // nuke = loadImage(images/);
+  heart = loadImage("images/Heart.png");
 }
 
 function setup() {
@@ -101,6 +110,8 @@ function setup() {
   paintLayer = createGraphics(200, 200);
   paintLayer.background(255);
   paintLayer.noSmooth();
+
+  currentColor = color(0)
 
   //start button
   textFont(myFont);
@@ -148,13 +159,7 @@ function setup() {
   zoneWidth = 150;
   zoneHeight = 150;
 
-  currentLevel = new Level(
-    0, 
-    1, 
-    15, 
-    [], 
-    [] // empty zones for now
-  );
+  setBoss();
   makeColorZones();
   makeVents();
   //randomizeZonePlacements();
@@ -175,7 +180,6 @@ function draw() {
       spawnActor();
       spawnRate();
       setGameCusor();
-      
 
   } else if (state == 2){ //play roguelike mode
       gameMenu2();
@@ -187,6 +191,8 @@ function draw() {
       dropBomb();
   } else if (state == 3){ //gameover
       gameOver();
+  } else if(state == 4){
+      levelTransition();
   }
 }
 
@@ -216,13 +222,16 @@ function startMenu(){
     state = 1;
     currentMode = "classic";
     activateRandomVent();
+    player.startHealth = 0;
+    player.health = player.startHealth;
   } 
   if (startButton2.mouse.pressing()) {
     state = 2;
     currentMode = "roguelike";
-    activateRandomVent();
-    randomColorZone(currentLevel);
-  }
+    switchVent(vents[1]);
+    levelSet[currentLevel].setup();
+    player.health = player.startHealth;
+  }   
 
   if (currentMode != null){
     startButton1.remove();
@@ -248,6 +257,7 @@ function gameMenu1(){
   
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
+  comboDisplay.text = "Combo:" + currentCombo
 
     
   for (let actor of ourCharacters) {
@@ -280,12 +290,14 @@ function gameMenu2(){ //game menu for roguelike mode
   image(paintLayer, 0, 0, width, height);
   drawColorZones();
   drawVents();
-
+  player.drawHealth();
+  
   //change color if cursor over pause button
   mouseOverButton(pauseButton, "green", "lightgreen");
 
   //update the displayed score
   scoreDisplay.text = "Score:" + score;
+  comboDisplay.text = "Combo:" + currentCombo;
 
 
   for (let actor of ourCharacters) {
@@ -303,15 +315,18 @@ function gameMenu2(){ //game menu for roguelike mode
   if (!actor.frozen || actor.state === "GRABBED") {
     actor.update();
   }
+  
+
   push();
   if (actor.frozen) {
     tint(150, 150, 255); // light blue tint to frozen buckets
   } else {
-    noTint();
+    tint(255,255,255,actor.opacity); // update opacity
   }
+  
   actor.draw();
   pop();
- }
+  }
 
   stroke(0);
 
@@ -334,8 +349,12 @@ function gameMenu2(){ //game menu for roguelike mode
     drawLevelMenu();
   }
 
+  if(score >= levelSet[currentLevel].scoreThreshold && !levelUpActive && state != 0){
+    state = 4;
+  }
+
   if(!gamePaused && !levelUpActive){time++;}
-  if(!levelUpActive && (time == 60 * spawnTime || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime)){ //spawnTime is the interval at which a new vent spawns
+  if(!levelUpActive && (time == 60 * spawnTime * currentVents) && currentVents < maxVents){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
   } 
 }
@@ -344,6 +363,7 @@ function gameOver(){
 
   pauseButton.remove();
   scoreDisplay.remove();
+  comboDisplay.remove();
 
   background(gameOverBG);
   stroke("black");
@@ -408,6 +428,8 @@ function exit(){
   ourCharacters = [];
   levelUpTriggered = {};
   player.inventory = [];
+  currentLevel = 0;
+  player.health = player.startHealth;
   buttonCreated = false;
   exitButton.remove();
   retryButton.remove();
@@ -415,6 +437,8 @@ function exit(){
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
+  comboDisplay.remove();
+  comboDisplay = null;
   score = 0;
   time = 0;
 
@@ -436,12 +460,12 @@ function restart(){
   ourCharacters = [];
   levelUpTriggered = {};
   player.inventory = [];
+  currentLevel = 0;
   //display score
   score = 0;
   time = 0;
 
   //reset spawn logic after quit
-  time = 0;
   closeAllVents();
   activateRandomVent();
   randomColorZone(currentLevel);
@@ -449,6 +473,8 @@ function restart(){
   spawnLogic.timeToSpawn =  100;
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
+  currentColor = color(0);
+  currentCombo = 0;
 
   paintLayer.background(255);
 
@@ -462,9 +488,13 @@ function retry(){
   ourCharacters = [];
   levelUpTriggered = {};
   player.inventory = [];
+  player.health = player.startHealth;
+  currentLevel = 0;
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
+
+  
 
   //set style
   stroke("black");
@@ -481,6 +511,8 @@ function retry(){
   pauseButton.color = "lightgreen";
 
   //display score
+  currentColor = color(0);
+  currentCombo = 0;
   score = 0;
   drawScore();
 
@@ -692,9 +724,9 @@ function drawLevelMenu(){
 
   image(levelUpChoice, 0, 0);
 
-  image(levelChoices[0].sprite, 120, 250);
-  image(levelChoices[1].sprite, 370, 250);
-  image(levelChoices[2].sprite, 610, 250);
+  image(levelChoices[0].sprite, 120, 250, 60, 60);
+  image(levelChoices[1].sprite, 370, 250, 60, 60);
+  image(levelChoices[2].sprite, 610, 250, 60, 60);
 
   fill(0);
 
@@ -749,13 +781,18 @@ function quitGame(){
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
+  comboDisplay.remove();
+  comboDisplay = null;
   score = 0;
+  currentCombo = 0;
   time = 0;
 
 
   ourCharacters = []; // Removes all enemies to prevent duplicates
   levelUpTriggered = {};
   player.inventory = [];
+  player.health = player.startHealth;
+  currentLevel = 0;
 
   //reset spawn logic after quit
   closeAllVents();
@@ -789,11 +826,21 @@ function mouseReleased() {
       const idx = grabSprite.indexOf(grabbedCharacter.sprite); 
       const actorColor = colors[idx]; // "red","blue","purple","green"
       if (zone.color === actorColor) {
+        if(currentColor.toString() == grabbedCharacter.color.toString())
+        {
+          currentCombo += 1;
+        }
+        else
+        {
+          currentColor = grabbedCharacter.color;
+          currentCombo = 1;
+          comboDisplay.color = currentColor;
+        }
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
         //update score if character is in correct color zone
-        score += 1;
+        score += 1 * currentCombo;
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
@@ -815,6 +862,12 @@ function drawScore(){
   scoreDisplay.width = 250;
   scoreDisplay.height = 50;
   scoreDisplay.color = "lightgreen";
+
+  comboDisplay = new Sprite(550, 50);
+  comboDisplay.text = "Combo:" + currentCombo;
+  comboDisplay.width = 250;
+  comboDisplay.height = 50;
+  comboDisplay.color = "white";
 }
 
 
