@@ -103,6 +103,7 @@ function preload(){
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
   heart = loadImage("images/Heart.png");
+  bomb = loadImage("images/Bomb.png");
 }
 
 function setup() {
@@ -750,16 +751,19 @@ function drawLevelMenu(){
   pop(); // restore settings
   if(chooseButton1.mouse.pressed()){
     player.addItem(levelChoices[0]);
+    if (levelChoices[0].name === "Bomb") bombisReady = true;
     allItems.splice(allItems.indexOf(levelChoices[0]), 1);
     levelUp();
   }
   if(chooseButton2 && chooseButton2.mouse.pressed()){
     player.addItem(levelChoices[1]);
+    if (levelChoices[1].name === "Bomb") bombisReady = true;
     allItems.splice(allItems.indexOf(levelChoices[1]), 1);
     levelUp();
   }
   if(chooseButton3 && chooseButton3.mouse.pressed()){
     player.addItem(levelChoices[2]);
+    if (levelChoices[2].name === "Bomb") bombisReady = true;
     allItems.splice(allItems.indexOf(levelChoices[2]), 1);
     levelUp();
   }

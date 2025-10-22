@@ -77,7 +77,7 @@ function makeItems(){
     //new Item("Yarn Ball", placeholder, "Unfinished: Control the meow thing"),
     //new Item("Mixer", placeholder, "Unfinished: Combine two colors"),
     new Item("Blatant Copyright", totem, "Revive...like in Minecraft"),
-    //new Item("Nuke", nuke, "Destroy all the paint buckets in the click of a button. Press 'b' to use." )
+    new Item("Bomb", bomb, "Destroy all the paint buckets in the click of a button. Press 'b' to use." ),
     //new Item("Paint Remover", placeholder, "Unfinished: Heal after x buckets placed"),
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
@@ -86,15 +86,21 @@ function makeItems(){
   ];
 }
 
+let bombisReady = false;
+
 function dropBomb(){
- // if(player.hasItem("Nuke"))
-  if (keyIsPressed && key.toLowerCase() === 'b'){
+  if (key.toLowerCase() === 'b' && bombisReady){
+    bombisReady = false;
+    player.removeItem("Bomb");
+    let actorsDestroyed = spawnLogic.activeActors; 
+    spawnLogic.activeActors = 0;
+
     //remove paint buckets
     ourCharacters = [];
     time = 0;
     spawnLogic.timer = 50;
     spawnLogic.timeToSpawn =  100;
     spawnLogic.rate = 1;
-    spawnLogic.activeActors = 0;
-  } 
+    score += actorsDestroyed;  // Add score based on number of actors destroyed
+  }
 }
