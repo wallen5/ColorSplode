@@ -90,17 +90,32 @@ let bombisReady = false;
 
 function dropBomb(){
   if (key.toLowerCase() === 'b' && bombisReady){
+    //play sound effect
+    bomb.play();
+
+    //Remove bomb fron inventory
     bombisReady = false;
     player.removeItem("Bomb");
-    let actorsDestroyed = spawnLogic.activeActors; 
-    spawnLogic.activeActors = 0;
 
     //remove paint buckets
+    spawnLogic.activeActors = 0;
     ourCharacters = [];
     time = 0;
-    spawnLogic.timer = 50;
-    spawnLogic.timeToSpawn =  100;
-    spawnLogic.rate = 1;
+    
+    // Store original
+    const originalTimer = spawnLogic.timer;
+    const originalTimeToSpawn = spawnLogic.timeToSpawn;
+    
+    // Stop spawning
+    spawnLogic.rate = 0;
+    let actorsDestroyed = spawnLogic.activeActors; 
     score += actorsDestroyed;  // Add score based on number of actors destroyed
+
+    // Resume spawning after 5 seconds
+    setTimeout(() => {
+      spawnLogic.rate = 1;
+      spawnLogic.timer = originalTimer;
+      spawnLogic.timeToSpawn = originalTimeToSpawn;
+    }, 5000);
   }
 }

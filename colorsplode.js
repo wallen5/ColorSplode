@@ -80,6 +80,7 @@ function preload(){
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
   pickup = loadSound('sounds/pickup.wav');
+  bomb = loadSound('sounds/nuclear-explosion.mp3');
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
@@ -232,6 +233,10 @@ function startMenu(){
     switchVent(vents[1]);
     levelSet[currentLevel].setup();
     player.health = player.startHealth;
+    if (!player.hasItem("Bomb")) {
+      player.addItem(allItems.find(item => item.name === "Bomb"));
+      bombisReady = true;
+    }
   }   
 
   if (currentMode != null){
@@ -747,6 +752,7 @@ function drawLevelMenu(){
   mouseOverButton(chooseButton1, "pink", "red");
   mouseOverButton(chooseButton2, "lightgreen", "green");
   mouseOverButton(chooseButton3, "lightblue", "blue");
+
 
   pop(); // restore settings
   if(chooseButton1.mouse.pressed()){
