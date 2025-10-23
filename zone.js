@@ -81,19 +81,19 @@ let zoneX = 50, zoneY1 = 100, zoneY2 = 620, zoneWidth = 150, zoneHeight = 150, g
 // create 4 drop zones along the bottom
 function makeColorZones() {
   levelSet[currentLevel].colorZones = [
-    new Zone(zoneX, zoneY1, zoneWidth, zoneHeight, "red"),
-    new Zone(zoneX, zoneY2, zoneWidth, zoneHeight, "blue"),
-    new Zone(width - zoneWidth - zoneX, zoneY2, zoneWidth, zoneHeight, "purple"),
-    new Zone(width - zoneWidth - zoneX, zoneY1, zoneWidth, zoneHeight, "green")
-  ];
+        new Zone(50 + gameX, 100 + gameY, 150, 150, "blue"),
+        new Zone(50 + gameX, 620 + gameY, 150, 150, "green"),
+        new Zone(gameLayer.width - 150 - 50 + gameX, 620 + gameY, 150, 150, "red"),
+        new Zone(gameLayer.width - 150 - 50 + gameX, 100 + gameY, 150, 150, "purple")
+        ];
 }
 
 // Sets random X and Y for color zones for testing (Could expand on this if we want to implement this as a feature later on)
 function randomizeZonePlacements()
 {
   levelSet[currentLevel].colorZones = colors.map(color => new Zone({ 
-  x: random(0, width - zoneWidth), 
-  y: random(0, height - zoneHeight), 
+  x: random(0, gameLayer.width - zoneWidth), 
+  y: random(0, gameLayer.height - zoneHeight), 
   w: zoneWidth,
   h: zoneHeight,
   color: color
@@ -109,10 +109,10 @@ const wall = ["left","right","top","bottom"];
 // For now coords are set, could randomize later
 function makeVents(){
   vents = [
-    new Vent(-50, 350, 100, 75, "left", false, ventLeft),
-    new Vent(350, 650, 75, 100, "bottom", false, ventBottom),
-    new Vent(650, 350, 100, 75, "right", false, ventRight),
-    new Vent(350, -50, 75, 100, "top", false, ventTop)
+    new Vent(-50 + gameX, 350 + gameY, 100, 75, "left", false, ventLeft),
+    new Vent(350 + gameX, 650 + gameY, 75, 100, "bottom", false, ventBottom),
+    new Vent(650 + gameX, 350 + gameY, 100, 75, "right", false, ventRight),
+    new Vent(350 + gameX, -50 + gameY, 75, 100, "top", false, ventTop)
   ];
 }
 
