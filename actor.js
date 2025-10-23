@@ -455,7 +455,7 @@ function onTimerFinished(actor) {
   //explode all buckets not sorted
   setTimeout(() => {
     for (let a of ourCharacters) {
-      if (a !== actor && a.state !== "EXPLODED") {
+      if (a !== actor && a.state !== "EXPLODED" && a.state != "SNAPPED") {
         idx = chrSprite.indexOf(a.sprite);
         a.splode();
         if (idx >= 0) a.sprite = deathSprite[idx];
