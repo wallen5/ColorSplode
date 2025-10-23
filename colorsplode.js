@@ -38,7 +38,7 @@ let transitionCreated = false;
 //Level Up Buttons
 let levelUpActive = false;
 let levelUpTriggered = {};
-let levelUpTrigger = [1, 2, 3, 100, 200];
+let levelUpTrigger = [39, 69, 75, 99, 200];
 
 //Game Over Buttons
 let buttonCreated = false;
