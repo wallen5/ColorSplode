@@ -34,7 +34,7 @@ class Player {
       if (elapsed < flashDuration) {
         fill(255, 255, 0, 150);
         noStroke();
-        rect(0, 0, width, height);
+        rect(gameX, gameY, gameLayer.width, gameLayer.height);
       } else {
         flashScreen = false;
       }
@@ -48,15 +48,15 @@ class Player {
     }
     for(let i = 0; i < this.health; ++i){
       if(player.health >= 1){
-        image(heart, 350 - ((this.health - 3) * 15) + (i * 35), 765, 30, 30);
+        image(heart, 1000 - ((this.health - 3) * 15) + (i * 35), 990, 30, 30);
       }
     }
   }
 
   drawInventory() { // Draws player inventory so they can see their items
     push();
-    let startX = 250;
-    let startY = -10;
+    let startX = 320;
+    let startY = 950;
     let size = 40;
     let spacing = 10;
 
@@ -76,7 +76,7 @@ function makeItems(){
     new Item("Freeze", freeze, "Hovering over a bucket freezes it for a short time"),
     //new Item("Yarn Ball", placeholder, "Unfinished: Control the meow thing"),
     //new Item("Mixer", placeholder, "Unfinished: Combine two colors"),
-    new Item("Blatant Copyright", totem, "Revive...like in Minecraft"),
+    new Item("Totem of Varnish", totem, "Revive...like in REDACTED"),
     new Item("Paint Scraper", scraper, "Heal after achieving a Combo of 5+"),
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")

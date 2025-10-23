@@ -45,31 +45,31 @@ class Level{
 }  
 
 function randomColorZone(level) {
-    let randPreset = floor(random(0,2));
+    let randPreset = floor(random(0,3));
 
     switch (randPreset) {
     case 0: // Corners
         level.colorZones = [
-        new Zone(50, 100, 150, 150, "red"),
-        new Zone(50, 620, 150, 150, "blue"),
-        new Zone(width - 150 - 50, 620, 150, 150, "purple"),
-        new Zone(width - 150 - 50, 100, 150, 150, "green")
+        new Zone(50 + gameX, 100 + gameY, 150, 150, "red"),
+        new Zone(50 + gameX, 620 + gameY, 150, 150, "blue"),
+        new Zone(gameLayer.width - 150 - 50 + gameX, 620 + gameY, 150, 150, "purple"),
+        new Zone(gameLayer.width - 150 - 50 + gameX, 100 + gameY, 150, 150, "green")
         ];
         break;
     case 1:
         level.colorZones = [
-        new Zone(50, 100, 150, 150, "blue"),
-        new Zone(50, 620, 150, 150, "green"),
-        new Zone(width - 150 - 50, 620, 150, 150, "red"),
-        new Zone(width - 150 - 50, 100, 150, 150, "purple")
+        new Zone(50 + gameX, 100 + gameY, 150, 150, "blue"),
+        new Zone(50 + gameX, 620 + gameY, 150, 150, "green"),
+        new Zone(gameLayer.width - 150 - 50 + gameX, 620 + gameY, 150, 150, "red"),
+        new Zone(gameLayer.width - 150 - 50 + gameX, 100 + gameY, 150, 150, "purple")
         ];
         break;
     case 2:
         level.colorZones = [
-        new Zone(50, 100, 150, 150, "purple"),
-        new Zone(50, 620, 150, 150, "red"),
-        new Zone(width - 150 - 50, 620, 150, 150, "green"),
-        new Zone(width - 150 - 50, 100, 150, 150, "blue")
+        new Zone(50 + gameX, 100 + gameY, 150, 150, "purple"),
+        new Zone(50 + gameX, 620 + gameY, 150, 150, "red"),
+        new Zone(gameLayer.width - 150 - 50 + gameX, 620 + gameY, 150, 150, "green"),
+        new Zone(gameLayer.width - 150 - 50 + gameX, 100 + gameY, 150, 150, "blue")
         ];
         break;
         
@@ -77,8 +77,8 @@ function randomColorZone(level) {
         level.colorZones = [
         new Zone(50, 100, 150, 150, "red"),
         new Zone(50, 620, 150, 150, "blue"),
-        new Zone(width - 150 - 50, 620, 150, 150, "purple"),
-        new Zone(width - 150 - 50, 100, 150, 150, "green")
+        new Zone(gameLayer.width - 150 - 50, 620, 150, 150, "purple"),
+        new Zone(gameLayer.width - 150 - 50, 100, 150, 150, "green")
         ];
     }
 }
@@ -121,13 +121,14 @@ function setBoss(){
 }
 
 function levelTransition(){
-  background(117, 2, 0);
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(117, 2, 0);
 
   push();
   fill(237, 204, 42);
   textAlign(CENTER, CENTER);
   textSize(30);
-  text("Level " + levelSet[currentLevel].difficulty + " Complete", width / 2, height / 2 - 50);
+  text("Level " + levelSet[currentLevel].difficulty + " Complete", gameLayer.width / 2 + gameX, gameLayer.height / 2 + gameY - 50);
   textSize(12);
   pop();
 
@@ -138,13 +139,13 @@ function levelTransition(){
   currentCombo = 0;
 
   if(!transitionCreated){
-    quitButton = new Sprite(400, 550);
+    quitButton = new Sprite(400 + gameX, 550 + gameY);
     quitButton.text = "Quit";
     quitButton.width = 200;
     quitButton.height = 50;
     quitButton.color = "red";
 
-    nextLevelButton = new Sprite(400, 500);
+    nextLevelButton = new Sprite(400 + gameX, 500 + gameY);
     nextLevelButton.text = "Next Level";
     nextLevelButton.width = 400;
     nextLevelButton.height = 50;
@@ -160,12 +161,13 @@ function levelTransition(){
 
   if(levelSet[currentLevel].difficulty == 3){
     nextLevelButton.remove();
-    background(117, 2, 0);
+    image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+    gameLayer.background(117, 2, 0);
     push();
     fill(237, 204, 42);
     textAlign(CENTER, CENTER);
     textSize(50)
-    text("Victory", width / 2, height / 2 - 50);
+    text("Victory", gameLayer.width / 2 + gameX, gameLayer.height / 2 + gameY - 50);
     textSize(12);
     pop();
   }
@@ -215,7 +217,7 @@ function levelTransition(){
     spawnLogic.rate = 1;
     spawnLogic.activeActors = 0;
     paintLayer.background(255);
-    pauseButton = new Sprite(750, 50);
+    pauseButton = new Sprite(750 + gameX, 50 + gameY);
     pauseButton.text = "||";
     pauseButton.width = 70;
     pauseButton.height = 50;

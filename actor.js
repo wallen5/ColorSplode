@@ -1,10 +1,10 @@
 // A Class of Our Actors/Characters
 class Actor {
   constructor(x, y, sprite, color) {
-    this.x = x;
-    this.y = y;
-    this.prevX = x; // Needed for "bouncing" collision detection
-    this.prevY = y;
+    this.x = x + gameX;
+    this.y = y + gameY;
+    this.prevX = x + gameX; // Needed for "bouncing" collision detection
+    this.prevY = y + gameY;
     this.size = 50;
     this.sprite = sprite;
     this.color = color;
@@ -55,7 +55,7 @@ class Actor {
     translate(this.x + this.size/2, this.y + this.size/2); // move to center
     rotate(radians(this.angle)); // use actor.angle
     imageMode(CENTER);
-    if(this.state == "EXPLODED" && this.state != "SNAPPED"){
+    if(this.state == "EXPLODED"){
       image(this.sprite, 0, 0, this.size + 40, this.size + 40);
     } else {
       image(this.sprite, 0, 0, this.size, this.size);
@@ -68,9 +68,15 @@ class Actor {
       let p = this.particles[i];
       fill(p.color);
       noStroke();
-      circle(p.x, p.y, p.size);
-      p.x += p.vx;
-      p.y += p.vy;
+      circle(p.x, p.y, p.size); 
+      if(p.x < gameLayer.width + gameX - 10 && 
+        p.y < gameLayer.height + gameY - 10 && 
+        p.x > gameX + 10 && p.y > gameY + 10){
+        p.x += p.vx;
+        p.y += p.vy;
+      } else {
+        this.particles.splice(i,1);
+      }
 
       // Fade and remove after set time is up
       if (millis() - p.born > 1500) {
@@ -83,11 +89,11 @@ class Actor {
     let remaining = max(this.timer - this.timeAlive, 0);
     if(this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2))
     {
-      let scaleFactor = paintLayer.width / width;
-      let px = (this.x + this.size / 2) * scaleFactor;
-      let py = (this.y + this.size / 2) * scaleFactor;
-      let pPrevX = (this.prevX + this.size / 2) * scaleFactor;
-      let pPrevY = (this.prevY + this.size / 2) * scaleFactor;
+      let scaleFactor = paintLayer.width / gameLayer.width;
+      let px = (this.x + this.size / 2 - gameX) * scaleFactor;
+      let py = (this.y + this.size / 2 - gameY) * scaleFactor;
+      let pPrevX = (this.prevX + this.size / 2 - gameX) * scaleFactor;
+      let pPrevY = (this.prevY + this.size / 2 - gameY) * scaleFactor;
 
       // Growth curve for stroke weight
       let lifeProgress = constrain(this.timeAlive / this.timer, 0, 1);
@@ -188,7 +194,7 @@ function spawnActor(){
     randColor = lerpColor(randColor, color(255,255,255), 0.7); // Gives the colors a pastel look
 
     // Chooses and pushes a random bucket to be spawned
-    ourCharacters.push(new Actor(newX, newY, chrSprite[randIndex], randColor));
+    ourCharacters.push(new Actor(newX - gameX, newY - gameY, chrSprite[randIndex], randColor));
     ++spawnLogic.activeActors;
   }
 }
@@ -371,7 +377,7 @@ function checkTimer(actor) {
 
   if (remaining <= 0) {
     // Totem Powerup
-    if(player.hasItem("Blatant Copyright") && player.health < 2){
+    if(player.hasItem("Totem of Varnish") && player.health < 2){
       mouseReleased();
       idx = chrSprite.indexOf(actor.sprite); // The actor that would explode shows their death sprite
       if (idx >= 0) actor.sprite = deathSprite[idx];  
@@ -383,7 +389,7 @@ function checkTimer(actor) {
           spawnLogic.activeActors--;
         }
       }
-      player.removeItem("Blatant Copyright");
+      player.removeItem("Totem of Varnish");
       flashScreen = true;   // Makes a cool flashing screen effect
       flashTimer = millis();
     } else if(player.health >= 2){
@@ -449,13 +455,10 @@ function onTimerFinished(actor) {
   //explode all buckets not sorted
   setTimeout(() => {
     for (let a of ourCharacters) {
-      if (a !== actor && a.state !== "EXPLODED" && a.state !== "SNAPPED") {
+      if (a !== actor && a.state !== "EXPLODED") {
         idx = chrSprite.indexOf(a.sprite);
         a.splode();
-        if (idx >= 0){
-           a.sprite = deathSprite[idx];
-           a.sprite.reset();
-        }
+        if (idx >= 0) a.sprite = deathSprite[idx];
         a.state = "EXPLODED";
       }
     }
