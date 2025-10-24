@@ -77,10 +77,67 @@ function makeItems(){
     //new Item("Yarn Ball", placeholder, "Unfinished: Control the meow thing"),
     //new Item("Mixer", placeholder, "Unfinished: Combine two colors"),
     new Item("Blatant Copyright", totem, "Revive...like in Minecraft"),
+    new Item("Bomb", bomb, "Destroy all the paint buckets in the click of a button. Press 'b' to use." ),
     //new Item("Paint Remover", placeholder, "Unfinished: Heal after x buckets placed"),
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
     new Item("Paint Thinner", thinner, "Sploded Buckets remove nearby buckets"),
     new Item("Heart Canister", heart, "Start each level with an extra heart")
   ];
+}
+
+let bombisReady = false;
+//let explosion;
+
+function dropBomb(){
+  if (key.toLowerCase() === 'b' && bombisReady){
+    //play sound effect
+    bombSound.play();
+    explodeGif.play();
+    
+    //Remove bomb fron inventory
+    bombisReady = false;
+    player.removeItem("Bomb");
+
+    // Start explosion animation
+    explosionActive = true;
+
+    //remove paint buckets
+    spawnLogic.activeActors = 0;
+    ourCharacters = [];
+    time = 0;
+    
+    // Store original
+    const originalTimer = spawnLogic.timer;
+    const originalTimeToSpawn = spawnLogic.timeToSpawn;
+    
+    // Stop spawning
+    spawnLogic.rate = 0;
+    let actorsDestroyed = spawnLogic.activeActors; 
+    score += actorsDestroyed;  // Add score based on number of actors destroyed
+
+    // Resume spawning after 5 seconds
+    setTimeout(() => {
+      spawnLogic.rate = 1;
+      spawnLogic.timer = originalTimer;
+      spawnLogic.timeToSpawn = originalTimeToSpawn;
+    }, 5000);
+
+    //explodeGif.position(50,350);
+  }
+}
+
+function drawExplosion(){
+  // Draw explosion if active
+      if (explosionActive) {
+        push();
+        imageMode(CENTER);
+        image(explodeGif, explosionX, explosionY, 700, 700);
+        pop();
+        // Check if explosion duration is over
+        if (timer > explosionDuration) {
+          explosionActive = false;
+        }
+        ++timer;
+      }
 }

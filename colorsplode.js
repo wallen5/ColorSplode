@@ -75,14 +75,23 @@ let spawnRateIncrease = 0.05;
 let currentColor;
 let currentCombo = 0;
 
+let bombSound;
+let explodeGif;
+let explosionActive = false;
+let explosionDuration = 500/3; // 1 second duration
+let explosionX = 400;
+let explosionY = 400;
+
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
-  gameOverBG = loadImage("images/gameoverbackground.png")
+  gameOverBG = loadImage("images/gameoverbackground.png");
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
   pickup = loadSound('sounds/pickup.wav');
+  bombSound = loadSound('sounds/nuclear-explosion.mp3');
+  explodeGif = loadImage("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
@@ -106,6 +115,7 @@ function preload(){
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
   heart = loadImage("images/Heart.png");
+  bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
 }
 
@@ -173,6 +183,7 @@ function setup() {
 
 }
 
+let timer = 0;
 
 function draw() {
   cursor("images/pointerHand.png", 10, 10);
@@ -185,13 +196,14 @@ function draw() {
       spawnActor();
       spawnRate();
       setGameCusor();
-
   } else if (state == 2){ //play roguelike mode
       gameMenu2();
       spawnActor();
       spawnRate();
       setGameCusor();
       player.drawInventory();
+      drawExplosion();
+      dropBomb();
       player.checkTotem(); 
       for (let obstacle of levelSet[currentLevel].obstacles) {
         obstacle.update();
@@ -370,6 +382,9 @@ function gameMenu2(){ //game menu for roguelike mode
   if(!levelUpActive && (time == 60 * spawnTime * currentVents) && currentVents < maxVents){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
   } 
+
+  //createExplosion();
+
 }
 
 function gameOver(){
@@ -762,19 +777,23 @@ function drawLevelMenu(){
   mouseOverButton(chooseButton2, "lightgreen", "green");
   mouseOverButton(chooseButton3, "lightblue", "blue");
 
+
   pop(); // restore settings
   if(chooseButton1.mouse.pressed()){
     player.addItem(levelChoices[0]);
+    if (levelChoices[0].name === "Bomb") bombisReady = true;
     allItems.splice(allItems.indexOf(levelChoices[0]), 1);
     levelUp();
   }
   if(chooseButton2 && chooseButton2.mouse.pressed()){
     player.addItem(levelChoices[1]);
+    if (levelChoices[1].name === "Bomb") bombisReady = true;
     allItems.splice(allItems.indexOf(levelChoices[1]), 1);
     levelUp();
   }
   if(chooseButton3 && chooseButton3.mouse.pressed()){
     player.addItem(levelChoices[2]);
+    if (levelChoices[2].name === "Bomb") bombisReady = true;
     allItems.splice(allItems.indexOf(levelChoices[2]), 1);
     levelUp();
   }
