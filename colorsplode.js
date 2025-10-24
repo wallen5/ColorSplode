@@ -72,6 +72,13 @@ let spawnRateIncrease = 0.05;
 let currentColor;
 let currentCombo = 0;
 
+let bombSound;
+let explodeGif;
+let explosionActive = false;
+let explosionDuration = 500/3; // 1 second duration
+let explosionX = 400;
+let explosionY = 400;
+
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
@@ -80,7 +87,8 @@ function preload(){
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
   pickup = loadSound('sounds/pickup.wav');
-  bomb = loadSound('sounds/nuclear-explosion.mp3');
+  bombSound = loadSound('sounds/nuclear-explosion.mp3');
+  explodeGif = loadImage("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
@@ -170,6 +178,7 @@ function setup() {
   player = new Player();
 }
 
+let timer = 0;
 
 function draw() {
   cursor("images/pointerHand.png", 10, 10);
@@ -182,7 +191,6 @@ function draw() {
       spawnActor();
       spawnRate();
       setGameCusor();
-
   } else if (state == 2){ //play roguelike mode
       gameMenu2();
       spawnActor();
@@ -190,6 +198,18 @@ function draw() {
       setGameCusor();
       player.drawInventory();
       player.checkTotem();
+      // Draw explosion if active
+      if (explosionActive) {
+        push();
+        imageMode(CENTER);
+        image(explodeGif, explosionX, explosionY, 700, 700);
+        pop();
+        // Check if explosion duration is over
+        if (timer > explosionDuration) {
+          explosionActive = false;
+        }
+        ++timer;
+      }
       dropBomb();
   } else if (state == 3){ //gameover
       gameOver();
@@ -233,10 +253,6 @@ function startMenu(){
     switchVent(vents[1]);
     levelSet[currentLevel].setup();
     player.health = player.startHealth;
-    if (!player.hasItem("Bomb")) {
-      player.addItem(allItems.find(item => item.name === "Bomb"));
-      bombisReady = true;
-    }
   }   
 
   if (currentMode != null){
@@ -363,6 +379,9 @@ function gameMenu2(){ //game menu for roguelike mode
   if(!levelUpActive && (time == 60 * spawnTime * currentVents) && currentVents < maxVents){ //spawnTime is the interval at which a new vent spawns
     activateRandomVent();
   } 
+
+  //createExplosion();
+
 }
 
 function gameOver(){

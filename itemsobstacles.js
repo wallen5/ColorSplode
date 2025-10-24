@@ -87,15 +87,20 @@ function makeItems(){
 }
 
 let bombisReady = false;
+//let explosion;
 
 function dropBomb(){
   if (key.toLowerCase() === 'b' && bombisReady){
     //play sound effect
-    bomb.play();
-
+    bombSound.play();
+    explodeGif.play();
+    
     //Remove bomb fron inventory
     bombisReady = false;
     player.removeItem("Bomb");
+
+    // Start explosion animation
+    explosionActive = true;
 
     //remove paint buckets
     spawnLogic.activeActors = 0;
@@ -117,5 +122,7 @@ function dropBomb(){
       spawnLogic.timer = originalTimer;
       spawnLogic.timeToSpawn = originalTimeToSpawn;
     }, 5000);
+
+    //explodeGif.position(50,350);
   }
 }
