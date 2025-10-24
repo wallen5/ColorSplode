@@ -823,12 +823,5 @@ class Actor {
       imageMode(CENTER);
       image(this.sprite, 0, 0, this.size, this.size);
       pop();
-  
-      if (this.targetZone) {
-        noFill();
-        stroke(255, 255, 0);
-        strokeWeight(2);
-        rect(this.targetZone.x, this.targetZone.y, this.targetZone.w, this.targetZone.h);
-      }
     }
   }
