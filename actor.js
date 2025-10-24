@@ -23,6 +23,9 @@ class Actor {
 
     this.opacity = 255;
 
+    this.flipX = 1;             // facing direction (1 = right, -1 = left)
+    this.lastFlipTime = 0;      // when we last flipped??
+    this.flipCooldown = 500;    // ms 
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
@@ -53,6 +56,14 @@ class Actor {
   draw(){
     push();
     translate(this.x + this.size/2, this.y + this.size/2); // move to center
+    let desiredFlip = this.xspeed < 0.0 ? 1 : -1;
+    let now = millis();
+    if (desiredFlip !== this.flipX && now - this.lastFlipTime > this.flipCooldown) {
+      this.flipX = desiredFlip;
+      this.lastFlipTime = now;
+    }
+    // Apply the current facing direction
+    scale(this.flipX, 1);
     rotate(radians(this.angle)); // use actor.angle
     imageMode(CENTER);
     image(this.sprite, 0, 0, this.size, this.size);
@@ -458,6 +469,5 @@ function onTimerFinished(actor) {
   }, 550); 
 
   //delays gameover so death animation plays
-
-  setTimeout(() => state = 3, 2000);
+  setTimeout(() => state = 3, 2500);
 }
