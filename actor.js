@@ -6,6 +6,7 @@ class Actor {
     this.prevX = x; // Needed for "bouncing" collision detection
     this.prevY = y;
     this.size = 50;
+    this.grabBox = 75;
     this.sprite = sprite;
     this.originalSprite = sprite;
     this.color = color;
@@ -99,8 +100,8 @@ class Actor {
 
   //makes sure the mouse is over the character
   isMouseOver() { 
-    return mouseX > this.x && mouseX < this.x + this.size &&
-            mouseY > this.y && mouseY < this.y + this.size;
+    return mouseX > this.x && mouseX < this.x + this.grabBox &&
+            mouseY > this.y && mouseY < this.y + this.grabBox;
     }
 
   
