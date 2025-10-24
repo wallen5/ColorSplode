@@ -62,9 +62,12 @@ class Actor {
     // Draw the particles around the actor
     for (let i = this.particles.length-1; i >= 0; i--) {
       let p = this.particles[i];
+      p.vy += 0.3;
+
       fill(p.color);
       noStroke();
       circle(p.x, p.y, p.size);
+      
       p.x += p.vx;
       p.y += p.vy;
 
@@ -109,20 +112,20 @@ class Actor {
   
   splode() {
 
-    let numParticles = 5;
+    let numParticles = 6;
     let lifetime = 250; // ms
 
     for (let i = 0; i < numParticles; i++) {
       
       let vx = random(-10, 10);
-      let vy = random(-10, 10);
+      let vy = random(-10, 1);
 
       let p = {
         x: this.x + this.size/2,
         y: this.y + this.size/2,
         vx: vx,
         vy: vy,
-        size: 8,
+        size: 6,
         born: millis(),
         color: this.sprite === chrSprite[0] ? color(255,0,0) :
               this.sprite === chrSprite[1] ? color(0,0,255) :
