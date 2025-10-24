@@ -126,3 +126,18 @@ function dropBomb(){
     //explodeGif.position(50,350);
   }
 }
+
+function drawExplosion(){
+  // Draw explosion if active
+      if (explosionActive) {
+        push();
+        imageMode(CENTER);
+        image(explodeGif, explosionX, explosionY, 700, 700);
+        pop();
+        // Check if explosion duration is over
+        if (timer > explosionDuration) {
+          explosionActive = false;
+        }
+        ++timer;
+      }
+}

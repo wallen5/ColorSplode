@@ -198,18 +198,7 @@ function draw() {
       setGameCusor();
       player.drawInventory();
       player.checkTotem();
-      // Draw explosion if active
-      if (explosionActive) {
-        push();
-        imageMode(CENTER);
-        image(explodeGif, explosionX, explosionY, 700, 700);
-        pop();
-        // Check if explosion duration is over
-        if (timer > explosionDuration) {
-          explosionActive = false;
-        }
-        ++timer;
-      }
+      drawExplosion();
       dropBomb();
   } else if (state == 3){ //gameover
       gameOver();
