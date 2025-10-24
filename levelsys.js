@@ -39,10 +39,28 @@ class Level{
         randomColorZone(this);
     }
 
-    setObstacles(){
-        
-    }
+    setObstacles() {
+        this.obstacles = [];
+      
+        if (this.difficulty === 1) {
+            //this.obstacles.push(rougeActor);
+        } else if (this.difficulty === 2) {
+            setTimeout(() => {spawnRougeActor();}, 2000);
+            if (rougeCharacter) {
+                this.obstacles.push(rougeCharacter);
+            }
+            //add more later
+        }
+      }
+      
 }  
+
+function clearObstacles() {
+    if (levelSet[currentLevel]) {
+        levelSet[currentLevel].obstacles = [];
+    }
+    rougeCharacter = null;
+}
 
 function randomColorZone(level) {
     let randPreset = floor(random(0,2));
@@ -193,11 +211,15 @@ function levelTransition(){
     spawnLogic.timeToSpawn =  100;
     spawnLogic.rate = 1;
     spawnLogic.activeActors = 0;
+    clearObstacles();
 
     setup();
     transitionCreated = false;
   }
   if(nextLevelButton.mouse.pressing()){
+    //remove obstacles
+    clearObstacles();
+
     state = 2;
     currentMode = "roguelike";
     currentLevel++;

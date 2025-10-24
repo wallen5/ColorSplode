@@ -19,6 +19,9 @@ let grabSprite =[]; //array of grab animations
 let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
 
+let rougeCharacter = null;
+let rougeBucketSprite;
+
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
 let backgroundImage;
@@ -103,6 +106,7 @@ function preload(){
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
   heart = loadImage("images/Heart.png");
+  rougeBucketSprite = loadImage("images/susbucket.gif");
 }
 
 function setup() {
@@ -166,6 +170,7 @@ function setup() {
 
   makeItems();
   player = new Player();
+
 }
 
 
@@ -187,7 +192,11 @@ function draw() {
       spawnRate();
       setGameCusor();
       player.drawInventory();
-      player.checkTotem();
+      player.checkTotem(); 
+      for (let obstacle of levelSet[currentLevel].obstacles) {
+        obstacle.update();
+        obstacle.display();
+      }    
   } else if (state == 3){ //gameover
       gameOver();
   } else if(state == 4){
@@ -298,7 +307,6 @@ function gameMenu2(){ //game menu for roguelike mode
   scoreDisplay.text = "Score:" + score;
   comboDisplay.text = "Combo:" + currentCombo;
 
-
   for (let actor of ourCharacters) {
   // Freeze powerup
   if (actor.isMouseOver() && !actor.frozen && player.hasItem("Freeze")) {
@@ -325,6 +333,12 @@ function gameMenu2(){ //game menu for roguelike mode
   
   actor.draw();
   pop();
+  }
+
+  // only run these if rougeCharacter exists
+  if (rougeCharacter) {
+    rougeCharacter.update();
+    rougeCharacter.draw();
   }
 
   stroke(0);
@@ -432,6 +446,7 @@ function exit(){
   buttonCreated = false;
   exitButton.remove();
   retryButton.remove();
+  clearObstacles();
 
   levelMusic.stop();
   scoreDisplay.remove()
@@ -464,6 +479,8 @@ function restart(){
   score = 0;
   time = 0;
 
+  clearObstacles();
+
   //reset spawn logic after quit
   closeAllVents();
   activateRandomVent();
@@ -492,8 +509,7 @@ function retry(){
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
-
-  
+  clearObstacles();
 
   //set style
   stroke("black");
@@ -792,6 +808,7 @@ function quitGame(){
   player.inventory = [];
   player.health = player.startHealth;
   currentLevel = 0;
+  clearObstacles();
 
   //reset spawn logic after quit
   closeAllVents();
@@ -816,10 +833,39 @@ function mousePressed() {
       break;
     }
   }
+
+  //grab rougeBucket
+  if (rougeCharacter && rougeCharacter.isMouseOver() &&!gamePaused) {
+    rougeCharacter.state = "GRABBED";
+    grabbedCharacter = rougeCharacter;
+    pickup.play();
+    console.log("rougeBucket picked up")
+    console.log("pickup state = " + grabbedCharacter.state);
+    return;
+  }
 }
 
 function mouseReleased() {
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
+    //release all grabbed buckets
+    for (let actor of ourCharacters) {
+      if (actor.state === "GRABBED" && actor !== grabbedCharacter) {
+        actor.state = "FREE";
+        const idx = chrSprite.indexOf(actor.sprite);
+        if (idx >= 0) actor.sprite = chrSprite[idx];
+        console.warn("Released stray grabbed actor.");
+      }
+    }
+    
+    if (grabbedCharacter instanceof rougeActor) {
+      grabbedCharacter.state = "IDLE";
+      grabbedCharacter.sprite = rougeBucketSprite;
+      console.log("release state = " + grabbedCharacter.state);
+      grabbedCharacter = null;
+      console.log("rouge bucket released");
+      return;
+    }
+
     const zone = zoneUnderActor(grabbedCharacter);
     if (zone) {
       const idx = grabSprite.indexOf(grabbedCharacter.sprite); 
@@ -852,6 +898,12 @@ function mouseReleased() {
     }
     grabbedCharacter = null;
   }
+
+  // Final cleanup: ensure no one stays grabbed
+    for (let actor of ourCharacters) {
+      if (actor.state === "GRABBED") actor.state = "FREE";
+    }
+
 }
 
 
