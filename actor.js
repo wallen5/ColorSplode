@@ -6,6 +6,7 @@ class Actor {
     this.prevX = x; // Needed for "bouncing" collision detection
     this.prevY = y;
     this.size = 50;
+    this.grabbox = 75;
     this.sprite = sprite;
     this.color = color;
     this.xspeed = random(-2,2);
@@ -282,7 +283,7 @@ function checkActorCollision(actor)
   for (let zone of (levelSet[currentLevel] && levelSet[currentLevel].colorZones ? levelSet[currentLevel].colorZones : [])) {
     // Collision works as follows: check the top left corner of rect 1, and top left corner of rect 2
     // Because our buckets are a square, you simply use actor.size for both the width and height
-    let hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
+    let hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.grabbox, actor.grabbox);
     if(hit)
     {
       // came from the left?
