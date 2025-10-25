@@ -24,7 +24,7 @@ class Actor {
     this.rotationMax = 360;      // seems like a lot, but looks good (?)
 
     this.opacity = 255;
-
+    this.scored = false;
 
     // state is currently a string. This is weird and bad. Fix l8r!
     this.state = "FREE";
