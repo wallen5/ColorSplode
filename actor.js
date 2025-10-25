@@ -520,12 +520,14 @@ class Actor {
 
 
 
-  function spawnRougeActor() {
+  function spawnRougeActor(speed, unsnapInterval) {
   
     let spawnX = width / 2 - 25;
     let spawnY = height / 2 - 25;
   
     rougeCharacter = new rougeActor(spawnX, spawnY, rougeBucketSprite);
+    rougeCharacter.speed = speed;
+    rougeCharacter.unsnapInterval = unsnapInterval;
   }
 
   class rougeActor extends Actor {
@@ -542,8 +544,13 @@ class Actor {
       this.unsnapTimer = 0;
       this.unsnapInterval = 50; //how fast buckets are freed
       this.idleStart = millis();
-      this.idleDelay = 1000;
+      this.idleDelay = 2000;
       this.inZoneFrames = 0;
+      this.zoneDelayStart = 0;    // timestamp when delay starts
+      this.zoneDelayDuration = 1000; // 1 second delay
+      //free item
+      this.frozen = false;
+      this.freezeTimer = 0;
     }
   
     update() {
@@ -576,8 +583,17 @@ class Actor {
       //if idle pick target zone
       if (this.state === "IDLE") {
         if (millis() - this.idleStart >= this.idleDelay) {
-          if (!this.targetZone) this.pickRandomZone();
-          if (this.targetZone) this.state = "MOVING_TO_ZONE";
+          if (!this.targetZone) {
+            this.pickRandomZone();
+            if (this.targetZone) {
+              // Start the delay timer before moving
+              this.zoneDelayStart = millis();
+            }
+          }
+          //wait before moving again
+          if (this.targetZone && millis() - this.zoneDelayStart >= this.zoneDelayDuration) {
+            this.state = "MOVING_TO_ZONE";
+          }
         }
       }
   
