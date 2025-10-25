@@ -924,8 +924,11 @@ function mouseReleased() {
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
-        //update score if character is in correct color zone
-        score += 1 * currentCombo;
+        //update score if character is in correct color zone 
+        //and hasn't already been sorted before
+        if (grabbedCharacter.scored === false){
+          score += 1 * currentCombo;
+        }
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
