@@ -40,25 +40,42 @@ class Level{
     }
 
     setObstacles() {
+        const obstacleNames = [...levelSet[currentLevel].obstacles];
         this.obstacles = [];
       
-        if (this.difficulty === 1) {
-            //this.obstacles.push(rougeActor);
-        } else if (this.difficulty === 2) {
-            setTimeout(() => {spawnRougeActor();}, 2000);
-            if (rougeCharacter) {
-                this.obstacles.push(rougeCharacter);
-            }
-            //add more later
+        for (let obstacleName of obstacleNames) {
+          switch (obstacleName) {
+            //add cases for each obstacle
+            case "rougeBucket":
+              console.log("Spawning:", obstacleName);
+              let speed;
+              let unsnapInterval;
+              switch (this.difficulty) {
+                case 1: speed = 1; unsnapInterval = 25; break;
+                case 2: speed = 1.7; unsnapInterval = 50; break;
+                case 3: speed = 2.2; unsnapInterval = 75; break;
+                default: speed = 2; unsnapInterval = 50;
+              }
+              setTimeout(() => {
+                spawnRougeActor(speed, unsnapInterval);
+                if (rougeCharacter) {
+                  this.obstacles.push(rougeCharacter);
+                  console.log("RougeBucket added to obstacles");
+                  console.log("speed = " + rougeCharacter.speed, "unsap = " +  rougeCharacter.unsnapInterval);
+
+                }
+              }, 2000);
+              break;
+          }
         }
       }
       
 }  
 
 function clearObstacles() {
-    if (levelSet[currentLevel]) {
-        levelSet[currentLevel].obstacles = [];
-    }
+    // if (levelSet[currentLevel]) {
+    //     levelSet[currentLevel].obstacles = [];
+    // }
     rougeCharacter = null;
 }
 
@@ -109,30 +126,33 @@ function setBoss(){
     switch (randPreset) {
     case 0:
         levelSet = [
-        new Level(0, 1, [], []),
-        new Level(0, 2, [], []),
-        new Level(1, 3, [], [])
+        new Level(0, 1, ["rougeBucket"], []),
+        new Level(0, 2, ["rougeBucket"], []),
+        new Level(1, 3, ["rougeBucket"], [])
         ];
         break;
     case 1:
         levelSet = [
-        new Level(0, 1, [], []),
-        new Level(0, 2, [], []),
-        new Level(1, 3, [], [])
+        //change rougeBucket(s) to different obstacle
+        new Level(0, 1, ["rougeBucket"], []), 
+        new Level(0, 2, ["rougeBucket"], []),
+        new Level(1, 3, ["rougeBucket"], [])
         ];
         break;
     case 2:
         levelSet = [
-        new Level(0, 1, [], []),
-        new Level(0, 2, [], []),
-        new Level(1, 3, [], [])
+        //change rougeBucket(s) to different obstacle
+        new Level(0, 1, ["rougeBucket"], []),
+        new Level(0, 2, ["rougeBucket"], []),
+        new Level(1, 3, ["rougeBucket"], [])
         ];
         break;
     case 3:
         levelSet = [
-        new Level(0, 1, [], []),
-        new Level(0, 2, [], []),
-        new Level(1, 3, [], [])
+        //change rougeBucket(s) to different obstacle
+        new Level(0, 1, ["rougeBucket"], []),
+        new Level(0, 2, ["rougeBucket"], []),
+        new Level(1, 3, ["rougeBucket"], [])
         ];
         break;
     }
