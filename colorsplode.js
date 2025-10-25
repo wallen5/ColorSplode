@@ -204,11 +204,7 @@ function draw() {
       player.drawInventory();
       drawExplosion();
       dropBomb();
-      player.checkTotem(); 
-      for (let obstacle of levelSet[currentLevel].obstacles) {
-        obstacle.update();
-        obstacle.display();
-      }    
+      player.checkTotem();    
   } else if (state == 3){ //gameover
       gameOver();
   } else if(state == 4){
@@ -349,8 +345,33 @@ function gameMenu2(){ //game menu for roguelike mode
 
   // only run these if rougeCharacter exists
   if (rougeCharacter) {
-    rougeCharacter.update();
+
+    //freeze item 
+    if (player.hasItem("Freeze") && !rougeCharacter.frozen && rougeCharacter.isMouseOver()) {
+      rougeCharacter.frozen = true;
+      rougeCharacter.freezeTimer = 120;
+    }
+
+    if (rougeCharacter.frozen) {
+      rougeCharacter.freezeTimer--;
+      if (rougeCharacter.freezeTimer <= 0) {
+        rougeCharacter.frozen = false;
+      }
+    }
+
+    //only update if not frozen
+    if (!rougeCharacter.frozen || rougeCharacter.state === "GRABBED") {
+      rougeCharacter.update();
+    }
+
+    push();
+    if (rougeCharacter.frozen) {
+      tint(150, 150, 255); //light blue tint when frozen
+    } else {
+      tint(255);
+    }
     rougeCharacter.draw();
+    pop();
   }
 
   stroke(0);
