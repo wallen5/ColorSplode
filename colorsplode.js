@@ -598,13 +598,9 @@ function keyPressed() // Generic Keypress function
       resumeButton = null;
     }
   }
-  if(key === '1')
+  if(['0', '1', '2', '3', '4', '5', '6', '7'].includes(key)) // Simple test function that let's us give ourselves an item for testing
   {
-    player.addItem(allItems[6]);
-  }
-  if(key === '2')
-  {
-    player.addItem(allItems[7]);
+    player.addItem(allItems[key - 0]);
   }
 }
 
