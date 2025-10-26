@@ -3,7 +3,8 @@ class Level{
         this.levelBoss = levelBoss;
         this.difficulty = difficulty;
         this.scoreThreshold = 0;
-        this.obstacles = obstacles;
+        this.obstacleTypes = [...obstacles];
+        this.obstacles = [];
         this.colorZones = colorZones;
         this.loaded = loaded;
     }
@@ -40,7 +41,7 @@ class Level{
     }
 
     setObstacles() {
-        const obstacleNames = [...levelSet[currentLevel].obstacles];
+        const obstacleNames = [...this.obstacleTypes];
         this.obstacles = [];
       
         for (let obstacleName of obstacleNames) {
