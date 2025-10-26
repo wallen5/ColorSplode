@@ -126,6 +126,8 @@ function preload(){
 function setup() {
   currentCombo = 0;
   currentColor = color(0);
+  baseScore = 1;
+  comboMultiplier = 1;
   createCanvas(800, 800);
   paintLayer = createGraphics(200, 200);
   paintLayer.background(255);
@@ -918,8 +920,8 @@ function mouseReleased() {
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
         //update score if character is in correct color zone
-        console.log(comboMultiplier)
-        score += floor(baseScore * (currentCombo * comboMultiplier));
+        // baseScore, and comboMultiplier are only important in rougelike
+        score += baseScore + round((currentCombo - 1) * comboMultiplier)
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";

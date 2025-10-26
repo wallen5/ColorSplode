@@ -93,8 +93,8 @@ function makeItems(){
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
     new Item("Paint Thinner", thinner, "Sploded Buckets remove nearby buckets"),
     new Item("Heart Canister", heart, "Start each level with an extra heart"),
-    new Item("Thicker Brush", thickerBrush, "Increases base score by +1 (can be received multiple times)"),
-    new Item("Selective Pallet", selectivePallet, "Increases combo multiplier by .25 (can be received multiple times)")
+    new Item("Thicker Brush", thickerBrush, "Increases base score by +1 (stackable)"),
+    new Item("Selective Pallet", selectivePallet, "Increases combo multiplier by .25x (stackable)")
   ];
 }
 
