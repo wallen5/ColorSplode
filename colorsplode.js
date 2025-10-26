@@ -531,6 +531,9 @@ function restart(){
   paintLayer.background(255);
 
   makeItems();
+  if (currentMode === "roguelike") {
+    levelSet[currentLevel].setup();
+  }
 }
 
 function retry(){
@@ -582,6 +585,9 @@ function retry(){
   paintLayer.background(255);
 
   makeItems();
+  if (currentMode === "roguelike") {
+    levelSet[currentLevel].setup();
+  }
 }
 
 function colorFluctuation(){
@@ -913,7 +919,10 @@ function mouseReleased() {
       if (zone.color === actorColor) {
         if(currentColor.toString() == grabbedCharacter.color.toString())
         {
-          currentCombo += 1;
+          //only count towards combo is buckets hasn't been sorted before
+          if (grabbedCharacter.scored === false){
+            currentCombo += 1;
+          } 
         }
         else
         {
