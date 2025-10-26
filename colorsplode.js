@@ -954,7 +954,9 @@ function mouseReleased() {
         grabbedCharacter.state = "SNAPPED";
         //update score if character is in correct color zone
         // baseScore, and comboMultiplier are only important in rougelike
-        score += baseScore + round((currentCombo - 1) * comboMultiplier)
+        if (grabbedCharacter.scored === false){
+          score += baseScore + round((currentCombo - 1) * comboMultiplier);
+        }
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
