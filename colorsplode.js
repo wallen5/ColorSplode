@@ -874,7 +874,7 @@ function mousePressed() {
   mousePressedHandled = true;
   
   for (let actor of ourCharacters){
-    if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
+    if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused&& grabbedCharacter == null){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
       actor.splode();
       grabbedCharacter = actor;
@@ -886,7 +886,7 @@ function mousePressed() {
   }
 
   //grab rougeBucket
-  if (rougeCharacter && rougeCharacter.isMouseOver() &&!gamePaused) {
+  if (rougeCharacter && rougeCharacter.isMouseOver() &&!gamePaused && grabbedCharacter == null) {
     rougeCharacter.state = "GRABBED";
     grabbedCharacter = rougeCharacter;
     pickup.play();
