@@ -48,6 +48,7 @@ class Actor {
         grabbedMovement(this);
       } else if (this.state === "SNAPPED") {
         // Do nothing; actor is in a zone
+        this.scored = true;
       }
     }
   }
