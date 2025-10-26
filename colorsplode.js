@@ -124,8 +124,6 @@ function preload(){
 }
 
 function setup() {
-  baseScore = 1;
-  comboMultiplier = 1;
   currentCombo = 0;
   currentColor = color(0);
   createCanvas(800, 800);
@@ -598,6 +596,14 @@ function keyPressed() // Generic Keypress function
       resumeButton = null;
     }
   }
+  if(key === '1')
+  {
+    player.addItem(allItems[6]);
+  }
+  if(key === '2')
+  {
+    player.addItem(allItems[7]);
+  }
 }
 
 function pauseGame(){
@@ -912,7 +918,8 @@ function mouseReleased() {
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
         //update score if character is in correct color zone
-        score += baseScore * (currentCombo * comboMultiplier);
+        console.log(comboMultiplier)
+        score += floor(baseScore * (currentCombo * comboMultiplier));
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
