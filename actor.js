@@ -559,7 +559,7 @@ class Actor {
       //console.log("game state = " + this.state);
   
       //allow player to grab actor
-      if (this.isMouseOver() && this.state === "IDLE" && mouseIsPressed) {
+      if (this.isMouseOver() && mouseIsPressed && !grabbedCharacter && (!rougeCharacter || rougeCharacter.state !== "GRABBED")) {
         this.state = "GRABBED";
         grabbedCharacter = this;
         pickup.play();
