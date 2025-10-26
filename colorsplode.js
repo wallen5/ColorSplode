@@ -25,6 +25,7 @@ let rougeBucketSprite;
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
 let backgroundImage;
+let mousePressedHandled = false;
 
 // Pause buttons
 let gamePaused = false;
@@ -204,11 +205,7 @@ function draw() {
       player.drawInventory();
       drawExplosion();
       dropBomb();
-      player.checkTotem(); 
-      for (let obstacle of levelSet[currentLevel].obstacles) {
-        obstacle.update();
-        obstacle.display();
-      }    
+      player.checkTotem();    
   } else if (state == 3){ //gameover
       gameOver();
   } else if(state == 4){
@@ -349,8 +346,33 @@ function gameMenu2(){ //game menu for roguelike mode
 
   // only run these if rougeCharacter exists
   if (rougeCharacter) {
-    rougeCharacter.update();
+
+    //freeze item 
+    if (player.hasItem("Freeze") && !rougeCharacter.frozen && rougeCharacter.isMouseOver()) {
+      rougeCharacter.frozen = true;
+      rougeCharacter.freezeTimer = 120;
+    }
+
+    if (rougeCharacter.frozen) {
+      rougeCharacter.freezeTimer--;
+      if (rougeCharacter.freezeTimer <= 0) {
+        rougeCharacter.frozen = false;
+      }
+    }
+
+    //only update if not frozen
+    if (!rougeCharacter.frozen || rougeCharacter.state === "GRABBED") {
+      rougeCharacter.update();
+    }
+
+    push();
+    if (rougeCharacter.frozen) {
+      tint(150, 150, 255); //light blue tint when frozen
+    } else {
+      tint(255);
+    }
     rougeCharacter.draw();
+    pop();
   }
 
   stroke(0);
@@ -510,6 +532,9 @@ function restart(){
   paintLayer.background(255);
 
   makeItems();
+  if (currentMode === "roguelike") {
+    levelSet[currentLevel].setup();
+  }
 }
 
 function retry(){
@@ -561,6 +586,9 @@ function retry(){
   paintLayer.background(255);
 
   makeItems();
+  if (currentMode === "roguelike") {
+    levelSet[currentLevel].setup();
+  }
 }
 
 function colorFluctuation(){
@@ -841,8 +869,12 @@ function quitGame(){
 
 // Grabs enemies
 function mousePressed() { 
+  //prevent grabbing while paused, or if anything is already grabbed
+  if (gamePaused || grabbedCharacter || mousePressedHandled) return;
+  mousePressedHandled = true;
+  
   for (let actor of ourCharacters){
-    if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
+    if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused&& grabbedCharacter == null){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
       actor.splode();
       grabbedCharacter = actor;
@@ -854,7 +886,7 @@ function mousePressed() {
   }
 
   //grab rougeBucket
-  if (rougeCharacter && rougeCharacter.isMouseOver() &&!gamePaused) {
+  if (rougeCharacter && rougeCharacter.isMouseOver() &&!gamePaused && grabbedCharacter == null) {
     rougeCharacter.state = "GRABBED";
     grabbedCharacter = rougeCharacter;
     pickup.play();
@@ -865,6 +897,8 @@ function mousePressed() {
 }
 
 function mouseReleased() {
+  mousePressedHandled = false;
+  
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     //release all grabbed buckets
     for (let actor of ourCharacters) {
@@ -892,7 +926,10 @@ function mouseReleased() {
       if (zone.color === actorColor) {
         if(currentColor.toString() == grabbedCharacter.color.toString())
         {
-          currentCombo += 1;
+          //only count towards combo is buckets hasn't been sorted before
+          if (grabbedCharacter.scored === false){
+            currentCombo += 1;
+          } 
         }
         else
         {
@@ -903,8 +940,11 @@ function mouseReleased() {
         grabbedCharacter.xspeed = 0;
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
-        //update score if character is in correct color zone
-        score += 1 * currentCombo;
+        //update score if character is in correct color zone 
+        //and hasn't already been sorted before
+        if (grabbedCharacter.scored === false){
+          score += 1 * currentCombo;
+        }
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
