@@ -25,6 +25,7 @@ let rougeBucketSprite;
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
 let backgroundImage;
+let mousePressedHandled = false;
 
 // Pause buttons
 let gamePaused = false;
@@ -868,6 +869,10 @@ function quitGame(){
 
 // Grabs enemies
 function mousePressed() { 
+  //prevent grabbing while paused, or if anything is already grabbed
+  if (gamePaused || grabbedCharacter || mousePressedHandled) return;
+  mousePressedHandled = true;
+  
   for (let actor of ourCharacters){
     if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
@@ -892,6 +897,8 @@ function mousePressed() {
 }
 
 function mouseReleased() {
+  mousePressedHandled = false;
+  
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     //release all grabbed buckets
     for (let actor of ourCharacters) {
