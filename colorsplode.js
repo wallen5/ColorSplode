@@ -981,7 +981,6 @@ function setGameCusor(){
 
 function generateRandomSplat(amt){
   noSmooth();
-  filter(BLUR, 3); 
   let splatImages = [splat1, splat2, splat3, splat4, splat5, splat6, splatD];
   let randSplat = random(splatImages);
   let randColor = int(random(0, 4));
@@ -1005,9 +1004,9 @@ function generateRandomSplat(amt){
     // Draw the splat somewhere random
   let x = random(width);
   let y = random(height);
-  let sizeMult = random(1.5, 4);
+  let sizeMult = random(1.5, 5);
   if (amt >= splatAmt-1) {
-    sizeMult = 16;
+    sizeMult = 20;
   }
   let w = randSplat.width * sizeMult;
   let h = randSplat.height * sizeMult;
@@ -1017,5 +1016,4 @@ function generateRandomSplat(amt){
   noTint();
   imageMode(CORNER);
   smooth();
-  filter(BLUR, 0); 
 }
