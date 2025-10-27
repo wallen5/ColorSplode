@@ -10,6 +10,9 @@ let ventSprite;
 
 let compressor;
 
+let splatAmt = 8;
+let doneSpotlight = 0;
+
 // Items arrays
 let allItems;
 let levelChoices;
@@ -118,6 +121,17 @@ function preload(){
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
   heart = loadImage("images/Heart.png");
+
+  // Splats
+  splat1 = loadImage("images/Splats/splat1.png");
+  splat2 = loadImage("images/Splats/splat2.png");
+  splat3 = loadImage("images/Splats/splat3.png");
+  splat4 = loadImage("images/Splats/splat4.png");
+  splat5 = loadImage("images/Splats/splat5.png");
+  splat6 = loadImage("images/Splats/splat6.png");
+  splatD = loadImage("images/Splats/splatDeLozier.png");
+
+
   bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
   thickerBrush = loadImage("images/ThickerBrush.png");
@@ -418,12 +432,16 @@ function gameMenu2(){ //game menu for roguelike mode
 }
 
 function gameOver(){
-
+  time++;
   pauseButton.remove();
   scoreDisplay.remove();
   comboDisplay.remove();
 
-  background(gameOverBG);
+  if ((doneSpotlight < splatAmt) && (time % (4+doneSpotlight*3) == 0)) {
+  generateRandomSplat(doneSpotlight);
+  doneSpotlight++;
+  }
+  
   stroke("black");
   strokeWeight(5);
   textSize(50);
@@ -556,9 +574,12 @@ function retry(){
   player.inventory = [];
   player.health = player.startHealth;
   currentLevel = 0;
+  doneSpotlight = 0;
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
+  paintLayer.background(255);
+  
   clearObstacles();
 
   //set style
@@ -1010,3 +1031,41 @@ function setGameCusor(){
   }
 }
 
+function generateRandomSplat(amt){
+  noSmooth();
+  let splatImages = [splat1, splat2, splat3, splat4, splat5, splat6, splatD];
+  let randSplat = random(splatImages);
+  let randColor = int(random(0, 4));
+  let randRot = random(-180,180);
+
+  switch(randColor){
+        case 0: // red
+      tint(255, 0, 0);
+      break;
+    case 1: // blue
+      tint(0, 0, 255);
+      break;
+    case 2: // green
+      tint(0, 255, 0);
+      break;
+    case 3: // purple
+      tint(150, 0, 255);
+      break;
+  }
+
+    // Draw the splat somewhere random
+  let x = random(width);
+  let y = random(height);
+  let sizeMult = random(1.5, 5);
+  if (amt >= splatAmt-1) {
+    sizeMult = 20;
+  }
+  let w = randSplat.width * sizeMult;
+  let h = randSplat.height * sizeMult;
+  imageMode(CENTER);
+  //rotate(randRot); //Makes the splatters go offscreen sometimes? Weird. Fix l8r
+  image(randSplat, x, y, w, h);
+  noTint();
+  imageMode(CORNER);
+  smooth();
+}
