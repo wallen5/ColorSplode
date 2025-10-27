@@ -45,7 +45,7 @@ let transitionCreated = false;
 //Level Up Buttons
 let levelUpActive = false;
 let levelUpTriggered = {};
-let levelUpTrigger = [29, 39, 49, 100, 200];
+let levelUpTrigger = [1, 39, 49, 100, 200];
 
 //Game Over Buttons
 let buttonCreated = false;
@@ -106,10 +106,10 @@ function preload(){
   grabSprite[1] = loadImage("images/bluepaintgrabbed.gif");
   grabSprite[2] = loadImage("images/purplepaintgrabbed.gif");
   grabSprite[3] = loadImage("images/greenpaintgrabbed.gif");
-  deathSprite[0] = loadImage("images/redpaintdeath.gif");
-  deathSprite[1] = loadImage("images/bluepaintdeath.gif");
-  deathSprite[2] = loadImage("images/purplepaintdeath.gif");
-  deathSprite[3] = loadImage("images/greenpaintdeath.gif");
+  deathSprite[0] = loadImage("images/redpaintdeathupdate.gif");
+  deathSprite[1] = loadImage("images/bluepaintdeathupdate.gif");
+  deathSprite[2] = loadImage("images/purplepaintdeathupdate.gif");
+  deathSprite[3] = loadImage("images/greenpaintdeathupdate.gif");
   ventTop = loadImage("images/ventTopUpdate.gif");
   ventBottom = loadImage("images/ventBottomUpdate.gif");
   ventRight = loadImage("images/ventRightUpdate.gif");
@@ -121,6 +121,7 @@ function preload(){
   totem = loadImage("images/TotemOfUndying.png");
   placeholder = loadImage("images/Placeholder.png");
   heart = loadImage("images/Heart.png");
+  scraper = loadImage("images/paintscraper.png");
 
   // Splats
   splat1 = loadImage("images/Splats/splat1.png");
@@ -963,6 +964,9 @@ function mouseReleased() {
           if (grabbedCharacter.scored === false){
             currentCombo += 1;
           } 
+          if(currentCombo >= 5 && player.hasItem("Paint Scraper") && player.health < player.startHealth){
+            player.health++;
+          }
         }
         else
         {
