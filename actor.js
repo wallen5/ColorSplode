@@ -70,7 +70,11 @@ class Actor {
     scale(this.flipX, 1);
     rotate(radians(this.angle)); // use actor.angle
     imageMode(CENTER);
-    image(this.sprite, 0, 0, this.size, this.size);
+    if(this.state == "EXPLODED"){
+      image(this.sprite, 0, 0, this.size + 40, this.size + 40);
+    } else {
+      image(this.sprite, 0, 0, this.size, this.size);
+    }
     pop();
 
     this.paintTrail();
@@ -515,7 +519,7 @@ class Actor {
     //explode all buckets not sorted
     setTimeout(() => {
       for (let a of ourCharacters) {
-        if (a !== actor && a.state !== "EXPLODED") {
+        if (a !== actor && a.state !== "EXPLODED" && a.state !== "SNAPPED") {
           idx = chrSprite.indexOf(a.sprite);
           a.splode();
           if (idx >= 0) a.sprite = deathSprite[idx];
