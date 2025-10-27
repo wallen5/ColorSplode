@@ -18,6 +18,16 @@ class Player {
 
   addItem(item) {
     this.inventory.push(item);
+    if (item.name === "Bomb") bombisReady = true;
+    if(item.name === "Selective Pallet"){
+      comboMultiplier += 0.25;
+    }
+    else if (item.name === "Thicker Brush")
+    {
+      baseScore += 1;
+    }
+    else  // Only remove items that AREN'T the brush and pallet
+      allItems.splice(allItems.indexOf(item), 1);
   }
 
   removeItem(itemName) {
@@ -82,7 +92,9 @@ function makeItems(){
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
     new Item("Paint Thinner", thinner, "Sploded Buckets remove nearby buckets"),
-    new Item("Heart Canister", heart, "Start each level with an extra heart")
+    new Item("Heart Canister", heart, "Start each level with an extra heart"),
+    new Item("Thicker Brush", thickerBrush, "Increases base score by +1 (stackable)"),
+    new Item("Selective Pallet", selectivePallet, "Increases combo multiplier by .25x (stackable)")
   ];
 }
 

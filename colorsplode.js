@@ -28,6 +28,7 @@ let rougeBucketSprite;
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
 let backgroundImage;
+let mousePressedHandled = false;
 
 // Pause buttons
 let gamePaused = false;
@@ -77,6 +78,8 @@ let spawnRateIncrease = 0.05;
 // Score combo stuff
 let currentColor;
 let currentCombo = 0;
+let comboMultiplier = 1;
+let baseScore = 1;
 
 let bombSound;
 let explodeGif;
@@ -131,9 +134,15 @@ function preload(){
 
   bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
+  thickerBrush = loadImage("images/ThickerBrush.png");
+  selectivePallet = loadImage("images/SelectivePallet.png");
 }
 
 function setup() {
+  currentCombo = 0;
+  currentColor = color(0);
+  baseScore = 1;
+  comboMultiplier = 1;
   createCanvas(800, 800);
   paintLayer = createGraphics(200, 200);
   paintLayer.background(255);
@@ -218,11 +227,7 @@ function draw() {
       player.drawInventory();
       drawExplosion();
       dropBomb();
-      player.checkTotem(); 
-      for (let obstacle of levelSet[currentLevel].obstacles) {
-        obstacle.update();
-        obstacle.display();
-      }    
+      player.checkTotem();    
   } else if (state == 3){ //gameover
       gameOver();
   } else if(state == 4){
@@ -283,7 +288,7 @@ function startMenu(){
 
 
 function gameMenu1(){
-
+  baseScore = 1;
   background(220);
   image(paintLayer, 0, 0, width, height);
   drawColorZones();
@@ -363,8 +368,33 @@ function gameMenu2(){ //game menu for roguelike mode
 
   // only run these if rougeCharacter exists
   if (rougeCharacter) {
-    rougeCharacter.update();
+
+    //freeze item 
+    if (player.hasItem("Freeze") && !rougeCharacter.frozen && rougeCharacter.isMouseOver()) {
+      rougeCharacter.frozen = true;
+      rougeCharacter.freezeTimer = 120;
+    }
+
+    if (rougeCharacter.frozen) {
+      rougeCharacter.freezeTimer--;
+      if (rougeCharacter.freezeTimer <= 0) {
+        rougeCharacter.frozen = false;
+      }
+    }
+
+    //only update if not frozen
+    if (!rougeCharacter.frozen || rougeCharacter.state === "GRABBED") {
+      rougeCharacter.update();
+    }
+
+    push();
+    if (rougeCharacter.frozen) {
+      tint(150, 150, 255); //light blue tint when frozen
+    } else {
+      tint(255);
+    }
     rougeCharacter.draw();
+    pop();
   }
 
   stroke(0);
@@ -524,10 +554,15 @@ function restart(){
   spawnLogic.activeActors = 0;
   currentColor = color(0);
   currentCombo = 0;
+  baseScore = 1;
+  comboMultiplier = 1;
 
   paintLayer.background(255);
 
   makeItems();
+  if (currentMode === "roguelike") {
+    levelSet[currentLevel].setup();
+  }
 }
 
 function retry(){
@@ -564,6 +599,8 @@ function retry(){
   //display score
   currentColor = color(0);
   currentCombo = 0;
+  baseScore = 1;
+  comboDisplay = 1;
   score = 0;
   drawScore();
 
@@ -582,6 +619,9 @@ function retry(){
   paintLayer.background(255);
 
   makeItems();
+  if (currentMode === "roguelike") {
+    levelSet[currentLevel].setup();
+  }
 }
 
 function colorFluctuation(){
@@ -606,6 +646,10 @@ function keyPressed() // Generic Keypress function
       resumeButton.remove();
       resumeButton = null;
     }
+  }
+  if(['0', '1', '2', '3', '4', '5', '6', '7'].includes(key)) // Simple test function that let's us give ourselves an item for testing
+  {
+    player.addItem(allItems[key - 0]);
   }
 }
 
@@ -802,20 +846,14 @@ function drawLevelMenu(){
   pop(); // restore settings
   if(chooseButton1.mouse.pressed()){
     player.addItem(levelChoices[0]);
-    if (levelChoices[0].name === "Bomb") bombisReady = true;
-    allItems.splice(allItems.indexOf(levelChoices[0]), 1);
     levelUp();
   }
   if(chooseButton2 && chooseButton2.mouse.pressed()){
     player.addItem(levelChoices[1]);
-    if (levelChoices[1].name === "Bomb") bombisReady = true;
-    allItems.splice(allItems.indexOf(levelChoices[1]), 1);
     levelUp();
   }
   if(chooseButton3 && chooseButton3.mouse.pressed()){
     player.addItem(levelChoices[2]);
-    if (levelChoices[2].name === "Bomb") bombisReady = true;
-    allItems.splice(allItems.indexOf(levelChoices[2]), 1);
     levelUp();
   }
 }
@@ -839,7 +877,9 @@ function quitGame(){
   comboDisplay.remove();
   comboDisplay = null;
   score = 0;
+  baseScore = 1;
   currentCombo = 0;
+  comboMultiplier = 1;
   time = 0;
 
 
@@ -862,8 +902,12 @@ function quitGame(){
 
 // Grabs enemies
 function mousePressed() { 
+  //prevent grabbing while paused, or if anything is already grabbed
+  if (gamePaused || grabbedCharacter || mousePressedHandled) return;
+  mousePressedHandled = true;
+  
   for (let actor of ourCharacters){
-    if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused){ // Ensures the player can't grab the actor when game is paused
+    if (actor.state === "FREE" && actor.isMouseOver() && !gamePaused&& grabbedCharacter == null){ // Ensures the player can't grab the actor when game is paused
       actor.state = "GRABBED";
       actor.splode();
       grabbedCharacter = actor;
@@ -875,7 +919,7 @@ function mousePressed() {
   }
 
   //grab rougeBucket
-  if (rougeCharacter && rougeCharacter.isMouseOver() &&!gamePaused) {
+  if (rougeCharacter && rougeCharacter.isMouseOver() &&!gamePaused && grabbedCharacter == null) {
     rougeCharacter.state = "GRABBED";
     grabbedCharacter = rougeCharacter;
     pickup.play();
@@ -886,6 +930,8 @@ function mousePressed() {
 }
 
 function mouseReleased() {
+  mousePressedHandled = false;
+  
   if (grabbedCharacter && grabbedCharacter.state === "GRABBED") {
     //release all grabbed buckets
     for (let actor of ourCharacters) {
@@ -913,7 +959,10 @@ function mouseReleased() {
       if (zone.color === actorColor) {
         if(currentColor.toString() == grabbedCharacter.color.toString())
         {
-          currentCombo += 1;
+          //only count towards combo is buckets hasn't been sorted before
+          if (grabbedCharacter.scored === false){
+            currentCombo += 1;
+          } 
         }
         else
         {
@@ -925,7 +974,10 @@ function mouseReleased() {
         grabbedCharacter.yspeed = 0;
         grabbedCharacter.state = "SNAPPED";
         //update score if character is in correct color zone
-        score += 1 * currentCombo;
+        // baseScore, and comboMultiplier are only important in rougelike
+        if (grabbedCharacter.scored === false){
+          score += baseScore + round((currentCombo - 1) * comboMultiplier);
+        }
       } else {
         // wrong zone release normally
         grabbedCharacter.state = "FREE";
