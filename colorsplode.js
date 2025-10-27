@@ -109,13 +109,13 @@ function preload(){
 }
 
 function setup() {
-  createCanvas(1500, 1100);
+  createCanvas(windowWidth, windowHeight);
   paintLayer = createGraphics(200, 200);
   paintLayer.background(255);
   paintLayer.noSmooth();
 
   currentColor = color(0);
-  gameLayer = createGraphics(800, 800);
+  gameLayer = createGraphics(windowWidth * 0.7, windowLength * 0.7);
 
   gameX = (width - gameLayer.width) / 2;
   gameY = (height - gameLayer.height) / 2;
