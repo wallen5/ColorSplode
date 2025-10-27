@@ -9,6 +9,7 @@ let startButton2; //roguelike mode
 let ventSprite;
 
 let compressor;
+let pickupSounds = [];
 
 let splatAmt = 8;
 let doneSpotlight = 0;
@@ -95,7 +96,9 @@ function preload(){
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
-  pickup = loadSound('sounds/pickup.wav');
+  pickupSounds.push(loadSound('sounds/pickup.wav'));
+  pickupSounds.push(loadSound('sounds/pickup2.wav'));
+  pickupSounds.push(loadSound('sounds/pickup3.wav'));
   bombSound = loadSound('sounds/nuclear-explosion.mp3');
   explodeGif = loadImage("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
@@ -168,11 +171,13 @@ function setup() {
   background(220);
   
   compressor = new p5.Compressor();
-  pickup.setVolume(0.2) ;
   menuMusic.setVolume(0.01);
   levelMusic.setVolume(0.05);
   pauseSound.setVolume(0.02);
   menuMusic.play();
+  for (let s of pickupSounds) {
+    s.setVolume(0.2);
+  }
   
 
   levelMusic.disconnect();
@@ -914,7 +919,8 @@ function mousePressed() {
       grabbedCharacter = actor;
       idx = chrSprite.indexOf(grabbedCharacter.sprite);
       grabbedCharacter.sprite = grabSprite[idx];
-      pickup.play();
+      let randomPickup = random(pickupSounds);
+      randomPickup.play();
       break;
     }
   }
