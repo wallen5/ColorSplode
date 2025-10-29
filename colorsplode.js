@@ -15,7 +15,7 @@ let doneSpotlight = 0;
 
 // Items arrays
 let allItems;
-let levelChoices;
+let Choices;
 
 let chrSprite =[]; //array of character sprits
 let grabSprite =[]; //array of grab animations
@@ -39,6 +39,13 @@ let restartButton;
 let chooseButton1;
 let chooseButton2;
 let chooseButton3;
+let chooseButton4;
+let chooseButton5;
+let chooseButton6;
+let chooseButton7;
+let chooseButton8;
+let chooseButton9;
+
 let nextLevelButton;
 let transitionCreated = false;
 
@@ -754,27 +761,14 @@ function levelUp(){
   }
 
   if(levelUpActive){
-    levelChoices = [random(allItems), random(allItems), random(allItems)];
+    levelChoices = [allItems[0], allItems[1], allItems[2], allItems[3], allItems[4], allItems[5], allItems[6], allItems[7], allItems[8]];
 
     push();
     textSize(15);
-    chooseButton1 = new Sprite(150, 500);
-    chooseButton1.text = "Choose";
-    chooseButton1.width = 100;
-    chooseButton1.height = 30;
-    chooseButton1.color = "red";
+    // if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
+    //   chooseButtons = [];
+    // }
 
-    chooseButton2 = new Sprite(400, 500);
-    chooseButton2.text = "Choose";
-    chooseButton2.width = 100;
-    chooseButton2.height = 30;
-    chooseButton2.color = "green";
-
-    chooseButton3 = new Sprite(650, 500);
-    chooseButton3.text = "Choose";
-    chooseButton3.width = 100;
-    chooseButton3.height = 30;
-    chooseButton3.color = "blue";
 
     pop();
 
@@ -795,6 +789,18 @@ function levelUp(){
     chooseButton2 = null;
     chooseButton3.remove();
     chooseButton3 = null;
+    chooseButton4.remove();
+    chooseButton4 = null;
+    chooseButton5.remove();
+    chooseButton5 = null;
+    chooseButton6.remove();
+    chooseButton6 = null;
+    chooseButton7.remove();
+    chooseButton7 = null;
+    chooseButton8.remove();
+    chooseButton8 = null;
+    chooseButton9.remove();
+    chooseButton9 = null;
 
     pauseSound.play();
     levelMusic.setVolume(0.05, 0.2); 
@@ -820,41 +826,111 @@ function drawLevelMenu(){
 
   image(levelUpChoice, 0, 0);
 
-  image(levelChoices[0].sprite, 120, 250, 60, 60);
-  image(levelChoices[1].sprite, 370, 250, 60, 60);
-  image(levelChoices[2].sprite, 610, 250, 60, 60);
+  // Draw level choices in a 3x3 grid that fits within 800x800
+  let cols = 3;
+  let imageSize = 60;
+  let colSpacing = 250; // keeps columns near 70, 320, 570
+  let startX = 70;
+  let startY = 170;
 
-  fill(0);
+  // create/keep an array of choose buttons so we can manage them collectively
+  if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
+    chooseButtons = [];
+  }
 
-  textSize(15)
-  text(levelChoices[0].name, 70, 220, 150);
-  text(levelChoices[1].name, 320, 220, 150);
-  text(levelChoices[2].name, 570, 220, 150);
+  for (let i = 0; i < levelChoices.length; i++) {
+    let col = i % cols;
+    let row = Math.floor(i / cols);
+    let x = startX + col * colSpacing + (150 - imageSize) / 2; // center inside 150px column
+    let y = startY + row * 190; // row spacing
 
-  textSize(12);
-  text(levelChoices[0].description, 70, 370, 180);
-  text(levelChoices[1].description, 320, 370, 180);
-  text(levelChoices[2].description, 570, 370, 180);
+    if (levelChoices[i] && levelChoices[i].sprite) {
+      image(levelChoices[i].sprite, x, y, imageSize, imageSize);
+      textSize(15);
+      fill(0);
+      text(levelChoices[i].name, x, y - 20, 150);
+      textSize(12);
+      text(levelChoices[i].description, x, y + 80, 180);
 
+      // Only create "Choose" buttons for the first three visible choices
+      if (i < 9) {
+        // place button roughly centered under the block (column width 150)
+        let btnX = x + 75;
+        let btnY = y + imageSize + 90;
 
+        if (!chooseButtons[i]) {
+          chooseButtons[i] = new Sprite(btnX, btnY);
+          chooseButtons[i].text = "Buy";
+          chooseButtons[i].width = 100;
+          chooseButtons[i].height = 30;
+          // color by index for quick visual distinction
+          const btnColors = ["red", "green", "blue"];
+          chooseButtons[i].color = btnColors[i] || "lightgreen";
+        } else {
+          // update position each frame so the button follows layout changes
+          chooseButtons[i].x = btnX;
+          chooseButtons[i].y = btnY;
+        }
+      }
+    }
+  }
+
+  // assign buttons
+  chooseButton1 = chooseButtons[0];
+  chooseButton2 = chooseButtons[1];
+  chooseButton3 = chooseButtons[2];
+  chooseButton4 = chooseButtons[3];
+  chooseButton5 = chooseButtons[4];
+  chooseButton6 = chooseButtons[5];
+  chooseButton7 = chooseButtons[6];
+  chooseButton8 = chooseButtons[7];
+  chooseButton9 = chooseButtons[8];
 
   // changes color of button when mouse hovers over
   mouseOverButton(chooseButton1, "pink", "red");
   mouseOverButton(chooseButton2, "lightgreen", "green");
   mouseOverButton(chooseButton3, "lightblue", "blue");
-
+  mouseOverButton(chooseButton4, "lightblue", "blue");
+  mouseOverButton(chooseButton5, "lightblue", "blue");
+  mouseOverButton(chooseButton6, "lightblue", "blue");
+  mouseOverButton(chooseButton7, "lightblue", "blue");
+  mouseOverButton(chooseButton8, "lightblue", "blue");
 
   pop(); // restore settings
-  if(chooseButton1.mouse.pressed()){
+  if (chooseButton1 && chooseButton1.mouse.pressed()) {
     player.addItem(levelChoices[0]);
     levelUp();
   }
-  if(chooseButton2 && chooseButton2.mouse.pressed()){
+  if (chooseButton2 && chooseButton2.mouse.pressed()) {
     player.addItem(levelChoices[1]);
     levelUp();
   }
-  if(chooseButton3 && chooseButton3.mouse.pressed()){
+  if (chooseButton3 && chooseButton3.mouse.pressed()) {
     player.addItem(levelChoices[2]);
+    levelUp();
+  }
+  if (chooseButton4 && chooseButton4.mouse.pressed()) {
+    player.addItem(levelChoices[3]);
+    levelUp();
+  }
+  if (chooseButton5 && chooseButton5.mouse.pressed()) {
+    player.addItem(levelChoices[4]);
+    levelUp();
+  }
+  if (chooseButton6 && chooseButton6.mouse.pressed()) {
+    player.addItem(levelChoices[5]);
+    levelUp();
+  }
+  if (chooseButton7 && chooseButton7.mouse.pressed()) {
+    player.addItem(levelChoices[6]);
+    levelUp();
+  }
+  if (chooseButton8 && chooseButton8.mouse.pressed()) {
+    player.addItem(levelChoices[7]);
+    levelUp();
+  }
+  if (chooseButton9 && chooseButton9.mouse.pressed()) {
+    player.addItem(levelChoices[8]);
     levelUp();
   }
 }
@@ -890,6 +966,9 @@ function quitGame(){
   player.health = player.startHealth;
   currentLevel = 0;
   clearObstacles();
+
+  //remove buy-menu buttons
+  chooseButtons = [];
 
   //reset spawn logic after quit
   closeAllVents();
