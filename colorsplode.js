@@ -765,9 +765,6 @@ function levelUp(){
 
     push();
     textSize(15);
-    // if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
-    //   chooseButtons = [];
-    // }
 
 
     pop();
@@ -824,39 +821,41 @@ function drawLevelMenu(){
   noStroke();
   rect(0, 0, width, height);
 
-  image(levelUpChoice, 0, 0);
+  image(levelUpChoice, 15, 60, 770, 750);
 
   // Draw level choices in a 3x3 grid that fits within 800x800
   let cols = 3;
   let imageSize = 60;
-  let colSpacing = 250; // keeps columns near 70, 320, 570
-  let startX = 70;
-  let startY = 170;
+  let startX = 130;
+  let startY = 160;
 
   // create/keep an array of choose buttons so we can manage them collectively
   if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
     chooseButtons = [];
   }
 
+  let items = 3;
+  let itemSpacing = 240;
+  let buyScreenWidth = 800;
+
   for (let i = 0; i < levelChoices.length; i++) {
-    let col = i % cols;
     let row = Math.floor(i / cols);
-    let x = startX + col * colSpacing + (150 - imageSize) / 2; // center inside 150px column
-    let y = startY + row * 190; // row spacing
+    let x = startX + (((i%items)*itemSpacing)%buyScreenWidth) // controls column spacing
+    let y = startY + row * 235; // controls row spacing
 
     if (levelChoices[i] && levelChoices[i].sprite) {
-      image(levelChoices[i].sprite, x, y, imageSize, imageSize);
+      image(levelChoices[i].sprite, x, y-20, imageSize, imageSize);
       textSize(15);
       fill(0);
-      text(levelChoices[i].name, x, y - 20, 150);
+      text(levelChoices[i].name, x - 20, y - 40, 150);
       textSize(12);
-      text(levelChoices[i].description, x, y + 80, 180);
+      text(levelChoices[i].description, x - 50, y + 60, 200);
 
       // Only create "Choose" buttons for the first three visible choices
       if (i < 9) {
         // place button roughly centered under the block (column width 150)
-        let btnX = x + 75;
-        let btnY = y + imageSize + 90;
+        let btnX = x + 40;
+        let btnY = y + imageSize + 70;
 
         if (!chooseButtons[i]) {
           chooseButtons[i] = new Sprite(btnX, btnY);
@@ -865,7 +864,7 @@ function drawLevelMenu(){
           chooseButtons[i].height = 30;
           // color by index for quick visual distinction
           const btnColors = ["red", "green", "blue"];
-          chooseButtons[i].color = btnColors[i] || "lightgreen";
+          chooseButtons[i].color = btnColors[i%3] || "lightgreen";
         } else {
           // update position each frame so the button follows layout changes
           chooseButtons[i].x = btnX;
@@ -890,11 +889,13 @@ function drawLevelMenu(){
   mouseOverButton(chooseButton1, "pink", "red");
   mouseOverButton(chooseButton2, "lightgreen", "green");
   mouseOverButton(chooseButton3, "lightblue", "blue");
-  mouseOverButton(chooseButton4, "lightblue", "blue");
-  mouseOverButton(chooseButton5, "lightblue", "blue");
+  mouseOverButton(chooseButton4, "pink", "red");
+  mouseOverButton(chooseButton5, "lightgreen", "green");
   mouseOverButton(chooseButton6, "lightblue", "blue");
-  mouseOverButton(chooseButton7, "lightblue", "blue");
-  mouseOverButton(chooseButton8, "lightblue", "blue");
+  mouseOverButton(chooseButton7, "pink", "red");
+  mouseOverButton(chooseButton8, "lightgreen", "green");
+  mouseOverButton(chooseButton9, "lightblue", "blue");
+
 
   pop(); // restore settings
   if (chooseButton1 && chooseButton1.mouse.pressed()) {
