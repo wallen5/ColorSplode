@@ -36,6 +36,8 @@ let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 let restartButton;
+
+let chooseButtons;
 let chooseButton1;
 let chooseButton2;
 let chooseButton3;
@@ -52,7 +54,7 @@ let transitionCreated = false;
 //Level Up Buttons
 let levelUpActive = false;
 let levelUpTriggered = {};
-let levelUpTrigger = [1, 39, 49, 100, 200];
+let levelUpTrigger = [1, 2, 49, 100, 200];
 
 //Game Over Buttons
 let buttonCreated = false;
@@ -94,6 +96,10 @@ let explosionActive = false;
 let explosionDuration = 500/3; // 1 second duration
 let explosionX = 400;
 let explosionY = 400;
+
+
+//const levelChoices = [];
+
 
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -417,8 +423,8 @@ function gameMenu2(){ //game menu for roguelike mode
 
   for (let s of levelUpTrigger) {  // Level ups trigger based on the arrays, can alter when they happen
     if (score >= s && !levelUpTriggered[s]) {
-        levelUp();
-        levelUpTriggered[s] = true;
+      levelUp();
+      levelUpTriggered[s] = true;
     }
   }
 
@@ -549,6 +555,9 @@ function restart(){
   //display score
   score = 0;
   time = 0;
+
+  //clear buttons
+  chooseButtons = [];
 
   clearObstacles();
 
@@ -859,7 +868,7 @@ function drawLevelMenu(){
 
         if (!chooseButtons[i]) {
           chooseButtons[i] = new Sprite(btnX, btnY);
-          chooseButtons[i].text = "Buy";
+          chooseButtons[i].text = "Buy: $X";
           chooseButtons[i].width = 100;
           chooseButtons[i].height = 30;
           // color by index for quick visual distinction
@@ -888,13 +897,13 @@ function drawLevelMenu(){
   // changes color of button when mouse hovers over
   mouseOverButton(chooseButton1, "pink", "red");
   mouseOverButton(chooseButton2, "lightgreen", "green");
-  mouseOverButton(chooseButton3, "lightblue", "blue");
+  mouseOverButton(chooseButton3, "lightblue", "deepskyblue"); //"steelblue","dodgerblue","deepskyblue","skyblue","cornflowerblue","lightblue"
   mouseOverButton(chooseButton4, "pink", "red");
   mouseOverButton(chooseButton5, "lightgreen", "green");
-  mouseOverButton(chooseButton6, "lightblue", "blue");
+  mouseOverButton(chooseButton6, "lightblue", "deepskyblue"); //"steelblue","dodgerblue","deepskyblue","skyblue","cornflowerblue","lightblue"
   mouseOverButton(chooseButton7, "pink", "red");
   mouseOverButton(chooseButton8, "lightgreen", "green");
-  mouseOverButton(chooseButton9, "lightblue", "blue");
+  mouseOverButton(chooseButton9, "lightblue", "deepskyblue");
 
 
   pop(); // restore settings
