@@ -54,7 +54,7 @@ let transitionCreated = false;
 //Level Up Buttons
 let levelUpActive = false;
 let levelUpTriggered = {};
-let levelUpTrigger = [1, 2, 49, 100, 200];
+let levelUpTrigger = [1, 2, 4, 6, 8];
 
 //Game Over Buttons
 let buttonCreated = false;
@@ -430,8 +430,6 @@ function gameMenu2(){ //game menu for roguelike mode
 
   if(levelUpActive){
     drawLevelMenu();
-    levelUpTriggered = {};
-    player.inventory = [];
   }
 
   if(score >= levelSet[currentLevel].scoreThreshold && !levelUpActive && state != 0){
@@ -834,16 +832,21 @@ function drawLevelMenu(){
 
   image(levelUpChoice, 15, 60, 770, 750);
 
+  // create/keep an array of choose buttons so we can manage them collectively
+  if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
+    chooseButtons = [];
+  }
+
+  drawItemMenu();
+  itemButtonLogic();
+}
+
+function drawItemMenu(){
   // Draw level choices in a 3x3 grid that fits within 800x800
   let cols = 3;
   let imageSize = 60;
   let startX = 130;
   let startY = 160;
-
-  // create/keep an array of choose buttons so we can manage them collectively
-  if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
-    chooseButtons = [];
-  }
 
   let items = 3;
   let itemSpacing = 240;
@@ -884,8 +887,10 @@ function drawLevelMenu(){
       }
     }
   }
+}
 
-  // assign buttons
+function itemButtonLogic(){
+   // assign buttons
   chooseButton1 = chooseButtons[0];
   chooseButton2 = chooseButtons[1];
   chooseButton3 = chooseButtons[2];
@@ -909,44 +914,63 @@ function drawLevelMenu(){
 
 
   pop(); // restore settings
-  if (chooseButton1 && chooseButton1.mouse.pressed()) {
+  if (chooseButton1 && chooseButton1.mouse.pressed() && !player.hasItem("Magnet")) {
     player.addItem(levelChoices[0]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
   }
-  if (chooseButton2 && chooseButton2.mouse.pressed()) {
+  if (chooseButton2 && chooseButton2.mouse.pressed() && !player.hasItem("Freeze")) {
     player.addItem(levelChoices[1]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
+
   }
-  if (chooseButton3 && chooseButton3.mouse.pressed()) {
+  if (chooseButton3 && chooseButton3.mouse.pressed() && !player.hasItem("Blatant Copyright")) {
     player.addItem(levelChoices[2]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
+
   }
-  if (chooseButton4 && chooseButton4.mouse.pressed()) {
+  if (chooseButton4 && chooseButton4.mouse.pressed() && !player.hasItem("Bomb")) {
     player.addItem(levelChoices[3]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
   }
-  if (chooseButton5 && chooseButton5.mouse.pressed()) {
+  if (chooseButton5 && chooseButton5.mouse.pressed() && !player.hasItem("Paint Scraper")) {
     player.addItem(levelChoices[4]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
   }
-  if (chooseButton6 && chooseButton6.mouse.pressed()) {
+  if (chooseButton6 && chooseButton6.mouse.pressed() && !player.hasItem("Paint Thinner")) {
     player.addItem(levelChoices[5]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
   }
-  if (chooseButton7 && chooseButton7.mouse.pressed()) {
+  if (chooseButton7 && chooseButton7.mouse.pressed() && !player.hasItem("Heart Canister")) {
     player.addItem(levelChoices[6]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
   }
   if (chooseButton8 && chooseButton8.mouse.pressed()) {
     player.addItem(levelChoices[7]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
   }
   if (chooseButton9 && chooseButton9.mouse.pressed()) {
     player.addItem(levelChoices[8]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
   }
 }
-
 
 // Quits the game, resets game state
 function quitGame(){
@@ -971,7 +995,7 @@ function quitGame(){
   comboMultiplier = 1;
   time = 0;
 
-
+  chooseButtons = [];
   ourCharacters = []; // Removes all enemies to prevent duplicates
   levelUpTriggered = {};
   player.inventory = [];

@@ -251,11 +251,6 @@ function levelTransition(){
     score = 0;
     levelSet[currentLevel].setup();
     player.health = player.startHealth;
-    ourCharacters = [];
-    // create/keep an array of choose buttons so we can manage them collectively
-    //if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
-    chooseButtons = [];
-   // }
     closeAllVents();
     activateRandomVent();
     spawnLogic.timer = 50;
