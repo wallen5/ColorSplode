@@ -430,6 +430,8 @@ function gameMenu2(){ //game menu for roguelike mode
 
   if(levelUpActive){
     drawLevelMenu();
+    levelUpTriggered = {};
+    player.inventory = [];
   }
 
   if(score >= levelSet[currentLevel].scoreThreshold && !levelUpActive && state != 0){
