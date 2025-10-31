@@ -67,10 +67,18 @@ class Level{
                 }
               }, 2000);
               break;
+              case "graffiti":
+                console.log("Spawning:", obstacleName);
+                let burstAmt;
+                switch (this.difficulty) {
+                case 1: burstAmt = 2; break;
+                case 2: burstAmt = 3; break;
+                case 3: burstAmt = 4; break;
+                default: burstAmt = 1; break;
+                }
           }
-        }
       }
-      
+    }   
 }  
 
 function clearObstacles() {
@@ -122,7 +130,7 @@ function randomColorZone(level) {
 let levelSet = [];
 
 function setBoss(){
-    let randPreset = floor(random(0, 3));
+    let randPreset = floor(random(1, 2));
 
     switch (randPreset) {
     case 0:
@@ -134,10 +142,9 @@ function setBoss(){
         break;
     case 1:
         levelSet = [
-        //change rougeBucket(s) to different obstacle
-        new Level(0, 1, ["rougeBucket"], []), 
-        new Level(0, 2, ["rougeBucket"], []),
-        new Level(1, 3, ["rougeBucket"], [])
+        new Level(0, 1, ["graffiti"], []), 
+        new Level(0, 2, ["graffiti"], []),
+        new Level(1, 3, ["graffiti"], [])
         ];
         break;
     case 2:

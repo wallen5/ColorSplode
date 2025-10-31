@@ -41,6 +41,24 @@ class Actor {
     this.state = newState;
   }
 
+  newRandomColor() {
+    let randIndex = int(random(0, chrSprite.length));
+    if(randIndex == 0) randColor = color(255, 0, 0)
+    if(randIndex == 1) randColor = color(0, 0, 255)
+    if(randIndex == 2) randColor = color(128, 0, 128)
+    if(randIndex == 3) randColor = color(0, 255, 0);    
+
+    // Chooses and pushes a random bucket to be spawned
+    randColor = lerpColor(randColor, color(255,255,255), 0.75);
+
+    this.sprite = chrSprite[randIndex]; 
+    this.color = randColor;
+    if (this.state === "SNAPPED") { 
+      this.state = "FREE";
+      this.timeAlive = 0.0;
+    }
+  }
+
   // Update the position of the character
   update() {
     if(!gamePaused && !levelUpActive){ // If the game ISN'T Paused then we update their movement
@@ -213,21 +231,20 @@ class Actor {
       }
   
       let randIndex = int(random(0, chrSprite.length));
-      let randColor;
       if(randIndex == 0) randColor = color(255, 0, 0)
       if(randIndex == 1) randColor = color(0, 0, 255)
       if(randIndex == 2) randColor = color(128, 0, 128)
-      if(randIndex == 3) randColor = color(0, 255, 0);
-  
-      randColor = lerpColor(randColor, color(255,255,255), 0.7); // Gives the colors a pastel look
-  
+      if(randIndex == 3) randColor = color(0, 255, 0);    
+
       // Chooses and pushes a random bucket to be spawned
+      randColor = lerpColor(randColor, color(255,255,255), 0.75);
       ourCharacters.push(new Actor(newX, newY, chrSprite[randIndex], randColor));
       ++spawnLogic.activeActors;
     }
-
-    
   }
+
+
+
   
   function spawnRate(){
                     //needs to be whole number
@@ -862,3 +879,5 @@ class Actor {
       pop();
     }
   }
+
+

@@ -25,6 +25,10 @@ let ourCharacters = []; //array of character objects
 let rougeCharacter = null;
 let rougeBucketSprite;
 
+let graffitiActors = [];
+let graffiti; // Graffiti Sprite
+let graffitiTime = 160;
+ 
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
 let backgroundImage;
@@ -137,6 +141,7 @@ function preload(){
   rougeBucketSprite = loadImage("images/susbucket.gif");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
+  graffiti = loadImage("images/Graffiti.png");
 }
 
 function setup() {
@@ -204,7 +209,6 @@ function setup() {
 
   makeItems();
   player = new Player();
-
 }
 
 let timer = 0;
@@ -234,6 +238,7 @@ function draw() {
   } else if(state == 4){
       levelTransition();
   }
+
 }
 
 
@@ -365,6 +370,26 @@ function gameMenu2(){ //game menu for roguelike mode
   
   actor.draw();
   pop();
+  }
+
+  // if graffiti 
+  if (levelSet.obstacles == "graffiti") {
+
+    console.log("OBSTACLE IS GRAFFITI");
+  if ((random() < 0.6) && (time % graffitiTime == 0)) { // chance to spawn a graffiti
+        let burstAmt;
+        switch(levelSet[currentLevel].difficulty) {
+            case 1: burstAmt = 2; break;
+            case 2: burstAmt = 3; break;
+            case 3: burstAmt = 4; break;
+            default: burstAmt = 2;
+        }
+        spawnGraffitiActor(burstAmt);
+    }
+   for (let grafActor of graffitiActors) {
+      grafActor.update();
+      grafActor.draw();
+    }
   }
 
   // only run these if rougeCharacter exists
