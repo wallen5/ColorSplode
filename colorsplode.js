@@ -65,6 +65,9 @@ let drawGameOver = false;
 // Paint trail layer
 let paintLayer;
 
+//used to check if b is pressed.
+let bPressed = false;
+
 //start menu text. acts as namespace
 let titleColor = {
   r: 250,
@@ -111,6 +114,7 @@ function preload(){
   pickup = loadSound('sounds/pickup.wav');
   bombSound = loadSound('sounds/nuclear-explosion.mp3');
   explodeGif = loadImage("images/explosion.gif");
+  explodeGif = createImg("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
@@ -667,6 +671,18 @@ function keyPressed() // Generic Keypress function
   if(['0', '1', '2', '3', '4', '5', '6', '7'].includes(key)) // Simple test function that let's us give ourselves an item for testing
   {
     player.addItem(allItems[key - 0]);
+  }
+
+  if (key == 'b'){
+    bPressed = true;
+  } else{
+    bPressed = false;
+  }
+}
+
+function keyReleased(){
+  if(key == 'b'){
+    bPressed = false;
   }
 }
 

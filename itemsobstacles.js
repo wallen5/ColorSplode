@@ -102,7 +102,8 @@ let bombisReady = false;
 //let explosion;
 
 function dropBomb(){
-  if (key.toLowerCase() === 'b' && bombisReady){
+  if (bPressed && bombisReady){
+
     //play sound effect
     bombSound.play();
     explodeGif.play();
@@ -133,9 +134,7 @@ function dropBomb(){
       spawnLogic.rate = 1;
       spawnLogic.timer = originalTimer;
       spawnLogic.timeToSpawn = originalTimeToSpawn;
-    }, 5000);
-
-    //explodeGif.position(50,350);
+    }, 3000);
   }
 }
 
