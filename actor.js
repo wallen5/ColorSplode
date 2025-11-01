@@ -870,6 +870,7 @@ class Actor {
     let spawnY = height / 2 - 25;
   
     cat = new Cat(spawnX, spawnY, catSprite);
+    cat.speed = speed;
   }
 
 
