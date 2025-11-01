@@ -265,7 +265,7 @@ function levelTransition(){
     spawnLogic.activeActors = 0;
     clearObstacles();
     fade = 0;
-    slide = 0l
+    slide = 0;
 
     setup();
     transitionCreated = false;
@@ -279,6 +279,8 @@ function levelTransition(){
     currentLevel++;
     // reset game
     transitionCreated = false;
+    fade = 0;
+    slide = 0;
     time = 0;
     score = 0;
     levelSet[currentLevel].setup();
