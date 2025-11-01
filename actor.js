@@ -964,7 +964,6 @@ class Actor {
             console.log("cat swiped bucket - timer reduced by 1 sec: " + target.timeAlive);
           } else {
             target.timeAlive = 14;
-            //onTimerFinished(target);
             console.log("cat made bucket explode: " + target.timeAlive);
           }
           break;
@@ -975,7 +974,6 @@ class Actor {
             console.log("cat swiped bucket - timer reduced by 2 sec: " + target.timeAlive);
           } else {
             target.timeAlive = 14;
-            //onTimerFinished(target);
             console.log("cat made bucket explode: " + target.timeAlive);
           }
           break;
@@ -986,7 +984,6 @@ class Actor {
             console.log("cat swiped bucket - timer reduced by 3 sec: " + target.timeAlive);
           } else {
             target.timeAlive = 14;
-            //onTimerFinished(target);
             console.log("cat made bucket explode: " + target.timeAlive);
           }
           break;
