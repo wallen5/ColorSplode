@@ -962,7 +962,7 @@ class Actor {
       }
   
       target.splode();
-      target.impactShakeEnd = millis() + 500;
+      target.impactShakeEnd = millis() + 500; //buckets shake after being swiped
     }
   
     draw() {
