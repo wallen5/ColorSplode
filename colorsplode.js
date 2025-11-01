@@ -38,7 +38,7 @@ let transitionCreated = false;
 //Level Up Buttons
 let levelUpActive = false;
 let levelUpTriggered = {};
-let levelUpTrigger = [39, 69, 75, 99, 200];
+let levelUpTrigger = [1, 69, 75, 99, 200];
 
 //Game Over Buttons
 let buttonCreated = false;
@@ -50,6 +50,13 @@ let drawGameOver = false;
 let paintLayer;
 let gameLayer;
 let gameX, gameY;
+
+const BASE_CANVAS_WIDTH = 1500;
+const BASE_CANVAS_HEIGHT = 1100;
+const BASE_GAME_WIDTH = 800;
+const BASE_GAME_HEIGHT = 800;
+
+let gs = 1;
 
 //start menu text. acts as namespace
 let titleColor = {
@@ -114,25 +121,29 @@ function setup() {
   paintLayer.background(255);
   paintLayer.noSmooth();
 
-  currentColor = color(0);
-  gameLayer = createGraphics(windowWidth * 0.7, windowLength * 0.7);
-
+  gameLayer = createGraphics(windowWidth * 0.4, windowHeight * 0.7);
   gameX = (width - gameLayer.width) / 2;
   gameY = (height - gameLayer.height) / 2;
 
+  const scaleX = windowWidth / BASE_CANVAS_WIDTH;
+  const scaleY = windowHeight / BASE_CANVAS_HEIGHT;
+  gs = Math.min(scaleX, scaleY);
+
+  currentColor = color(0);
+
   //start button
   textFont(myFont);
-  textSize(12); // Sets a font size to keep text size consistent
-  startButton1 = new Sprite(320 + gameX, 450 + gameY);
+  textSize(12 * gs); // Sets a font size to keep text size consistent
+  startButton1 = new Sprite(320 * gs + gameX, 450 * gs + gameY);
   startButton1.text = "Play\n Classic Mode";
-  startButton1.width = 180;
-  startButton1.height = 50;
+  startButton1.width = 180 * gs;
+  startButton1.height = 50 * gs;
   startButton1.color = "lightgreen";
 
-  startButton2 = new Sprite(520 + gameX, 450 + gameY);
+  startButton2 = new Sprite(520 * gs + gameX, 450 * gs + gameY);
   startButton2.text = "Play\n Rougelike Mode";
-  startButton2.width = 200;
-  startButton2.height = 50;
+  startButton2.width = 200 * gs;
+  startButton2.height = 50 * gs;
   startButton2.color = "red";
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   gameLayer.background(220);
@@ -217,10 +228,10 @@ function startMenu(){
 
   stroke("black");
   strokeWeight(5);
-  textSize(30);
+  textSize(30 * gs);
   textStyle("bold");
     
-  text("ColorSplode", 250 + gameX , 350 + gameY);
+  text("ColorSplode", 250 * gs + gameX , 350 * gs + gameY);
 
   currentMode = null;
 
@@ -247,10 +258,10 @@ function startMenu(){
   if (currentMode != null){
     startButton1.remove();
     startButton2.remove();
-    pauseButton = new Sprite(750 + gameX, 50 + gameY);
+    pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
-    pauseButton.width = 70;
-    pauseButton.height = 50;
+    pauseButton.width = 70 * gs;
+    pauseButton.height = 50 * gs;
     pauseButton.color = "lightgreen";
     menuMusic.stop();
     levelMusic.loop();
@@ -260,6 +271,7 @@ function startMenu(){
 
 
 function gameMenu1(){
+  drawBorder();
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   gameLayer.background(220);
   image(paintLayer, gameX, gameY, gameLayer.width, gameLayer.height);
@@ -296,6 +308,7 @@ function gameMenu1(){
 }
 
 function gameMenu2(){ //game menu for roguelike mode
+  drawBorder();
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   gameLayer.background(220);
   image(paintLayer, gameX, gameY, gameLayer.width, gameLayer.height);
@@ -380,35 +393,35 @@ function gameOver(){
   gameLayer.background(gameOverBG);
   stroke("black");
   strokeWeight(5);
-  textSize(50);
+  textSize(50 * gs);
   textStyle("bold");
   fill("red");
 
   colorFluctuation();
   fill(titleColor.r, titleColor.g, titleColor.b);
-  text("Game Over!", 195 + gameX , 350 + gameY);
+  text("Game Over!", 195 * gs + gameX , 350 * gs + gameY);
   scoreDisplay.text = "Score:" + score;
 
   stroke("black");
   strokeWeight(7.5);
-  textSize(30);
+  textSize(30 * gs);
   fill("white");
-  let x = 300 + gameX;
-  let y = 400 + gameY;
+  let x = 300 * gs + gameX;
+  let y = 400 * gs + gameY;
   text("Score: " + score, x , y );
 
   if (!buttonCreated){
     strokeWeight(5);
-    textSize(20);
-    retryButton = new Sprite(400 + gameX, 450 + gameY);
+    textSize(20 * gs);
+    retryButton = new Sprite(400 * gs + gameX, 450 * gs + gameY);
     retryButton.text = "Retry";
-    retryButton.width = 120;
-    retryButton.height = 50;
+    retryButton.width = 120 * gs;
+    retryButton.height = 50 * gs;
 
-    exitButton = new Sprite(400 + gameX, 515 + gameY);
+    exitButton = new Sprite(400 * gs + gameX, 515 * gs + gameY);
     exitButton.text = "Quit";
-    exitButton.width = 120;
-    exitButton.height = 50;
+    exitButton.width = 120 * gs;
+    exitButton.height = 50 * gs;
 
     buttonCreated = true;
   }
@@ -511,15 +524,15 @@ function retry(){
   //set style
   stroke("black");
   strokeWeight(5);
-  textSize(30);
+  textSize(30 * gs);
   textStyle("bold");
   fill(200);
 
   //create pause button
-  pauseButton = new Sprite(750 + gameX, 50 + gameY);
+  pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
   pauseButton.text = "||";
-  pauseButton.width = 70;
-  pauseButton.height = 50;
+  pauseButton.width = 70 * gs;
+  pauseButton.height = 50 * gs;
   pauseButton.color = "lightgreen";
 
   //display score
@@ -579,26 +592,26 @@ function pauseGame(){
     }
   }
   if(gamePaused){ // if game paused, draw the new buttons
-    resumeButton = new Sprite(400 + gameX, 450 + gameY);
+    resumeButton = new Sprite(400 * gs + gameX, 450 * gs + gameY);
     resumeButton.text = "Resume";
-    resumeButton.width = 200;
-    resumeButton.height = 50;
+    resumeButton.width = 200 * gs;
+    resumeButton.height = 50 * gs;
     resumeButton.color = "lightgreen";
 
     push();
-    textSize(27);
-    restartButton = new Sprite(400 + gameX, 500 + gameY);
+    textSize(27 * gs);
+    restartButton = new Sprite(400 * gs + gameX, 500 * gs + gameY);
     restartButton.text = "Restart";
-    restartButton.width = 200;
-    restartButton.height = 50;
+    restartButton.width = 200 * gs;
+    restartButton.height = 50 * gs;
     restartButton.color = "lightgreen";
 
     pop();
 
-    quitButton = new Sprite(400 + gameX, 550 + gameY);
+    quitButton = new Sprite(400 * gs + gameX, 550 * gs + gameY);
     quitButton.text = "Quit";
-    quitButton.width = 200;
-    quitButton.height = 50;
+    quitButton.width = 200 * gs;
+    quitButton.height = 50 * gs;
     quitButton.color = "lightgreen";
 
     pauseSound.play();
@@ -637,9 +650,9 @@ function drawPauseMenu(){
   // pause text
   fill(255);
   textAlign(CENTER, CENTER);
-  textSize(32);
+  textSize(32 * gs);
   text("Paused", gameLayer.width / 2 + gameX, gameLayer.height / 2 - 50 + gameY);
-  textSize(12);
+  textSize(12 * gs);
 
   // changes color of button when mouse hovers over
   mouseOverButton(quitButton, "green", "lightgreen");
@@ -673,23 +686,23 @@ function levelUp(){
     levelChoices = [random(allItems), random(allItems), random(allItems)];
 
     push();
-    textSize(15);
-    chooseButton1 = new Sprite(150 + gameX, 500 + gameY);
+    textSize(15 * gs);
+    chooseButton1 = new Sprite(150 * gs + gameX, 500 * gs + gameY);
     chooseButton1.text = "Choose";
-    chooseButton1.width = 100;
-    chooseButton1.height = 30;
+    chooseButton1.width = 100 * gs;
+    chooseButton1.height = 30 * gs;
     chooseButton1.color = "red";
 
-    chooseButton2 = new Sprite(400 + gameX, 500 + gameY);
+    chooseButton2 = new Sprite(400 * gs + gameX, 500 * gs + gameY);
     chooseButton2.text = "Choose";
-    chooseButton2.width = 100;
-    chooseButton2.height = 30;
+    chooseButton2.width = 100 * gs;
+    chooseButton2.height = 30 * gs;
     chooseButton2.color = "green";
 
-    chooseButton3 = new Sprite(650 + gameX, 500 + gameY);
+    chooseButton3 = new Sprite(650 * gs + gameX, 500 *gs + gameY);
     chooseButton3.text = "Choose";
-    chooseButton3.width = 100;
-    chooseButton3.height = 30;
+    chooseButton3.width = 100 * gs;
+    chooseButton3.height = 30 * gs;
     chooseButton3.color = "blue";
 
     pop();
@@ -718,10 +731,10 @@ function levelUp(){
     compressor.threshold(-24);
     compressor.ratio(4);
 
-    pauseButton = new Sprite(750 + gameX, 50 + gameY);
+    pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
-    pauseButton.width = 70;
-    pauseButton.height = 50;
+    pauseButton.width = 70 * gs;
+    pauseButton.height = 50 * gs;
     pauseButton.color = "lightgreen";
   }
 }
@@ -734,23 +747,23 @@ function drawLevelMenu(){
   noStroke();
   rect(gameX, gameY, gameLayer.width, gameLayer.height);
 
-  image(levelUpChoice, gameX, gameY);
+  image(levelUpChoice, gameX, gameY, 800 * gs, 800 *gs);
 
-  image(levelChoices[0].sprite, 120 + gameX, 250 + gameY, 60, 60);
-  image(levelChoices[1].sprite, 370 + gameX, 250 + gameY, 60, 60);
-  image(levelChoices[2].sprite, 610 + gameX, 250 + gameY, 60, 60);
+  image(levelChoices[0].sprite, 120 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
+  image(levelChoices[1].sprite, 370 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
+  image(levelChoices[2].sprite, 610 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
 
   fill(0);
 
-  textSize(15)
-  text(levelChoices[0].name, 70 + gameX, 220 + gameY, 150);
-  text(levelChoices[1].name, 320 + gameX, 220 + gameY, 150);
-  text(levelChoices[2].name, 570 + gameX, 220 + gameY, 150);
+  textSize(15 * gs)
+  text(levelChoices[0].name, 70 * gs + gameX, 220 * gs + gameY, 150 * gs);
+  text(levelChoices[1].name, 320 * gs + gameX, 220 * gs + gameY, 150 * gs);
+  text(levelChoices[2].name, 570 * gs + gameX, 220 * gs + gameY, 150 * gs);
 
-  textSize(12);
-  text(levelChoices[0].description, 70 + gameX, 370 + gameY, 180);
-  text(levelChoices[1].description, 320 + gameX, 370 + gameY, 180);
-  text(levelChoices[2].description, 570 + gameX, 370 + gameY, 180);
+  textSize(12 * gs);
+  text(levelChoices[0].description, 70 * gs + gameX, 370 * gs + gameY, 180 * gs);
+  text(levelChoices[1].description, 320 * gs + gameX, 370 * gs + gameY, 180 * gs);
+  text(levelChoices[2].description, 570 * gs + gameX, 370 * gs + gameY, 180 * gs);
 
 
 
@@ -872,16 +885,16 @@ function mouseReleased() {
 
 
 function drawScore(){
-  scoreDisplay = new Sprite(150 + gameX, 50 + gameY);
+  scoreDisplay = new Sprite((150 * gs + gameX), 50 * gs + gameY);
   scoreDisplay.text = "Score:" + score;
-  scoreDisplay.width = 250;
-  scoreDisplay.height = 50;
+  scoreDisplay.width = 250 * gs;
+  scoreDisplay.height = 50 * gs;
   scoreDisplay.color = "lightgreen";
 
-  comboDisplay = new Sprite(550 + gameX, 50 + gameY);
+  comboDisplay = new Sprite(550 * gs + gameX, 50 * gs + gameY);
   comboDisplay.text = "Combo:" + currentCombo;
-  comboDisplay.width = 250;
-  comboDisplay.height = 50;
+  comboDisplay.width = 250 * gs;
+  comboDisplay.height = 50 * gs;
   comboDisplay.color = "white";
 }
 
@@ -889,8 +902,8 @@ function drawScore(){
 function drawScoreAtPos(x,y){
   scoreDisplay = new Sprite(x, y);
   scoreDisplay.text = "Score:" + score;
-  scoreDisplay.width = 250;
-  scoreDisplay.height = 50;
+  scoreDisplay.width = 250 * gs;
+  scoreDisplay.height = 50 * gs;
 }
 
 function drawBorder(){
@@ -910,3 +923,6 @@ function setGameCusor(){
   }
 }
 
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}

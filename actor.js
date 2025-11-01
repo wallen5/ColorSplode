@@ -8,8 +8,8 @@ class Actor {
     this.size = 50;
     this.sprite = sprite;
     this.color = color;
-    this.xspeed = random(-2,2);
-    this.yspeed = random(-2,2);
+    this.xspeed = random(-2,2) * gs;
+    this.yspeed = random(-2,2) * gs;
     
     this.timer = 14.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
@@ -56,9 +56,9 @@ class Actor {
     rotate(radians(this.angle)); // use actor.angle
     imageMode(CENTER);
     if(this.state == "EXPLODED"){
-      image(this.sprite, 0, 0, this.size + 40, this.size + 40);
+      image(this.sprite, 0, 0, (this.size + 40) * gs, (this.size + 40) * gs);
     } else {
-      image(this.sprite, 0, 0, this.size, this.size);
+      image(this.sprite, 0, 0, (this.size) * gs, (this.size * gs));
     }
     pop();
 
@@ -237,8 +237,8 @@ function roamingMovement(actor) {
   actor.prevX = actor.x; //save coordinate
   actor.prevY = actor.y;
 
-  actor.x += velocity.x;//update coordinates
-  actor.y += velocity.y;
+  actor.x += velocity.x * gs;//update coordinates
+  actor.y += velocity.y * gs;
 
   
 
@@ -278,8 +278,8 @@ function roamingMovement(actor) {
     actor.y = zoneY1;
     actor.yspeed *= -1;
   }
-  if (actor.y > height - actor.size - (height - (zoneY2 + zoneHeight))) {
-    actor.y = height - actor.size - (height - (zoneY2 + zoneHeight));
+  if (actor.y > gs * (height - actor.size - (height - (zoneY2 + zoneHeight)))) {
+    actor.y = gs * (height - actor.size - (height - (zoneY2 + zoneHeight)));
     actor.yspeed *= -1;
   }
 
@@ -362,8 +362,8 @@ function checkActorToActorCollisions() {
 }
 
 function grabbedMovement(actor) {
-  actor.x = constrain(mouseX - actor.size/2, zoneX, width - actor.size - zoneX);
-  actor.y = constrain(mouseY - actor.size/2, zoneY1, height - actor.size - (height - (zoneY2 + zoneHeight)));
+  actor.x = constrain(mouseX - actor.size/2, zoneX, width - (actor.size * gs) - zoneX);
+  actor.y = constrain(mouseY - actor.size/2, zoneY1, gs * (height - (50 * gs) - actor.size - (height - (zoneY2 + zoneHeight))));
 }
 
 // Checks the actors timer

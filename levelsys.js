@@ -50,35 +50,35 @@ function randomColorZone(level) {
     switch (randPreset) {
     case 0: // Corners
         level.colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150, 150, "red"),
-        new Zone(50 + gameX, 620 + gameY, 150, 150, "blue"),
-        new Zone(gameLayer.width - 150 - 50 + gameX, 620 + gameY, 150, 150, "purple"),
-        new Zone(gameLayer.width - 150 - 50 + gameX, 100 + gameY, 150, 150, "green")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "blue"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "purple"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "green")
         ];
         break;
     case 1:
         level.colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150, 150, "blue"),
-        new Zone(50 + gameX, 620 + gameY, 150, 150, "green"),
-        new Zone(gameLayer.width - 150 - 50 + gameX, 620 + gameY, 150, 150, "red"),
-        new Zone(gameLayer.width - 150 - 50 + gameX, 100 + gameY, 150, 150, "purple")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple")
         ];
         break;
     case 2:
         level.colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150, 150, "purple"),
-        new Zone(50 + gameX, 620 + gameY, 150, 150, "red"),
-        new Zone(gameLayer.width - 150 - 50 + gameX, 620 + gameY, 150, 150, "green"),
-        new Zone(gameLayer.width - 150 - 50 + gameX, 100 + gameY, 150, 150, "blue")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue")
         ];
         break;
         
     default:
         level.colorZones = [
-        new Zone(50, 100, 150, 150, "red"),
-        new Zone(50, 620, 150, 150, "blue"),
-        new Zone(gameLayer.width - 150 - 50, 620, 150, 150, "purple"),
-        new Zone(gameLayer.width - 150 - 50, 100, 150, 150, "green")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple")
         ];
     }
 }

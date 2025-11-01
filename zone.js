@@ -75,16 +75,16 @@ function zoneFill(colorName){
 }
 
 //zone vars -- temp until zones are randomized
-let zoneX = 50, zoneY1 = 100, zoneY2 = 620, zoneWidth = 150, zoneHeight = 150, gap = 20;
+let zoneX = 50, zoneY1 = 100, zoneY2 = 620, zoneWidth = 150, zoneHeight = 150;
 
 
 // create 4 drop zones along the bottom
 function makeColorZones() {
   levelSet[currentLevel].colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150, 150, "blue"),
-        new Zone(50 + gameX, 620 + gameY, 150, 150, "green"),
-        new Zone(gameLayer.width - 150 - 50 + gameX, 620 + gameY, 150, 150, "red"),
-        new Zone(gameLayer.width - 150 - 50 + gameX, 100 + gameY, 150, 150, "purple")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple")
         ];
 }
 
@@ -100,7 +100,7 @@ function randomizeZonePlacements()
   }));
 }
 
-// Vents
+// Vents2
 
 let spawnLogic = new Vent;
 let vents = [];
@@ -109,10 +109,10 @@ const wall = ["left","right","top","bottom"];
 // For now coords are set, could randomize later
 function makeVents(){
   vents = [
-    new Vent(-50 + gameX, 350 + gameY, 100, 75, "left", false, ventLeft),
-    new Vent(350 + gameX, 650 + gameY, 75, 100, "bottom", false, ventBottom),
-    new Vent(650 + gameX, 350 + gameY, 100, 75, "right", false, ventRight),
-    new Vent(350 + gameX, -50 + gameY, 75, 100, "top", false, ventTop)
+    new Vent((-50 * gs) + gameX, (350 * gs) + gameY, 100 * gs, 75 * gs, "left", false, ventLeft),
+    new Vent((350 * gs) + gameX, (620 * gs) + gameY, 75 * gs, 100 * gs, "bottom", false, ventBottom),
+    new Vent(gameLayer.width - (150 * gs) + gameX, (350 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight),
+    new Vent((350 * gs) + gameX, (-50 * gs) + gameY, 75 * gs, 100 * gs, "top", false, ventTop)
   ];
 }
 

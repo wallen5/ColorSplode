@@ -48,17 +48,17 @@ class Player {
     }
     for(let i = 0; i < this.health; ++i){
       if(player.health >= 1){
-        image(heart, 1000 - ((this.health - 3) * 15) + (i * 35), 990, 30, 30);
+        image(heart, gs * (1300 - ((this.health - 3) * 15) + (i * 35)), gs * 990, gs * 30, gs * 30);
       }
     }
   }
 
   drawInventory() { // Draws player inventory so they can see their items
     push();
-    let startX = 320;
-    let startY = 950;
-    let size = 40;
-    let spacing = 10;
+    let startX = 550 * gs;
+    let startY = 950 * gs;
+    let size = 40 * gs;
+    let spacing = 10 * gs;
 
     for (let i = 0; i < player.inventory.length; i++) {
       let item = player.inventory[i];
