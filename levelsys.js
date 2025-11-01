@@ -76,14 +76,15 @@ class Level{
             case "Cat":
               console.log("Spawning:", obstacleName);
               let catSpeed;
+              let swipeStrength;
               switch (this.difficulty){
-                case 1: catSpeed = 1.5; break;
-                case 2: catSpeed = 2; break;
-                case 3: catSpeed = 2.75; break;
-                default: catSpeed = 2;
+                case 1: catSpeed = 1.5; swipeStrength = 1.0; break;
+                case 2: catSpeed = 2; swipeStrength = 2.0; break;
+                case 3: catSpeed = 2.75; swipeStrength = 3.0; break;
+                default: catSpeed = 2; swipeStrength = 2.0;
               }
               setTimeout(() => {
-                spawnCat(catSpeed);
+                spawnCat(catSpeed, swipeStrength);
                 if (cat) {
                   this.obstacles.push(cat);
                   console.log("Cat added to obstacles");
