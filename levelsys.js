@@ -186,7 +186,7 @@ function setBoss(){
 function levelTransition(){
   if (fade < 255){fade += fadeSpeed;}
   if (slide < width / 2){slide += slideSpeed}
-  background(117, 2, 0);
+  background(0, 0, 0, fade);
 
   if (levelSet[currentLevel].difficulty != 3){
     push();
