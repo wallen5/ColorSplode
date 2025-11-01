@@ -22,8 +22,11 @@ let grabSprite =[]; //array of grab animations
 let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
 
+//obstacles
 let rougeCharacter = null;
 let rougeBucketSprite;
+let cat = null;
+let catSprite;
 
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
@@ -135,6 +138,7 @@ function preload(){
 
   bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
+  catSprite = loadImage("images/catimage.gif");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
 }
@@ -396,6 +400,11 @@ function gameMenu2(){ //game menu for roguelike mode
     }
     rougeCharacter.draw();
     pop();
+  }
+
+  if (cat){
+    cat.update();
+    cat.draw();
   }
 
   stroke(0);
