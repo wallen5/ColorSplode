@@ -1,3 +1,9 @@
+//transition vars
+let fade = 0;
+let fadeSpeed = 5;
+let slide = 0;
+let slideSpeed = 5;
+
 class Level{
     constructor(levelBoss, difficulty, obstacles, colorZones, loaded = false){
         this.levelBoss = levelBoss;
@@ -67,6 +73,26 @@ class Level{
                 }
               }, 2000);
               break;
+            case "Cat":
+              console.log("Spawning:", obstacleName);
+              let catSpeed;
+              let swipeStrength;
+              switch (this.difficulty){
+                case 1: catSpeed = 1.5; swipeStrength = 1.0; break;
+                case 2: catSpeed = 2; swipeStrength = 2.0; break;
+                case 3: catSpeed = 2.75; swipeStrength = 3.0; break;
+                default: catSpeed = 2; swipeStrength = 2.0;
+              }
+              setTimeout(() => {
+                spawnCat(catSpeed, swipeStrength);
+                if (cat) {
+                  this.obstacles.push(cat);
+                  console.log("Cat added to obstacles");
+                  //console.log("speed = " + rougeCharacter.speed, "unsap = " +  rougeCharacter.unsnapInterval);
+
+                }
+              }, 2000);
+              break;
           }
         }
       }
@@ -74,10 +100,8 @@ class Level{
 }  
 
 function clearObstacles() {
-    // if (levelSet[currentLevel]) {
-    //     levelSet[currentLevel].obstacles = [];
-    // }
     rougeCharacter = null;
+    cat = null;
 }
 
 function randomColorZone(level) {
@@ -135,40 +159,45 @@ function setBoss(){
     case 1:
         levelSet = [
         //change rougeBucket(s) to different obstacle
-        new Level(0, 1, ["rougeBucket"], []), 
-        new Level(0, 2, ["rougeBucket"], []),
-        new Level(1, 3, ["rougeBucket"], [])
+        new Level(0, 1, ["Cat"], []), 
+        new Level(0, 2, ["Cat"], []),
+        new Level(1, 3, ["Cat"], [])
         ];
         break;
     case 2:
         levelSet = [
         //change rougeBucket(s) to different obstacle
-        new Level(0, 1, ["rougeBucket"], []),
-        new Level(0, 2, ["rougeBucket"], []),
-        new Level(1, 3, ["rougeBucket"], [])
+        new Level(0, 1, ["Cat"], []),
+        new Level(0, 2, ["Cat"], []),
+        new Level(1, 3, ["Cat"], [])
         ];
         break;
     case 3:
         levelSet = [
         //change rougeBucket(s) to different obstacle
-        new Level(0, 1, ["rougeBucket"], []),
-        new Level(0, 2, ["rougeBucket"], []),
-        new Level(1, 3, ["rougeBucket"], [])
+        new Level(0, 1, ["Cat"], []),
+        new Level(0, 2, ["Cat"], []),
+        new Level(1, 3, ["Cat"], [])
         ];
         break;
     }
 }
 
 function levelTransition(){
+  if (fade < 255){fade += fadeSpeed;}
+  if (slide < width / 2){slide += slideSpeed}
   background(117, 2, 0);
 
-  push();
-  fill(237, 204, 42);
-  textAlign(CENTER, CENTER);
-  textSize(30);
-  text("Level " + levelSet[currentLevel].difficulty + " Complete", width / 2, height / 2 - 50);
-  textSize(12);
-  pop();
+  if (levelSet[currentLevel].difficulty != 3){
+    push();
+    fill(237, 204, 42);
+    textAlign(CENTER, CENTER);
+    textSize(30);
+
+    text("Level " + levelSet[currentLevel].difficulty + " Complete", width / 2, slide - 50);
+    textSize(12);
+    pop();
+  }
 
   pauseButton.remove();
   scoreDisplay.remove();
@@ -177,19 +206,26 @@ function levelTransition(){
   currentCombo = 0;
 
   if(!transitionCreated){
-    quitButton = new Sprite(400, 550);
+    quitButton = new Sprite(-400, 550);
     quitButton.text = "Quit";
     quitButton.width = 200;
     quitButton.height = 50;
     quitButton.color = "red";
 
-    nextLevelButton = new Sprite(400, 500);
+    nextLevelButton = new Sprite(-400, 500);
     nextLevelButton.text = "Next Level";
     nextLevelButton.width = 400;
     nextLevelButton.height = 50;
     nextLevelButton.color = "red";
 
     transitionCreated = true;
+    fade = 0;
+    slide = 0;
+  }
+
+  if (transitionCreated && nextLevelButton && quitButton) {
+    nextLevelButton.x = slide;
+    quitButton.x = slide;
   }
 
   mouseOverButton(nextLevelButton, "lightred", "red");
@@ -199,12 +235,15 @@ function levelTransition(){
 
   if(levelSet[currentLevel].difficulty == 3){
     nextLevelButton.remove();
-    background(117, 2, 0);
+    background(0, 0, 0, fade);
     push();
     fill(237, 204, 42);
     textAlign(CENTER, CENTER);
     textSize(50)
-    text("Victory", width / 2, height / 2 - 50);
+    text("Victory", width / 2, slide - 50);
+    if (transitionCreated && nextLevelButton && quitButton) {
+      quitButton.x = slide;
+    }
     textSize(12);
     pop();
   }
@@ -233,6 +272,8 @@ function levelTransition(){
     spawnLogic.rate = 1;
     spawnLogic.activeActors = 0;
     clearObstacles();
+    fade = 0;
+    slide = 0;
 
     setup();
     transitionCreated = false;
@@ -246,6 +287,8 @@ function levelTransition(){
     currentLevel++;
     // reset game
     transitionCreated = false;
+    fade = 0;
+    slide = 0;
     time = 0;
     score = 0;
     levelSet[currentLevel].setup();

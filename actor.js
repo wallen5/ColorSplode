@@ -18,6 +18,7 @@ class Actor {
     this.timeAlive = 0.0;        // Tracks how long the actor has been alive while the game is UNPAUSED
 
     this.shakeThreshold = 5.0;   // how many seconds left to shake
+    this.impactShakeEnd = 0;
     this.angle = 0;              // current rotation angle
     this.rotationSpeed = 80.0;  // how fast it rotates per frame
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
@@ -852,6 +853,144 @@ class Actor {
         objBottom < zone.y ||
         objTop > zone.y + zone.h
       );
+    }
+  
+    draw() {
+      push();
+      translate(this.x + this.size / 2, this.y + this.size / 2);
+      imageMode(CENTER);
+      image(this.sprite, 0, 0, this.size, this.size);
+      pop();
+    }
+  }
+
+   function spawnCat(speed, swipeStrength) {
+  
+    let spawnX = width / 2 - 25;
+    let spawnY = height / 2 - 25;
+  
+    cat = new Cat(spawnX, spawnY, catSprite);
+    cat.speed = speed;
+    cat.swipeStrength = swipeStrength;
+  }
+
+
+  class Cat extends Actor {
+    constructor(x, y, sprite) {
+      super(x, y, sprite, color(200, 150, 255));
+      this.state = "IDLE";
+      this.size = 60;
+      this.swipeCooldown = 1000; //wait after each swipe
+      this.lastAction = millis();
+      this.targetBucket = null;
+      this.speed = 2.75;
+      this.swipeRange = 30; 
+      this.swipeStrength = 2;
+      this.timer = Infinity; 
+    }
+  
+    update() {
+      if (gamePaused || levelUpActive) return;
+  
+      //if no target roam randomly
+      if (!this.targetBucket) {
+        roamingMovement(this);
+  
+        //pick a new target
+        if (millis() - this.lastAction >= this.swipeCooldown) {
+          this.pickNewTarget();
+        }
+      } else {
+        //if targetBucket gets sorted untarget it
+        if (this.targetBucket.state !== "FREE") {
+          this.targetBucket = null;
+          this.lastAction = millis();
+          return;
+        }
+  
+        this.moveTowardTarget();
+  
+        //check if close enough to swipe
+        const distToTarget = dist(
+          this.x + this.size / 2,
+          this.y + this.size / 2,
+          this.targetBucket.x + this.targetBucket.size / 2,
+          this.targetBucket.y + this.targetBucket.size / 2
+        );
+  
+        if (distToTarget < this.swipeRange) {
+          this.swipeAtBucket();
+          this.targetBucket = null;
+          this.lastAction = millis();
+        }
+      }
+    }
+  
+    pickNewTarget() {
+      const unsortedBuckets = ourCharacters.filter(b => b.state === "FREE");
+  
+      if (unsortedBuckets.length === 0) return;
+  
+      this.targetBucket = random(unsortedBuckets); //pick random bucket to target
+      console.log("cat picked new target bucket!");
+    }
+  
+    moveTowardTarget() {
+      if (!this.targetBucket) return;
+  
+      const dx = this.targetBucket.x + this.targetBucket.size / 2 - (this.x + this.size / 2);
+      const dy = this.targetBucket.y + this.targetBucket.size / 2 - (this.y + this.size / 2);
+  
+      const distToTarget = Math.sqrt(dx * dx + dy * dy);
+  
+      if (distToTarget > 1) {
+        this.x += (dx / distToTarget) * this.speed;
+        this.y += (dy / distToTarget) * this.speed;
+      }
+    }
+  
+    swipeAtBucket() {
+      const target = this.targetBucket;
+      if (!target) return;
+  
+      const remaining = max(target.timer - target.timeAlive);
+
+      //increase time alive so buckets explode faster
+      switch (levelSet[currentLevel].difficulty) {
+        case 1: 
+          if (remaining >= 2) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 1 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
+        case 2: 
+          if (remaining >= 3) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 2 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
+        case 3: 
+          if (remaining >= 4) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 3 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
+      }
+  
+      target.splode();
+      target.impactShakeEnd = millis() + 500; //buckets shake after being swiped
     }
   
     draw() {
