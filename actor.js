@@ -42,20 +42,24 @@ class Actor {
   }
 
   newRandomColor() {
-    let randIndex = int(random(0, chrSprite.length));
-    if(randIndex == 0) randColor = color(255, 0, 0)
-    if(randIndex == 1) randColor = color(0, 0, 255)
-    if(randIndex == 2) randColor = color(128, 0, 128)
-    if(randIndex == 3) randColor = color(0, 255, 0);    
 
-    // Chooses and pushes a random bucket to be spawned
-    randColor = lerpColor(randColor, color(255,255,255), 0.75);
-
-    this.sprite = chrSprite[randIndex]; 
+    let newColors = [color(255,0,0), color(0,0,255), color(128,0,128), color(0,255,0)];
+  
+    let randIndex = int(random(0, newColors.length));
+    let randColor = newColors[randIndex];
+    randColor = lerpColor(randColor, color(255,255,255), 0.7);
+    // Avoid choosing the same color
+    // Im like 80% sure this doesnt work as intended but im too sick of messing with it for now - FIX
+    if (colorsEqual(randColor, this.color)) {
+      randColor = newColors[(randIndex + 1) % newColors.length];
+    }
+    
+    this.sprite = chrSprite[randIndex];
     this.color = randColor;
     if (this.state === "SNAPPED") { 
       this.state = "FREE";
       this.timeAlive = 0.0;
+      this.angle = 0.0;
     }
   }
 
