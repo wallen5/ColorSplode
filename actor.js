@@ -487,7 +487,7 @@ class Actor {
       }
     }
     
-    if (remaining <= actor.shakeThreshold) {
+    if (remaining <= actor.shakeThreshold || millis() < actor.impactShakeEnd) {
     let speedMultiplier = 1 / (t + 0.05);  // tweak 0.1 to control max speed
     speedMultiplier = constrain(speedMultiplier, 0, 7);  // never shake faster than 7x normal
     actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
