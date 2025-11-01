@@ -864,13 +864,14 @@ class Actor {
     }
   }
 
-   function spawnCat() {
+   function spawnCat(speed, swipeStrength) {
   
     let spawnX = width / 2 - 25;
     let spawnY = height / 2 - 25;
   
     cat = new Cat(spawnX, spawnY, catSprite);
     cat.speed = speed;
+    cat.swipeStrength = swipeStrength;
   }
 
 
@@ -884,6 +885,7 @@ class Actor {
       this.targetBucket = null;
       this.speed = 2.75;
       this.swipeRange = 30; 
+      this.swipeStrength = 2;
       this.timer = Infinity; 
     }
   
@@ -954,12 +956,40 @@ class Actor {
       const remaining = max(target.timer - target.timeAlive);
 
       //increase time alive so buckets explode faster
-      if (remaining >= 3) {
-        target.timeAlive += 2.0;
-        //console.log("cat swiped bucket: " + target.timeAlive);
-      } else {
-        target.timeAlive = 14; //buckets timer is up
-        //console.log("cat made bucket explode: " + target.timeAlive);
+      switch (levelSet[currentLevel].difficulty) {
+        case 1: 
+          if (remaining >= 2) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 1 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            //onTimerFinished(target);
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
+        case 2: 
+          if (remaining >= 3) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 2 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            //onTimerFinished(target);
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
+        case 3: 
+          if (remaining >= 4) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 3 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            //onTimerFinished(target);
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
       }
   
       target.splode();
