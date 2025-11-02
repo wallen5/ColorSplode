@@ -145,7 +145,7 @@ spray() {
     let distToActor = dist(actor.x,actor.y, this.x,this.y);
     if (distToActor < this.sprayRadius) {
       actor.newRandomColor();
-      
+      actor.splode();   
     }
   }
 
