@@ -375,9 +375,7 @@ function gameMenu2(){ //game menu for roguelike mode
   // if graffiti
   
   if (levelSet[currentLevel].obstacleTypes.includes("graffiti")) {
-
-    console.log("OBSTACLE IS GRAFFITI");
-  if ((random() < 0.7) && (time % graffitiTime == 0)) { // chance to spawn a graffiti
+  if ((random() < 0.8) && (time % graffitiTime == 0)) { // chance to spawn a graffiti
         let burstAmt;
         console.log("Time to do some graffiti!");
         switch(levelSet[currentLevel].difficulty) {
@@ -1069,7 +1067,7 @@ function generateRandomSplat(amt){
   let splatImages = [splat1, splat2, splat3, splat4, splat5, splat6, splatD];
   let randSplat = random(splatImages);
   let randColor = int(random(0, 4));
-  let randRot = random(-180,180);
+  //let randRot = random(-180,180);
 
   switch(randColor){
         case 0: // red
@@ -1097,15 +1095,10 @@ function generateRandomSplat(amt){
   let h = randSplat.height * sizeMult;
   imageMode(CENTER);
   //rotate(randRot); //Makes the splatters go offscreen sometimes? Weird. Fix l8r
+  console.log("Splat sprite:", randSplat);
   image(randSplat, x, y, w, h);
   noTint();
-  imageMode(CORNER);
   smooth();
+  imageMode(CORNER);
 }
 
-function colorsEqual(c1, c2) {
-  return red(c1) === red(c2) &&
-         green(c1) === green(c2) &&
-         blue(c1) === blue(c2) &&
-         alpha(c1) === alpha(c2);
-}

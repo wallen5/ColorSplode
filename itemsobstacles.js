@@ -107,7 +107,7 @@ class Graffiti{
       this.active = false;
     }
 
-    this.sprayRadius = 200; // how far graffiti affects
+    this.sprayRadius = 150; // how far graffiti affects
     this.sprayed = false;   // ensure AOE happens once
   }
 
@@ -166,6 +166,7 @@ draw() {
   push();
   translate(this.x + this.size / 2, this.y + this.size / 2);
   imageMode(CENTER);
+  //console.log("Graffiti sprite:", this.sprite);
   image(this.sprite, 0, 0, this.size, this.size);
   pop();
   }

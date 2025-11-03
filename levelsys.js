@@ -43,6 +43,7 @@ class Level{
     setObstacles() {
         const obstacleNames = [...this.obstacleTypes];
         this.obstacles = [];
+        
       
         for (let obstacleName of obstacleNames) {
           switch (obstacleName) {

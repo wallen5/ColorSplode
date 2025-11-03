@@ -47,13 +47,16 @@ class Actor {
   
     let randIndex = int(random(0, newColors.length));
     let randColor = newColors[randIndex];
-    randColor = lerpColor(randColor, color(255,255,255), 0.7);
+    randColor = lerpColor(randColor, color(255,255,255), 0.75);
     // Avoid choosing the same color
     // Im like 80% sure this doesnt work as intended but im too sick of messing with it for now - FIX
-    if (colorsEqual(randColor, this.color)) {
-      randColor = newColors[(randIndex + 1) % newColors.length];
+    if (chrSprite[randIndex] === this.sprite) {
+      this.newRandomColor();
+      console.log("COLOR CHANGED!");
     }
-    
+    console.log("OUR NEW COLOR: " + randColor);
+    console.log("OUR OLD COLOR: " + this.color);
+
     this.sprite = chrSprite[randIndex];
     this.color = randColor;
     if (this.state === "SNAPPED") { 
