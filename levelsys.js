@@ -26,17 +26,17 @@ class Level{
         switch(this.difficulty){
         case 1:
             spawnRateIncrease = 0.01;
-            this.scoreThreshold = 30;
+            this.scoreThreshold = 1;
             maxVents = 2;
             break;
         case 2:
             spawnRateIncrease = 0.05;
-            this.scoreThreshold = 40;
+            this.scoreThreshold = 1;
             maxVents = 4;
             break;
         case 3:
             spawnRateIncrease = 0.08;
-            this.scoreThreshold = 50;
+            this.scoreThreshold = 1;
             maxVents = 4;
             break;
         }
@@ -184,6 +184,8 @@ function setBoss(){
 }
 
 function levelTransition(){
+  clear();
+  drawBorder();
   if (fade < 255){fade += fadeSpeed;}
   if (slide < width / 2){slide += slideSpeed}
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
@@ -195,7 +197,7 @@ function levelTransition(){
     textAlign(CENTER, CENTER);
     textSize(30 * gs);
 
-    text("Level " + levelSet[currentLevel].difficulty + " Complete", gameLayer.width / 2, slide - 50);
+    text("Level " + levelSet[currentLevel].difficulty + " Complete", gameLayer.width / 2 + gameX, slide - (500 * gs));
     textSize(12 * gs);
     pop();
   }
@@ -242,7 +244,7 @@ function levelTransition(){
     fill(237, 204, 42);
     textAlign(CENTER, CENTER);
     textSize(50 * gs)
-    text("Victory", gameLayer.width / 2, slide - 50);
+    text("Victory", gameLayer.width / 2 + gameX, slide - (500 * gs));
     if (transitionCreated && nextLevelButton && quitButton) {
       quitButton.x = slide;
     }
