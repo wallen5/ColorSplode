@@ -1,17 +1,17 @@
 // A Class of Our Actors/Characters
 class Actor {
   constructor(x, y, sprite, color) {
-    this.x = x;
-    this.y = y;
-    this.prevX = x; // Needed for "bouncing" collision detection
-    this.prevY = y;
+    this.x = x + gameX;
+    this.y = y + gameY;
+    this.prevX = x + gameX; // Needed for "bouncing" collision detection
+    this.prevY = y + gameY;
     this.size = 50;
     this.grabBox = 75;
     this.sprite = sprite;
     this.originalSprite = sprite;
     this.color = color;
-    this.xspeed = random(-2,2);
-    this.yspeed = random(-2,2);
+    this.xspeed = random(-2,2) * gs;
+    this.yspeed = random(-2,2) * gs;
     
     this.timer = 14.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
@@ -97,9 +97,9 @@ class Actor {
     rotate(radians(this.angle)); // use actor.angle
     imageMode(CENTER);
     if(this.state == "EXPLODED"){
-      image(this.sprite, 0, 0, this.size + 40, this.size + 40);
+      image(this.sprite, 0, 0, (this.size + 40) * gs, (this.size + 40) * gs);
     } else {
-      image(this.sprite, 0, 0, this.size, this.size);
+      image(this.sprite, 0, 0, this.size * gs, this.size * gs);
     }
     pop();
 
@@ -112,9 +112,14 @@ class Actor {
       fill(p.color);
       noStroke();
       circle(p.x, p.y, p.size);
-      
-      p.x += p.vx;
-      p.y += p.vy;
+      if(p.x < gameLayer.width + gameX - 10 && 
+        p.y < gameLayer.height + gameY - 10 && 
+        p.x > gameX + 10 && p.y > gameY + 10){
+        p.x += p.vx;
+        p.y += p.vy;
+      } else {
+        this.particles.splice(i,1);
+      }
 
       // Fade and remove after set time is up
       if (millis() - p.born > 1500) {
@@ -127,15 +132,6 @@ class Actor {
     let remaining = max(this.timer - this.timeAlive, 0);
     if(this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2))
     {
-
-      if (!paintLayer) {
-        console.error("paintLayer is undefined!");
-      }
-      if (typeof width === "undefined") {
-        console.error("width is undefined!");
-      }
-
-
       let scaleFactor = paintLayer.width / width;
       let px = (this.x + this.size / 2) * scaleFactor;
       let py = (this.y + this.size / 2) * scaleFactor;
@@ -172,7 +168,7 @@ class Actor {
     for (let i = 0; i < numParticles; i++) {
       
       let vx = random(-10, 10);
-      let vy = random(-10, 1);
+      let vy = random(-10, 10);
 
       let p = {
         x: this.x + this.size/2,
@@ -301,8 +297,8 @@ class Actor {
     actor.prevX = actor.x; //save coordinate
     actor.prevY = actor.y;
   
-    actor.x += velocity.x;//update coordinates
-    actor.y += velocity.y;
+    actor.x += velocity.x * gs;//update coordinates
+    actor.y += velocity.y * gs;
   
     
   
@@ -342,8 +338,8 @@ class Actor {
       actor.y = zoneY1;
       actor.yspeed *= -1;
     }
-    if (actor.y > height - actor.size - (height - (zoneY2 + zoneHeight))) {
-      actor.y = height - actor.size - (height - (zoneY2 + zoneHeight));
+    if (actor.y > gs * (height - actor.size - (height - (zoneY2 + zoneHeight)))) {
+      actor.y = gs * (height - actor.size - (height - (zoneY2 + zoneHeight)));
       actor.yspeed *= -1;
     }
   
@@ -459,10 +455,10 @@ class Actor {
   }
   
   
-  function grabbedMovement(actor) {
-    actor.x = constrain(mouseX - actor.size/2, zoneX, width - actor.size - zoneX);
-    actor.y = constrain(mouseY - actor.size/2, zoneY1, height - actor.size - (height - (zoneY2 + zoneHeight)));
-  }
+function grabbedMovement(actor) {
+  actor.x = constrain(mouseX - actor.size/2, zoneX, width - (actor.size * gs) - zoneX);
+  actor.y = constrain(mouseY - actor.size/2, zoneY1, gs * (height - (20 * gs) - actor.size - (height - (zoneY2 + zoneHeight))));
+}
   
   // Checks the actors timer
   function checkTimer(actor) {
@@ -475,7 +471,7 @@ class Actor {
   
     if (remaining <= 0) {
       // Totem Powerup
-      if(player.hasItem("Blatant Copyright") && player.health < 2){
+      if(player.hasItem("Totem of Varnish") && player.health < 2){
         mouseReleased();
         idx = chrSprite.indexOf(actor.sprite); // The actor that would explode shows their death sprite
         if (idx >= 0) actor.sprite = deathSprite[idx];  
@@ -487,7 +483,7 @@ class Actor {
             spawnLogic.activeActors--;
           }
         }
-        player.removeItem("Blatant Copyright");
+        player.removeItem("Totem of Varnish");
         flashScreen = true;   // Makes a cool flashing screen effect
         flashTimer = millis();
       } else if(player.health >= 2){
@@ -576,8 +572,9 @@ class Actor {
 
   function spawnRougeActor(speed, unsnapInterval) {
   
-    let spawnX = width / 2 - 25;
-    let spawnY = height / 2 - 25;
+    let spawnX = gameLayer.width / 2 - 25;
+    let spawnY = gameLayer.height / 2 - 25;
+
   
     rougeCharacter = new rougeActor(spawnX, spawnY, rougeBucketSprite);
     rougeCharacter.speed = speed;
@@ -588,7 +585,7 @@ class Actor {
     constructor(x, y, sprite) {
       super(x, y, sprite, color(255, 255, 0));
       this.state = "IDLE";  
-      this.speed = 3;       
+      this.speed = 3;     
       this.targetZone = null;  // current target zone
       this.lastZone = null; //last target zone
       this.currentBuckets = [];  //buckets rougeActor is trying to free
@@ -894,7 +891,7 @@ class Actor {
       push();
       translate(this.x + this.size / 2, this.y + this.size / 2);
       imageMode(CENTER);
-      image(this.sprite, 0, 0, this.size, this.size);
+      image(this.sprite, 0, 0, 60 * gs, 60 * gs);
       pop();
     }
   }
@@ -902,8 +899,8 @@ class Actor {
 
    function spawnCat(speed, swipeStrength) {
   
-    let spawnX = width / 2 - 25;
-    let spawnY = height / 2 - 25;
+    let spawnX = gameLayer.width / 2 - 25;
+    let spawnY = gameLayer.height / 2 - 25;
   
     cat = new Cat(spawnX, spawnY, catSprite);
     cat.speed = speed;
@@ -1033,7 +1030,7 @@ class Actor {
       push();
       translate(this.x + this.size / 2, this.y + this.size / 2);
       imageMode(CENTER);
-      image(this.sprite, 0, 0, this.size, this.size);
+      image(this.sprite, 0, 0, 100 * gs, 100 * gs);
       pop();
     }
   }
