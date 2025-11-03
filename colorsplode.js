@@ -9,6 +9,11 @@ let startButton2; //roguelike mode
 let ventSprite;
 
 let compressor;
+let pickupSounds = [];
+let currentVolume = 0.5;
+
+let colorBlindCheckbox;
+let colorBlindMode = false;
 
 let splatAmt = 8;
 let doneSpotlight = 0;
@@ -44,6 +49,8 @@ let chooseButton2;
 let chooseButton3;
 let nextLevelButton;
 let transitionCreated = false;
+let volumeSlider;
+let volumeLabel;
 
 //Level Up Buttons
 let levelUpActive = false;
@@ -98,7 +105,9 @@ function preload(){
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
-  pickup = loadSound('sounds/pickup.wav');
+  pickupSounds.push(loadSound('sounds/pickup.wav'));
+  pickupSounds.push(loadSound('sounds/pickup2.wav'));
+  pickupSounds.push(loadSound('sounds/pickup3.wav'));
   bombSound = loadSound('sounds/nuclear-explosion.mp3');
   explodeGif = loadImage("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
@@ -172,7 +181,9 @@ function setup() {
   background(220);
   
   compressor = new p5.Compressor();
-  pickup.setVolume(0.2) ;
+  for (let s of pickupSounds) {
+    s.setVolume(0.2);
+  }
   menuMusic.setVolume(0.01);
   levelMusic.setVolume(0.05);
   pauseSound.setVolume(0.02);
@@ -694,11 +705,30 @@ function pauseGame(){
     quitButton.height = 50;
     quitButton.color = "lightgreen";
 
+    volumeLabel = createP('Volume');
+    volumeLabel.position(windowWidth / 2 - 25, windowHeight / 2 + 200);
+    volumeLabel.style('color', 'white');
+    volumeLabel.style('font-family', 'PressStart2P-Regular');
+    volumeLabel.style('font-size', '10px');
+    volumeLabel.style('margin', '0');
+
+    volumeSlider = createSlider(0, 1, currentVolume, 0.01);
+    volumeSlider.position(windowWidth / 2 - 75, windowHeight / 2 + 225);
+    volumeSlider.style('width', '150px');
+
+    colorBlindCheckbox = createCheckbox('Color Blind Mode', colorBlindMode);
+    colorBlindCheckbox.position(windowWidth / 2 - 75, windowHeight / 2 + 260);
+    colorBlindCheckbox.style('color', 'white');
+    colorBlindCheckbox.style('font-family', 'PressStart2P-Regular');
+    colorBlindCheckbox.style('font-size', '10px');
+    colorBlindCheckbox.changed(() => {
+    colorBlindMode = colorBlindCheckbox.checked();
+    //applyColorBlindMode(); // not yet implemented
+});
+
     pauseSound.play();
-    levelMusic.setVolume(0.005, 0.2); 
-    levelMusic.rate(0.85, 0.2);
-    compressor.threshold(-50);
-    compressor.ratio(10);
+    levelMusic.rate(0.8, 0.3); // slower
+    smoothCompressorChange(-50, 10, 0.4);
 
   }
   else{ // Remove the resume button
@@ -709,11 +739,22 @@ function pauseGame(){
     quitButton.remove();
     quitButton = null;
 
+    if (volumeSlider) {
+      volumeSlider.remove();
+      volumeSlider = null;
+    }
+    if (volumeLabel) {
+      volumeLabel.remove();
+      volumeLabel = null;
+    }
+
+    if (volumeSlider) volumeSlider.remove();
+    if (volumeLabel) volumeLabel.remove();
+    if (colorBlindCheckbox) colorBlindCheckbox.remove();
+
     pauseSound.play();
-    levelMusic.setVolume(0.05, 0.2); 
-    levelMusic.rate(1.0, 0.2);
-    compressor.threshold(-24);
-    compressor.ratio(4);
+    levelMusic.rate(1.0, 0.3); // restore speed
+    smoothCompressorChange(-24, 4, 0.4);
   }
 }
 
@@ -738,6 +779,23 @@ function drawPauseMenu(){
   mouseOverButton(quitButton, "green", "lightgreen");
   mouseOverButton(restartButton, "green", "lightgreen");
   mouseOverButton(resumeButton, "green", "lightgreen");
+
+  if (volumeSlider) {
+  let vol = volumeSlider.value();
+  currentVolume = vol; // remember value
+
+  // Adjust main music volume dynamically
+  if (levelMusic && levelMusic.isPlaying()) levelMusic.setVolume(vol * 0.1);
+  if (menuMusic && menuMusic.isPlaying()) menuMusic.setVolume(vol * 0.1);
+  if (pauseSound) pauseSound.setVolume(vol * 0.05);
+
+  // If you have arrays of pickup / enemy sounds
+  if (pickupSounds) {
+    for (let s of pickupSounds) {
+      s.setVolume(vol * 0.2);
+    }
+  }
+}
 
   pop(); // restore settings
   if(quitButton.mouse.pressed()){
@@ -881,6 +939,19 @@ function quitGame(){
   restartButton = null;
   gamePaused = false;
 
+  if (volumeSlider) {
+    volumeSlider.remove();
+    volumeSlider = null;
+  }
+  if (volumeLabel) {
+    volumeLabel.remove();
+    volumeLabel = null;
+  }
+
+  if (volumeSlider) volumeSlider.remove();
+  if (volumeLabel) volumeLabel.remove();
+  if (colorBlindCheckbox) colorBlindCheckbox.remove();
+
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
@@ -907,6 +978,13 @@ function quitGame(){
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
 
+  if (levelMusic && levelMusic.isPlaying()) {
+    levelMusic.rate(1.0);           // normal speed
+    levelMusic.setVolume(currentVolume); // keep same volume
+  }
+  compressor.threshold(-24); // restore default compression
+  compressor.ratio(4);
+
   setup();
 }
 
@@ -923,7 +1001,8 @@ function mousePressed() {
       grabbedCharacter = actor;
       idx = chrSprite.indexOf(grabbedCharacter.sprite);
       grabbedCharacter.sprite = grabSprite[idx];
-      pickup.play();
+      let randomPickup = random(pickupSounds);
+      randomPickup.play();
       break;
     }
   }
