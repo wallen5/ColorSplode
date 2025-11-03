@@ -266,7 +266,7 @@ function startMenu(){
   fill(titleColor.r, titleColor.g, titleColor.b);
 
   stroke("black");
-  strokeWeight(5);
+  strokeWeight(5 * gs);
   textSize(30 * gs);
   textStyle("bold");
     
@@ -474,7 +474,7 @@ function gameOver(){
   }
   
   stroke("black");
-  strokeWeight(5);
+  strokeWeight(5 * gs);
   textSize(50 * gs);
   textStyle("bold");
   fill("red");
@@ -485,7 +485,7 @@ function gameOver(){
   scoreDisplay.text = "Score:" + score;
 
   stroke("black");
-  strokeWeight(7.5);
+  strokeWeight(7.5 * gs);
   textSize(30 * gs);
   fill("white");
   let x = 300 * gs + gameX;
@@ -493,7 +493,7 @@ function gameOver(){
   text("Score: " + score, x , y );
 
   if (!buttonCreated){
-    strokeWeight(5);
+    strokeWeight(5 * gs);
     textSize(20 * gs);
     retryButton = new Sprite(400 * gs + gameX, 450 * gs + gameY);
     retryButton.text = "Retry";
@@ -615,7 +615,7 @@ function retry(){
 
   //set style
   stroke("black");
-  strokeWeight(5);
+  strokeWeight(5 * gs);
   textSize(30 * gs);
   textStyle("bold");
   fill(200);
