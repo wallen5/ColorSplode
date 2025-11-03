@@ -58,6 +58,15 @@ let drawGameOver = false;
 
 // Paint trail layer
 let paintLayer;
+let gameLayer;
+let gameX, gameY;
+
+const BASE_CANVAS_WIDTH = 1500;
+const BASE_CANVAS_HEIGHT = 1100;
+const BASE_GAME_WIDTH = 800;
+const BASE_GAME_HEIGHT = 800;
+
+let gs = 1;
 
 //start menu text. acts as namespace
 let titleColor = {
@@ -88,8 +97,6 @@ let bombSound;
 let explodeGif;
 let explosionActive = false;
 let explosionDuration = 500/3; // 1 second duration
-let explosionX = 400;
-let explosionY = 400;
 
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -148,28 +155,36 @@ function setup() {
   currentColor = color(0);
   baseScore = 1;
   comboMultiplier = 1;
-  createCanvas(800, 800);
+  createCanvas(windowWidth, windowHeight);
   paintLayer = createGraphics(200, 200);
   paintLayer.background(255);
   paintLayer.noSmooth();
 
   currentColor = color(0)
+  const scaleX = windowWidth / BASE_CANVAS_WIDTH;
+  const scaleY = windowHeight / BASE_CANVAS_HEIGHT;
+  gs = Math.min(scaleX, scaleY);
+
+  gameLayer = createGraphics(BASE_GAME_WIDTH * gs, BASE_GAME_HEIGHT * gs);
+  gameX = (width - gameLayer.width) / 2;
+  gameY = (height - gameLayer.height) / 2;
 
   //start button
   textFont(myFont);
-  textSize(12); // Sets a font size to keep text size consistent
-  startButton1 = new Sprite(320, 450);
+  textSize(12 * gs); // Sets a font size to keep text size consistent
+  startButton1 = new Sprite(320 * gs + gameX, 450 * gs + gameY);
   startButton1.text = "Play\n Classic Mode";
-  startButton1.width = 180;
-  startButton1.height = 50;
+  startButton1.width = 180 * gs;
+  startButton1.height = 50 * gs;
   startButton1.color = "lightgreen";
 
-  startButton2 = new Sprite(520, 450);
+  startButton2 = new Sprite(520 * gs + gameX, 450 * gs + gameY);
   startButton2.text = "Play\n Rougelike Mode";
-  startButton2.width = 200;
-  startButton2.height = 50;
+  startButton2.width = 200 * gs;
+  startButton2.height = 50 * gs;
   startButton2.color = "red";
-  background(220);
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(220);
   
   compressor = new p5.Compressor();
   pickup.setVolume(0.2) ;
@@ -195,9 +210,9 @@ function setup() {
 
   // Define missing zone variables for makeColorZones()
   // Initialize global zone placement variables defined in zone.js (defaults match zone.js)
-  zoneX = 50;
-  zoneY1 = 100;
-  zoneY2 = 620;
+  zoneX = 50 + gameX;
+  zoneY1 = 100 + gameY;
+  zoneY2 = 620 + gameY;
   zoneWidth = 150;
   zoneHeight = 150;
 
@@ -242,18 +257,20 @@ function draw() {
 
 
 function startMenu(){
-  background(bg);
+  drawBorder();
+  image(gameLayer, gameX, gameY);
+  gameLayer.background(bg);
 
   colorFluctuation();
 
   fill(titleColor.r, titleColor.g, titleColor.b);
 
   stroke("black");
-  strokeWeight(5);
-  textSize(30);
+  strokeWeight(5 * gs);
+  textSize(30 * gs);
   textStyle("bold");
     
-  text("ColorSplode", 250 , 350 );
+  text("ColorSplode", 250 * gs + gameX, 350 * gs + gameY);
 
   currentMode = null;
 
@@ -280,10 +297,10 @@ function startMenu(){
   if (currentMode != null){
     startButton1.remove();
     startButton2.remove();
-    pauseButton = new Sprite(750, 50);
+    pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
-    pauseButton.width = 70;
-    pauseButton.height = 50;
+    pauseButton.width = 70 * gs;
+    pauseButton.height = 50 * gs;
     pauseButton.color = "lightgreen";
     menuMusic.stop();
     levelMusic.loop();
@@ -293,9 +310,12 @@ function startMenu(){
 
 
 function gameMenu1(){
+  clear();
+  drawBorder();
   baseScore = 1;
-  background(220);
-  image(paintLayer, 0, 0, width, height);
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(220);
+  image(paintLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   drawColorZones();
   drawVents();
   
@@ -329,9 +349,11 @@ function gameMenu1(){
 }
 
 function gameMenu2(){ //game menu for roguelike mode
-
-  background(220);
-  image(paintLayer, 0, 0, width, height);
+  clear();
+  drawBorder();
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(220);
+  image(paintLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   drawColorZones();
   drawVents();
   player.drawHealth();
@@ -438,7 +460,6 @@ function gameMenu2(){ //game menu for roguelike mode
   } 
 
   //createExplosion();
-
 }
 
 function gameOver(){
@@ -453,36 +474,36 @@ function gameOver(){
   }
   
   stroke("black");
-  strokeWeight(5);
-  textSize(50);
+  strokeWeight(5 * gs);
+  textSize(50 * gs);
   textStyle("bold");
   fill("red");
 
   colorFluctuation();
   fill(titleColor.r, titleColor.g, titleColor.b);
-  text("Game Over!", 195 , 350 );
+  text("Game Over!", 195 * gs + gameX, 350 * gs + gameY);
   scoreDisplay.text = "Score:" + score;
 
   stroke("black");
-  strokeWeight(7.5);
-  textSize(30);
+  strokeWeight(7.5 * gs);
+  textSize(30 * gs);
   fill("white");
-  let x = 300;
-  let y = 400;
+  let x = 300 * gs + gameX;
+  let y = 400 * gs + gameY;
   text("Score: " + score, x , y );
 
   if (!buttonCreated){
-    strokeWeight(5);
-    textSize(20);
-    retryButton = new Sprite(400, 450);
+    strokeWeight(5 * gs);
+    textSize(20 * gs);
+    retryButton = new Sprite(400 * gs + gameX, 450 * gs + gameY);
     retryButton.text = "Retry";
-    retryButton.width = 120;
-    retryButton.height = 50;
+    retryButton.width = 120 * gs;
+    retryButton.height = 50 * gs;
 
-    exitButton = new Sprite(400, 515);
+    exitButton = new Sprite(400 * gs + gameX, 515 * gs + gameY);
     exitButton.text = "Quit";
-    exitButton.width = 120;
-    exitButton.height = 50;
+    exitButton.width = 120 * gs;
+    exitButton.height = 50 * gs;
 
     buttonCreated = true;
   }
@@ -594,16 +615,16 @@ function retry(){
 
   //set style
   stroke("black");
-  strokeWeight(5);
-  textSize(30);
+  strokeWeight(5 * gs);
+  textSize(30 * gs);
   textStyle("bold");
   fill(200);
 
   //create pause button
-  pauseButton = new Sprite(750, 50);
+  pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
   pauseButton.text = "||";
-  pauseButton.width = 70;
-  pauseButton.height = 50;
+  pauseButton.width = 70 * gs;
+  pauseButton.height = 50 * gs;
   pauseButton.color = "lightgreen";
 
   //display score
@@ -672,26 +693,26 @@ function pauseGame(){
     }
   }
   if(gamePaused){ // if game paused, draw the new buttons
-    resumeButton = new Sprite(400, 450);
+    resumeButton = new Sprite(400 * gs + gameX, 450 * gs + gameY);
     resumeButton.text = "Resume";
-    resumeButton.width = 200;
-    resumeButton.height = 50;
+    resumeButton.width = 200 * gs;
+    resumeButton.height = 50 * gs;
     resumeButton.color = "lightgreen";
 
     push();
-    textSize(27);
-    restartButton = new Sprite(400, 500);
+    textSize(27 * gs);
+    restartButton = new Sprite(400 * gs + gameX, 500 * gs + gameY);
     restartButton.text = "Restart";
-    restartButton.width = 200;
-    restartButton.height = 50;
+    restartButton.width = 200 * gs;
+    restartButton.height = 50 * gs;
     restartButton.color = "lightgreen";
 
     pop();
 
-    quitButton = new Sprite(400, 550);
+    quitButton = new Sprite(400 * gs + gameX, 550 * gs + gameY);
     quitButton.text = "Quit";
-    quitButton.width = 200;
-    quitButton.height = 50;
+    quitButton.width = 200 * gs;
+    quitButton.height = 50 * gs;
     quitButton.color = "lightgreen";
 
     pauseSound.play();
@@ -723,16 +744,16 @@ function drawPauseMenu(){
   // Creates the semi-transparent background for the pause menu
   fill(0, 0, 0, 150);
   noStroke();
-  rect(0, 0, width, height);
+  rect(gameX, gameY, gameLayer.width, gameLayer.height);
 
   
 
   // pause text
   fill(255);
   textAlign(CENTER, CENTER);
-  textSize(32);
-  text("Paused", width / 2, height / 2 - 50);
-  textSize(12);
+  textSize(32 * gs);
+  text("Paused", gameLayer.width / 2 + gameX, gameLayer.height / 2 - 50 + gameY);
+  textSize(12 * gs);
 
   // changes color of button when mouse hovers over
   mouseOverButton(quitButton, "green", "lightgreen");
@@ -766,23 +787,23 @@ function levelUp(){
     levelChoices = [random(allItems), random(allItems), random(allItems)];
 
     push();
-    textSize(15);
-    chooseButton1 = new Sprite(150, 500);
+    textSize(15 * gs);
+    chooseButton1 = new Sprite(150 * gs + gameX, 500 * gs + gameY);
     chooseButton1.text = "Choose";
-    chooseButton1.width = 100;
-    chooseButton1.height = 30;
+    chooseButton1.width = 100 * gs;
+    chooseButton1.height = 30 * gs;
     chooseButton1.color = "red";
 
-    chooseButton2 = new Sprite(400, 500);
+    chooseButton2 = new Sprite(400 * gs + gameX, 500 * gs + gameY);
     chooseButton2.text = "Choose";
-    chooseButton2.width = 100;
-    chooseButton2.height = 30;
+    chooseButton2.width = 100 * gs;
+    chooseButton2.height = 30 * gs;
     chooseButton2.color = "green";
 
-    chooseButton3 = new Sprite(650, 500);
+    chooseButton3 = new Sprite(650 * gs + gameX, 500 *gs + gameY);
     chooseButton3.text = "Choose";
-    chooseButton3.width = 100;
-    chooseButton3.height = 30;
+    chooseButton3.width = 100 * gs;
+    chooseButton3.height = 30 * gs;
     chooseButton3.color = "blue";
 
     pop();
@@ -811,10 +832,10 @@ function levelUp(){
     compressor.threshold(-24);
     compressor.ratio(4);
 
-    pauseButton = new Sprite(750, 50);
+    pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
-    pauseButton.width = 70;
-    pauseButton.height = 50;
+    pauseButton.width = 70 * gs;
+    pauseButton.height = 50 * gs;
     pauseButton.color = "lightgreen";
   }
 }
@@ -825,25 +846,25 @@ function drawLevelMenu(){
   // Creates the semi-transparent background for the level menu
   fill(0, 0, 0, 150);
   noStroke();
-  rect(0, 0, width, height);
+  rect(gameX, gameY, gameLayer.width, gameLayer.height);
 
-  image(levelUpChoice, 0, 0);
+  image(levelUpChoice, gameX, gameY, 800 * gs, 800 *gs);
 
-  image(levelChoices[0].sprite, 120, 250, 60, 60);
-  image(levelChoices[1].sprite, 370, 250, 60, 60);
-  image(levelChoices[2].sprite, 610, 250, 60, 60);
+  image(levelChoices[0].sprite, 120 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
+  image(levelChoices[1].sprite, 370 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
+  image(levelChoices[2].sprite, 610 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
 
   fill(0);
 
-  textSize(15)
-  text(levelChoices[0].name, 70, 220, 150);
-  text(levelChoices[1].name, 320, 220, 150);
-  text(levelChoices[2].name, 570, 220, 150);
+  textSize(15 * gs)
+  text(levelChoices[0].name, 70 * gs + gameX, 220 * gs + gameY, 150 * gs);
+  text(levelChoices[1].name, 320 * gs + gameX, 220 * gs + gameY, 150 * gs);
+  text(levelChoices[2].name, 570 * gs + gameX, 220 * gs + gameY, 150 * gs);
 
-  textSize(12);
-  text(levelChoices[0].description, 70, 370, 180);
-  text(levelChoices[1].description, 320, 370, 180);
-  text(levelChoices[2].description, 570, 370, 180);
+  textSize(12 * gs);
+  text(levelChoices[0].description, 70 * gs + gameX, 370 * gs + gameY, 180 * gs);
+  text(levelChoices[1].description, 320 * gs + gameX, 370 * gs + gameY, 180 * gs);
+  text(levelChoices[2].description, 570 * gs + gameX, 370 * gs + gameY, 180 * gs);
 
 
 
@@ -1013,16 +1034,16 @@ function mouseReleased() {
 
 
 function drawScore(){
-  scoreDisplay = new Sprite(150, 50);
+  scoreDisplay = new Sprite((150 * gs + gameX), 50 * gs + gameY);
   scoreDisplay.text = "Score:" + score;
-  scoreDisplay.width = 250;
-  scoreDisplay.height = 50;
+  scoreDisplay.width = 250 * gs;
+  scoreDisplay.height = 50 * gs;
   scoreDisplay.color = "lightgreen";
 
-  comboDisplay = new Sprite(550, 50);
+  comboDisplay = new Sprite(550 * gs + gameX, 50 * gs + gameY);
   comboDisplay.text = "Combo:" + currentCombo;
-  comboDisplay.width = 250;
-  comboDisplay.height = 50;
+  comboDisplay.width = 250 * gs;
+  comboDisplay.height = 50 * gs;
   comboDisplay.color = "white";
 }
 
@@ -1030,8 +1051,15 @@ function drawScore(){
 function drawScoreAtPos(x,y){
   scoreDisplay = new Sprite(x, y);
   scoreDisplay.text = "Score:" + score;
-  scoreDisplay.width = 250;
-  scoreDisplay.height = 50;
+  scoreDisplay.width = 250 * gs;
+  scoreDisplay.height = 50 * gs;
+}
+
+function drawBorder(){
+  push();
+  fill(0);
+  rect(gameX - 10, gameY - 10, gameLayer.width + 20, gameLayer.height + 20);
+  pop();
 }
 
 function setGameCusor(){
@@ -1067,8 +1095,8 @@ function generateRandomSplat(amt){
   }
 
     // Draw the splat somewhere random
-  let x = random(width);
-  let y = random(height);
+  let x = random(gameLayer.width + gameX);
+  let y = random(gameLayer.height + gameY);
   let sizeMult = random(1.5, 5);
   if (amt >= splatAmt-1) {
     sizeMult = 20;
