@@ -553,7 +553,15 @@ function exit(){
 }
 
 function restart(){
-  pauseGame(); // This will "unpause" the game
+  gamePaused = false;
+
+  // Remove pause menu buttons if they exist
+  if (resumeButton) { resumeButton.remove(); resumeButton = null; }
+  if (restartButton) { restartButton.remove(); restartButton = null; }
+  if (quitButton) { quitButton.remove(); quitButton = null; }
+  if (volumeSlider) { volumeSlider.remove(); volumeSlider = null; }
+  if (volumeLabel) { volumeLabel.remove(); volumeLabel = null; }
+  if (colorBlindCheckbox) { colorBlindCheckbox.remove(); colorBlindCheckbox = null; } // This will "unpause" the game
   //remove characters and buttons
   ourCharacters = [];
   levelUpTriggered = {};
@@ -601,6 +609,8 @@ function retry(){
   exitButton.remove();
   paintLayer.background(255);
   
+  
+
   clearObstacles();
 
   //set style
@@ -725,32 +735,19 @@ function pauseGame(){
     colorBlindMode = colorBlindCheckbox.checked();
     //applyColorBlindMode(); // not yet implemented
 });
-
+    
     pauseSound.play();
     levelMusic.rate(0.8, 0.3); // slower
     smoothCompressorChange(-50, 10, 0.4);
 
   }
   else{ // Remove the resume button
-    resumeButton.remove();
-    resumeButton = null;
-    restartButton.remove();
-    restartButton = null;
-    quitButton.remove();
-    quitButton = null;
-
-    if (volumeSlider) {
-      volumeSlider.remove();
-      volumeSlider = null;
-    }
-    if (volumeLabel) {
-      volumeLabel.remove();
-      volumeLabel = null;
-    }
-
-    if (volumeSlider) volumeSlider.remove();
-    if (volumeLabel) volumeLabel.remove();
-    if (colorBlindCheckbox) colorBlindCheckbox.remove();
+    if (resumeButton) { resumeButton.remove(); resumeButton = null; }
+    if (restartButton) { restartButton.remove(); restartButton = null; }
+    if (quitButton) { quitButton.remove(); quitButton = null; }
+    if (volumeSlider) { volumeSlider.remove(); volumeSlider = null; }
+    if (volumeLabel) { volumeLabel.remove(); volumeLabel = null; }
+    if (colorBlindCheckbox) { colorBlindCheckbox.remove(); colorBlindCheckbox = null; }
 
     pauseSound.play();
     levelMusic.rate(1.0, 0.3); // restore speed
@@ -780,6 +777,7 @@ function drawPauseMenu(){
   mouseOverButton(restartButton, "green", "lightgreen");
   mouseOverButton(resumeButton, "green", "lightgreen");
 
+
   if (volumeSlider) {
   let vol = volumeSlider.value();
   currentVolume = vol; // remember value
@@ -803,7 +801,14 @@ function drawPauseMenu(){
     quitGame();
   }
   if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
-    pauseGame();
+    gamePaused = false; 
+
+    if (resumeButton) { resumeButton.remove(); resumeButton = null; }
+    if (restartButton) { restartButton.remove(); restartButton = null; }
+    if (quitButton) { quitButton.remove(); quitButton = null; }
+    if (volumeSlider) { volumeSlider.remove(); volumeSlider = null; }
+    if (volumeLabel) { volumeLabel.remove(); volumeLabel = null; }
+    if (colorBlindCheckbox) { colorBlindCheckbox.remove(); colorBlindCheckbox = null; }
   }
   if(restartButton && restartButton.mouse.pressed())
   {
@@ -1002,6 +1007,7 @@ function mousePressed() {
       idx = chrSprite.indexOf(grabbedCharacter.sprite);
       grabbedCharacter.sprite = grabSprite[idx];
       let randomPickup = random(pickupSounds);
+      randomPickup.setVolume(currentVolume * 0.2);
       randomPickup.play();
       break;
     }
