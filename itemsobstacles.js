@@ -113,7 +113,7 @@ class Graffiti{
 
 
   update() {
-    if (!this.active || !this.target) return;
+    if (!this.active || !this.target || gamePaused) return;
 
     // Move toward destination
     let dx = this.destX - this.x;
@@ -175,7 +175,15 @@ draw() {
 }
 
 function spawnGraffitiActor(amtSpawn) {
+
+  if (gamePaused) {
+    // Try again after 500ms
+    setTimeout(() => spawnGraffitiActor(amtSpawn), 500);
+    return;
+  }
+
   let spawnFlip = random([ -1, 1 ]);
+
   let spawnX = width * 1.2 * spawnFlip;
   spawnFlip = random([-1, 1]);
   let spawnY = height * 1.2 * spawnFlip;
@@ -183,7 +191,7 @@ function spawnGraffitiActor(amtSpawn) {
   graffitiActors.push(g);
   console.log("TRYING TO MAKE GRAFFITI");
   setTimeout(() => {
-    if (amtSpawn > 0) {
+    if ((amtSpawn > 0) && (state === 2)) {
       spawnGraffitiActor(amtSpawn-1);
     }
     }, 1000);

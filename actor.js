@@ -127,6 +127,15 @@ class Actor {
     let remaining = max(this.timer - this.timeAlive, 0);
     if(this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2))
     {
+
+      if (!paintLayer) {
+        console.error("paintLayer is undefined!");
+      }
+      if (typeof width === "undefined") {
+        console.error("width is undefined!");
+      }
+
+
       let scaleFactor = paintLayer.width / width;
       let px = (this.x + this.size / 2) * scaleFactor;
       let py = (this.y + this.size / 2) * scaleFactor;
@@ -880,6 +889,8 @@ class Actor {
     }
   
     draw() {
+      if (!this.sprite) return; // prevents crash
+      
       push();
       translate(this.x + this.size / 2, this.y + this.size / 2);
       imageMode(CENTER);

@@ -377,24 +377,16 @@ function gameMenu2(){ //game menu for roguelike mode
   }
 
   // if graffiti
-  
   if (levelSet[currentLevel].obstacleTypes.includes("graffiti")) {
   if ((random() < 0.8) && (time % graffitiTime == 0)) { // chance to spawn a graffiti
-        let burstAmt;
         console.log("Time to do some graffiti!");
-        switch(levelSet[currentLevel].difficulty) {
-            case 1: burstAmt = 1; break;
-            case 2: burstAmt = 2; break;
-            case 3: burstAmt = 3; break;
-            default: burstAmt = 1;
-        }
+        let burstAmt = levelSet[currentLevel].graffitiBurst;
         spawnGraffitiActor(burstAmt);
     }
    for (let grafActor of graffitiActors) {
-      if (!gamePaused) {
       grafActor.update();
       grafActor.draw();
-      }
+      
     }
   }
 

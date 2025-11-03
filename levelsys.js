@@ -83,6 +83,11 @@ class Level{
                 case 3: burstAmt = 4; break;
                 default: burstAmt = 1; break;
                 }
+                    this.graffitiBurst = burstAmt;
+                    setTimeout(() => {
+                      spawnGraffitiActor(1); // we use burstAmt logic in colorsplode.js, just spawn 1 to start off.
+                    }, 2000);
+                    break;
             case "Cat":
               console.log("Spawning:", obstacleName);
               let catSpeed;
@@ -111,6 +116,7 @@ class Level{
 function clearObstacles() {
     rougeCharacter = null;
     cat = null;
+    graffitiActors = [];
 }
 
 function randomColorZone(level) {
@@ -155,7 +161,7 @@ function randomColorZone(level) {
 let levelSet = [];
 
 function setBoss(){
-    let randPreset = round(random(0, 2));
+    let randPreset = round(random(0, 3));
 
     switch (randPreset) {
     case 0:
