@@ -141,7 +141,6 @@ function dropBomb(){
       spawnLogic.timer = originalTimer;
       spawnLogic.timeToSpawn = originalTimeToSpawn;
     }, 3000);
-
   }
 }
 

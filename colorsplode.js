@@ -48,8 +48,6 @@ let chooseButton7;
 let chooseButton8;
 let chooseButton9;
 
-let bPressed = false;
-
 let nextLevelButton;
 let transitionCreated = false;
 
@@ -66,6 +64,9 @@ let drawGameOver = false;
 
 // Paint trail layer
 let paintLayer;
+
+//used to check if b is pressed.
+let bPressed = false;
 
 //start menu text. acts as namespace
 let titleColor = {
@@ -113,6 +114,7 @@ function preload(){
   pickup = loadSound('sounds/pickup.wav');
   bombSound = loadSound('sounds/nuclear-explosion.mp3');
   explodeGif = loadImage("images/explosion.gif");
+  explodeGif = createImg("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
