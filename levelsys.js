@@ -298,6 +298,7 @@ function levelTransition(){
     score = 0;
     levelSet[currentLevel].setup();
     player.health = player.startHealth;
+    ourCharacters = [];
     closeAllVents();
     activateRandomVent();
     spawnLogic.timer = 50;
