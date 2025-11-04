@@ -9,6 +9,11 @@ let startButton2; //roguelike mode
 let ventSprite;
 
 let compressor;
+let pickupSounds = [];
+let currentVolume = 0.5;
+
+let colorBlindCheckbox;
+let colorBlindMode = false;
 
 let splatAmt = 8;
 let doneSpotlight = 0;
@@ -22,8 +27,11 @@ let grabSprite =[]; //array of grab animations
 let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
 
+//obstacles
 let rougeCharacter = null;
 let rougeBucketSprite;
+let cat = null;
+let catSprite;
 
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
@@ -50,11 +58,13 @@ let chooseButton9;
 
 let nextLevelButton;
 let transitionCreated = false;
+let volumeSlider;
+let volumeLabel;
 
 //Level Up Buttons
 let levelUpActive = false;
 let levelUpTriggered = {};
-let levelUpTrigger = [1, 2, 4, 6, 8];
+let levelUpTrigger = [1, 39, 49, 100, 200];
 
 //Game Over Buttons
 let buttonCreated = false;
@@ -64,6 +74,15 @@ let drawGameOver = false;
 
 // Paint trail layer
 let paintLayer;
+let gameLayer;
+let gameX, gameY;
+
+const BASE_CANVAS_WIDTH = 1500;
+const BASE_CANVAS_HEIGHT = 1100;
+const BASE_GAME_WIDTH = 800;
+const BASE_GAME_HEIGHT = 800;
+
+let gs = 1;
 
 //used to check if b is pressed.
 let bPressed = false;
@@ -97,8 +116,6 @@ let bombSound;
 let explodeGif;
 let explosionActive = false;
 let explosionDuration = 500/3; // 1 second duration
-let explosionX = 400;
-let explosionY = 400;
 
 
 //const levelChoices = [];
@@ -111,7 +128,9 @@ function preload(){
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
-  pickup = loadSound('sounds/pickup.wav');
+  pickupSounds.push(loadSound('sounds/pickup.wav'));
+  pickupSounds.push(loadSound('sounds/pickup2.wav'));
+  pickupSounds.push(loadSound('sounds/pickup3.wav'));
   bombSound = loadSound('sounds/nuclear-explosion.mp3');
   explodeGif = loadImage("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
@@ -151,6 +170,7 @@ function preload(){
 
   bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
+  catSprite = loadImage("images/catimage.gif");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
 }
@@ -160,31 +180,41 @@ function setup() {
   currentColor = color(0);
   baseScore = 1;
   comboMultiplier = 1;
-  createCanvas(800, 800);
+  createCanvas(windowWidth, windowHeight);
   paintLayer = createGraphics(200, 200);
   paintLayer.background(255);
   paintLayer.noSmooth();
 
   currentColor = color(0)
+  const scaleX = windowWidth / BASE_CANVAS_WIDTH;
+  const scaleY = windowHeight / BASE_CANVAS_HEIGHT;
+  gs = Math.min(scaleX, scaleY);
+
+  gameLayer = createGraphics(BASE_GAME_WIDTH * gs, BASE_GAME_HEIGHT * gs);
+  gameX = (width - gameLayer.width) / 2;
+  gameY = (height - gameLayer.height) / 2;
 
   //start button
   textFont(myFont);
-  textSize(12); // Sets a font size to keep text size consistent
-  startButton1 = new Sprite(320, 450);
+  textSize(12 * gs); // Sets a font size to keep text size consistent
+  startButton1 = new Sprite(320 * gs + gameX, 450 * gs + gameY);
   startButton1.text = "Play\n Classic Mode";
-  startButton1.width = 180;
-  startButton1.height = 50;
+  startButton1.width = 180 * gs;
+  startButton1.height = 50 * gs;
   startButton1.color = "lightgreen";
 
-  startButton2 = new Sprite(520, 450);
+  startButton2 = new Sprite(520 * gs + gameX, 450 * gs + gameY);
   startButton2.text = "Play\n Rougelike Mode";
-  startButton2.width = 200;
-  startButton2.height = 50;
+  startButton2.width = 200 * gs;
+  startButton2.height = 50 * gs;
   startButton2.color = "red";
-  background(220);
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(220);
   
   compressor = new p5.Compressor();
-  pickup.setVolume(0.2) ;
+  for (let s of pickupSounds) {
+    s.setVolume(0.2);
+  }
   menuMusic.setVolume(0.01);
   levelMusic.setVolume(0.05);
   pauseSound.setVolume(0.02);
@@ -207,9 +237,9 @@ function setup() {
 
   // Define missing zone variables for makeColorZones()
   // Initialize global zone placement variables defined in zone.js (defaults match zone.js)
-  zoneX = 50;
-  zoneY1 = 100;
-  zoneY2 = 620;
+  zoneX = 50 + gameX;
+  zoneY1 = 100 + gameY;
+  zoneY2 = 620 + gameY;
   zoneWidth = 150;
   zoneHeight = 150;
 
@@ -254,18 +284,20 @@ function draw() {
 
 
 function startMenu(){
-  background(bg);
+  drawBorder();
+  image(gameLayer, gameX, gameY);
+  gameLayer.background(bg);
 
   colorFluctuation();
 
   fill(titleColor.r, titleColor.g, titleColor.b);
 
   stroke("black");
-  strokeWeight(5);
-  textSize(30);
+  strokeWeight(5 * gs);
+  textSize(30 * gs);
   textStyle("bold");
     
-  text("ColorSplode", 250 , 350 );
+  text("ColorSplode", 250 * gs + gameX, 350 * gs + gameY);
 
   currentMode = null;
 
@@ -292,10 +324,10 @@ function startMenu(){
   if (currentMode != null){
     startButton1.remove();
     startButton2.remove();
-    pauseButton = new Sprite(750, 50);
+    pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
-    pauseButton.width = 70;
-    pauseButton.height = 50;
+    pauseButton.width = 70 * gs;
+    pauseButton.height = 50 * gs;
     pauseButton.color = "lightgreen";
     menuMusic.stop();
     levelMusic.loop();
@@ -305,9 +337,12 @@ function startMenu(){
 
 
 function gameMenu1(){
+  clear();
+  drawBorder();
   baseScore = 1;
-  background(220);
-  image(paintLayer, 0, 0, width, height);
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(220);
+  image(paintLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   drawColorZones();
   drawVents();
   
@@ -341,9 +376,11 @@ function gameMenu1(){
 }
 
 function gameMenu2(){ //game menu for roguelike mode
-
-  background(220);
-  image(paintLayer, 0, 0, width, height);
+  clear();
+  drawBorder();
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(220);
+  image(paintLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   drawColorZones();
   drawVents();
   player.drawHealth();
@@ -414,6 +451,11 @@ function gameMenu2(){ //game menu for roguelike mode
     pop();
   }
 
+  if (cat){
+    cat.update();
+    cat.draw();
+  }
+
   stroke(0);
 
   if(pauseButton.mouse.pressed()){
@@ -445,7 +487,6 @@ function gameMenu2(){ //game menu for roguelike mode
   } 
 
   //createExplosion();
-
 }
 
 function gameOver(){
@@ -460,36 +501,36 @@ function gameOver(){
   }
   
   stroke("black");
-  strokeWeight(5);
-  textSize(50);
+  strokeWeight(5 * gs);
+  textSize(50 * gs);
   textStyle("bold");
   fill("red");
 
   colorFluctuation();
   fill(titleColor.r, titleColor.g, titleColor.b);
-  text("Game Over!", 195 , 350 );
+  text("Game Over!", 195 * gs + gameX, 350 * gs + gameY);
   scoreDisplay.text = "Score:" + score;
 
   stroke("black");
-  strokeWeight(7.5);
-  textSize(30);
+  strokeWeight(7.5 * gs);
+  textSize(30 * gs);
   fill("white");
-  let x = 300;
-  let y = 400;
+  let x = 300 * gs + gameX;
+  let y = 400 * gs + gameY;
   text("Score: " + score, x , y );
 
   if (!buttonCreated){
-    strokeWeight(5);
-    textSize(20);
-    retryButton = new Sprite(400, 450);
+    strokeWeight(5 * gs);
+    textSize(20 * gs);
+    retryButton = new Sprite(400 * gs + gameX, 450 * gs + gameY);
     retryButton.text = "Retry";
-    retryButton.width = 120;
-    retryButton.height = 50;
+    retryButton.width = 120 * gs;
+    retryButton.height = 50 * gs;
 
-    exitButton = new Sprite(400, 515);
+    exitButton = new Sprite(400 * gs + gameX, 515 * gs + gameY);
     exitButton.text = "Quit";
-    exitButton.width = 120;
-    exitButton.height = 50;
+    exitButton.width = 120 * gs;
+    exitButton.height = 50 * gs;
 
     buttonCreated = true;
   }
@@ -549,7 +590,15 @@ function exit(){
 }
 
 function restart(){
-  pauseGame(); // This will "unpause" the game
+  gamePaused = false;
+
+  // Remove pause menu buttons if they exist
+  if (resumeButton) { resumeButton.remove(); resumeButton = null; }
+  if (restartButton) { restartButton.remove(); restartButton = null; }
+  if (quitButton) { quitButton.remove(); quitButton = null; }
+  if (volumeSlider) { volumeSlider.remove(); volumeSlider = null; }
+  if (volumeLabel) { volumeLabel.remove(); volumeLabel = null; }
+  if (colorBlindCheckbox) { colorBlindCheckbox.remove(); colorBlindCheckbox = null; } // This will "unpause" the game
   //remove characters and buttons
   ourCharacters = [];
   levelUpTriggered = {};
@@ -600,20 +649,22 @@ function retry(){
   exitButton.remove();
   paintLayer.background(255);
   
+  
+
   clearObstacles();
 
   //set style
   stroke("black");
-  strokeWeight(5);
-  textSize(30);
+  strokeWeight(5 * gs);
+  textSize(30 * gs);
   textStyle("bold");
   fill(200);
 
   //create pause button
-  pauseButton = new Sprite(750, 50);
+  pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
   pauseButton.text = "||";
-  pauseButton.width = 70;
-  pauseButton.height = 50;
+  pauseButton.width = 70 * gs;
+  pauseButton.height = 50 * gs;
   pauseButton.color = "lightgreen";
 
   //display score
@@ -687,48 +738,65 @@ function pauseGame(){
     }
   }
   if(gamePaused){ // if game paused, draw the new buttons
-    resumeButton = new Sprite(400, 450);
+    resumeButton = new Sprite(400 * gs + gameX, 450 * gs + gameY);
     resumeButton.text = "Resume";
-    resumeButton.width = 200;
-    resumeButton.height = 50;
+    resumeButton.width = 200 * gs;
+    resumeButton.height = 50 * gs;
     resumeButton.color = "lightgreen";
 
     push();
-    textSize(27);
-    restartButton = new Sprite(400, 500);
+    textSize(27 * gs);
+    restartButton = new Sprite(400 * gs + gameX, 500 * gs + gameY);
     restartButton.text = "Restart";
-    restartButton.width = 200;
-    restartButton.height = 50;
+    restartButton.width = 200 * gs;
+    restartButton.height = 50 * gs;
     restartButton.color = "lightgreen";
 
     pop();
 
-    quitButton = new Sprite(400, 550);
+    quitButton = new Sprite(400 * gs + gameX, 550 * gs + gameY);
     quitButton.text = "Quit";
-    quitButton.width = 200;
-    quitButton.height = 50;
+    quitButton.width = 200 * gs;
+    quitButton.height = 50 * gs;
     quitButton.color = "lightgreen";
 
+    volumeLabel = createP('Volume');
+    volumeLabel.position(windowWidth / 2 - 25, windowHeight / 2 + 200);
+    volumeLabel.style('color', 'white');
+    volumeLabel.style('font-family', 'PressStart2P-Regular');
+    volumeLabel.style('font-size', '10px');
+    volumeLabel.style('margin', '0');
+
+    volumeSlider = createSlider(0, 1, currentVolume, 0.01);
+    volumeSlider.position(windowWidth / 2 - 75, windowHeight / 2 + 225);
+    volumeSlider.style('width', '150px');
+
+    colorBlindCheckbox = createCheckbox('Color Blind Mode', colorBlindMode);
+    colorBlindCheckbox.position(windowWidth / 2 - 75, windowHeight / 2 + 260);
+    colorBlindCheckbox.style('color', 'white');
+    colorBlindCheckbox.style('font-family', 'PressStart2P-Regular');
+    colorBlindCheckbox.style('font-size', '10px');
+    colorBlindCheckbox.changed(() => {
+    colorBlindMode = colorBlindCheckbox.checked();
+    //applyColorBlindMode(); // not yet implemented
+});
+    
     pauseSound.play();
-    levelMusic.setVolume(0.005, 0.2); 
-    levelMusic.rate(0.85, 0.2);
-    compressor.threshold(-50);
-    compressor.ratio(10);
+    levelMusic.rate(0.8, 0.3); // slower
+    smoothCompressorChange(-50, 10, 0.4);
 
   }
   else{ // Remove the resume button
-    resumeButton.remove();
-    resumeButton = null;
-    restartButton.remove();
-    restartButton = null;
-    quitButton.remove();
-    quitButton = null;
+    if (resumeButton) { resumeButton.remove(); resumeButton = null; }
+    if (restartButton) { restartButton.remove(); restartButton = null; }
+    if (quitButton) { quitButton.remove(); quitButton = null; }
+    if (volumeSlider) { volumeSlider.remove(); volumeSlider = null; }
+    if (volumeLabel) { volumeLabel.remove(); volumeLabel = null; }
+    if (colorBlindCheckbox) { colorBlindCheckbox.remove(); colorBlindCheckbox = null; }
 
     pauseSound.play();
-    levelMusic.setVolume(0.05, 0.2); 
-    levelMusic.rate(1.0, 0.2);
-    compressor.threshold(-24);
-    compressor.ratio(4);
+    levelMusic.rate(1.0, 0.3); // restore speed
+    smoothCompressorChange(-24, 4, 0.4);
   }
 }
 
@@ -738,21 +806,39 @@ function drawPauseMenu(){
   // Creates the semi-transparent background for the pause menu
   fill(0, 0, 0, 150);
   noStroke();
-  rect(0, 0, width, height);
+  rect(gameX, gameY, gameLayer.width, gameLayer.height);
 
   
 
   // pause text
   fill(255);
   textAlign(CENTER, CENTER);
-  textSize(32);
-  text("Paused", width / 2, height / 2 - 50);
-  textSize(12);
+  textSize(32 * gs);
+  text("Paused", gameLayer.width / 2 + gameX, gameLayer.height / 2 - 50 + gameY);
+  textSize(12 * gs);
 
   // changes color of button when mouse hovers over
   mouseOverButton(quitButton, "green", "lightgreen");
   mouseOverButton(restartButton, "green", "lightgreen");
   mouseOverButton(resumeButton, "green", "lightgreen");
+
+
+  if (volumeSlider) {
+  let vol = volumeSlider.value();
+  currentVolume = vol; // remember value
+
+  // Adjust main music volume dynamically
+  if (levelMusic && levelMusic.isPlaying()) levelMusic.setVolume(vol * 0.1);
+  if (menuMusic && menuMusic.isPlaying()) menuMusic.setVolume(vol * 0.1);
+  if (pauseSound) pauseSound.setVolume(vol * 0.05);
+
+  // If you have arrays of pickup / enemy sounds
+  if (pickupSounds) {
+    for (let s of pickupSounds) {
+      s.setVolume(vol * 0.2);
+    }
+  }
+}
 
   pop(); // restore settings
   if(quitButton.mouse.pressed()){
@@ -760,7 +846,14 @@ function drawPauseMenu(){
     quitGame();
   }
   if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
-    pauseGame();
+    gamePaused = false; 
+
+    if (resumeButton) { resumeButton.remove(); resumeButton = null; }
+    if (restartButton) { restartButton.remove(); restartButton = null; }
+    if (quitButton) { quitButton.remove(); quitButton = null; }
+    if (volumeSlider) { volumeSlider.remove(); volumeSlider = null; }
+    if (volumeLabel) { volumeLabel.remove(); volumeLabel = null; }
+    if (colorBlindCheckbox) { colorBlindCheckbox.remove(); colorBlindCheckbox = null; }
   }
   if(restartButton && restartButton.mouse.pressed())
   {
@@ -783,6 +876,7 @@ function levelUp(){
     push();
     textSize(15);
 
+    textSize(15 * gs);
 
     pop();
 
@@ -822,10 +916,10 @@ function levelUp(){
     compressor.threshold(-24);
     compressor.ratio(4);
 
-    pauseButton = new Sprite(750, 50);
+    pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
-    pauseButton.width = 70;
-    pauseButton.height = 50;
+    pauseButton.width = 70 * gs;
+    pauseButton.height = 50 * gs;
     pauseButton.color = "lightgreen";
   }
 }
@@ -836,9 +930,9 @@ function drawLevelMenu(){
   // Creates the semi-transparent background for the level menu
   fill(0, 0, 0, 150);
   noStroke();
-  rect(0, 0, width, height);
+  rect(gameX, gameY, gameLayer.width, gameLayer.height);
 
-  image(levelUpChoice, 15, 60, 770, 750);
+  image(levelUpChoice, 15*gs + gameX, 60*gs + gameY, 770*gs, 750*gs);
 
   // create/keep an array of choose buttons so we can manage them collectively
   if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
@@ -850,7 +944,7 @@ function drawLevelMenu(){
 }
 
 function drawItemMenu(){
-  // Draw level choices in a 3x3 grid that fits within 800x800
+  // Draw level choices in a 3x3 grid
   let cols = 3;
   let imageSize = 60;
   let startX = 130;
@@ -866,24 +960,25 @@ function drawItemMenu(){
     let y = startY + row * 235; // controls row spacing
 
     if (levelChoices[i] && levelChoices[i].sprite) {
-      image(levelChoices[i].sprite, x, y-20, imageSize, imageSize);
-      textSize(15);
+                                    //scale to fit screen
+      image(levelChoices[i].sprite, x * gs + gameX, (y-20) * gs + gameY , imageSize * gs, imageSize * gs);
+      textSize(14 * gs);
       fill(0);
-      text(levelChoices[i].name, x - 20, y - 40, 150);
-      textSize(12);
-      text(levelChoices[i].description, x - 50, y + 60, 200);
+      text(levelChoices[i].name, (x - 20) * gs + gameX, (y - 40) * gs + gameY , 150 * gs);
+      textSize(12 * gs);
+      text(levelChoices[i].description, (x - 50) * gs + gameX, (y + 60) * gs + gameY , 200 * gs);
 
       // Only create "Choose" buttons for the first three visible choices
       if (i < 9) {
         // place button roughly centered under the block (column width 150)
-        let btnX = x + 40;
-        let btnY = y + imageSize + 70;
+        let btnX = (x + 25) * gs + gameX;
+        let btnY = (y + imageSize + 70) * gs + gameY;
 
         if (!chooseButtons[i]) {
           chooseButtons[i] = new Sprite(btnX, btnY);
           chooseButtons[i].text = "Buy: $X";
           chooseButtons[i].width = 100;
-          chooseButtons[i].height = 30;
+          chooseButtons[i].height = 20;
           // color by index for quick visual distinction
           const btnColors = ["red", "green", "blue"];
           chooseButtons[i].color = btnColors[i%3] || "lightgreen";
@@ -992,6 +1087,19 @@ function quitGame(){
   restartButton = null;
   gamePaused = false;
 
+  if (volumeSlider) {
+    volumeSlider.remove();
+    volumeSlider = null;
+  }
+  if (volumeLabel) {
+    volumeLabel.remove();
+    volumeLabel = null;
+  }
+
+  if (volumeSlider) volumeSlider.remove();
+  if (volumeLabel) volumeLabel.remove();
+  if (colorBlindCheckbox) colorBlindCheckbox.remove();
+
   levelMusic.stop();
   scoreDisplay.remove()
   scoreDisplay = null;
@@ -1021,6 +1129,13 @@ function quitGame(){
   spawnLogic.rate = 1;
   spawnLogic.activeActors = 0;
 
+  if (levelMusic && levelMusic.isPlaying()) {
+    levelMusic.rate(1.0);           // normal speed
+    levelMusic.setVolume(currentVolume); // keep same volume
+  }
+  compressor.threshold(-24); // restore default compression
+  compressor.ratio(4);
+
   setup();
 }
 
@@ -1037,7 +1152,9 @@ function mousePressed() {
       grabbedCharacter = actor;
       idx = chrSprite.indexOf(grabbedCharacter.sprite);
       grabbedCharacter.sprite = grabSprite[idx];
-      pickup.play();
+      let randomPickup = random(pickupSounds);
+      randomPickup.setVolume(currentVolume * 0.2);
+      randomPickup.play();
       break;
     }
   }
@@ -1127,16 +1244,16 @@ function mouseReleased() {
 
 
 function drawScore(){
-  scoreDisplay = new Sprite(150, 50);
+  scoreDisplay = new Sprite((150 * gs + gameX), 50 * gs + gameY);
   scoreDisplay.text = "Score:" + score;
-  scoreDisplay.width = 250;
-  scoreDisplay.height = 50;
+  scoreDisplay.width = 250 * gs;
+  scoreDisplay.height = 50 * gs;
   scoreDisplay.color = "lightgreen";
 
-  comboDisplay = new Sprite(550, 50);
+  comboDisplay = new Sprite(550 * gs + gameX, 50 * gs + gameY);
   comboDisplay.text = "Combo:" + currentCombo;
-  comboDisplay.width = 250;
-  comboDisplay.height = 50;
+  comboDisplay.width = 250 * gs;
+  comboDisplay.height = 50 * gs;
   comboDisplay.color = "white";
 }
 
@@ -1144,8 +1261,15 @@ function drawScore(){
 function drawScoreAtPos(x,y){
   scoreDisplay = new Sprite(x, y);
   scoreDisplay.text = "Score:" + score;
-  scoreDisplay.width = 250;
-  scoreDisplay.height = 50;
+  scoreDisplay.width = 250 * gs;
+  scoreDisplay.height = 50 * gs;
+}
+
+function drawBorder(){
+  push();
+  fill(0);
+  rect(gameX - 10, gameY - 10, gameLayer.width + 20, gameLayer.height + 20);
+  pop();
 }
 
 function setGameCusor(){
@@ -1181,8 +1305,8 @@ function generateRandomSplat(amt){
   }
 
     // Draw the splat somewhere random
-  let x = random(width);
-  let y = random(height);
+  let x = random(gameLayer.width + gameX);
+  let y = random(gameLayer.height + gameY);
   let sizeMult = random(1.5, 5);
   if (amt >= splatAmt-1) {
     sizeMult = 20;

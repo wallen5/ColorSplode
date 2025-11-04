@@ -44,7 +44,7 @@ class Player {
       if (elapsed < flashDuration) {
         fill(255, 255, 0, 150);
         noStroke();
-        rect(0, 0, width, height);
+        rect(gameX, gameY, gameLayer.width, gameLayer.height);
       } else {
         flashScreen = false;
       }
@@ -58,17 +58,17 @@ class Player {
     }
     for(let i = 0; i < this.health; ++i){
       if(player.health >= 1){
-        image(heart, 350 - ((this.health - 3) * 15) + (i * 35), 765, 30, 30);
+        image(heart, gs * (1300 - ((this.health - 3) * 15) + (i * 35)), gs * 990, gs * 30, gs * 30);
       }
     }
   }
 
   drawInventory() { // Draws player inventory so they can see their items
     push();
-    let startX = 250;
-    let startY = -10;
-    let size = 40;
-    let spacing = 10;
+    let startX = 550 * gs;
+    let startY = 950 * gs;
+    let size = 40 * gs;
+    let spacing = 10 * gs;
 
     for (let i = 0; i < player.inventory.length; i++) {
       let item = player.inventory[i];
@@ -86,8 +86,8 @@ function makeItems(){
     new Item("Freeze", freeze, "Hovering over a bucket freezes it for a short time"),
     //new Item("Yarn Ball", placeholder, "Unfinished: Control the meow thing"),
     //new Item("Mixer", placeholder, "Unfinished: Combine two colors"),
-    new Item("Blatant Copyright", totem, "Revive...like in Minecraft"),
     new Item("Bomb", bomb, "Destroy all the paint buckets. Press 'b' to use." ),
+    new Item("Totem of Varnish", totem, "Revive...like in Minecraft"),
     new Item("Paint Scraper", scraper, "Heal after a combo of 5+"),
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
@@ -149,7 +149,7 @@ function drawExplosion(){
       if (explosionActive) {
         push();
         imageMode(CENTER);
-        image(explodeGif, explosionX, explosionY, 700, 700);
+        image(explodeGif, 400 * gs + gameX, 400 * gs + gameY, 700 * gs + gameX, 700 * gs + gameY);
         pop();
         // Check if explosion duration is over
         if (timer > explosionDuration) {

@@ -1,23 +1,24 @@
 // A Class of Our Actors/Characters
 class Actor {
   constructor(x, y, sprite, color) {
-    this.x = x;
-    this.y = y;
-    this.prevX = x; // Needed for "bouncing" collision detection
-    this.prevY = y;
+    this.x = x + gameX;
+    this.y = y + gameY;
+    this.prevX = x + gameX; // Needed for "bouncing" collision detection
+    this.prevY = y + gameY;
     this.size = 50;
     this.grabBox = 75;
     this.sprite = sprite;
     this.originalSprite = sprite;
     this.color = color;
-    this.xspeed = random(-2,2);
-    this.yspeed = random(-2,2);
+    this.xspeed = random(-2,2) * gs;
+    this.yspeed = random(-2,2) * gs;
     
     this.timer = 14.0;           // measured in seconds
     this.timerStart = millis();  // when the timer started
     this.timeAlive = 0.0;        // Tracks how long the actor has been alive while the game is UNPAUSED
 
     this.shakeThreshold = 5.0;   // how many seconds left to shake
+    this.impactShakeEnd = 0;
     this.angle = 0;              // current rotation angle
     this.rotationSpeed = 80.0;  // how fast it rotates per frame
     this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
@@ -71,9 +72,9 @@ class Actor {
     rotate(radians(this.angle)); // use actor.angle
     imageMode(CENTER);
     if(this.state == "EXPLODED"){
-      image(this.sprite, 0, 0, this.size + 40, this.size + 40);
+      image(this.sprite, 0, 0, (this.size + 40) * gs, (this.size + 40) * gs);
     } else {
-      image(this.sprite, 0, 0, this.size, this.size);
+      image(this.sprite, 0, 0, this.size * gs, this.size * gs);
     }
     pop();
 
@@ -86,9 +87,14 @@ class Actor {
       fill(p.color);
       noStroke();
       circle(p.x, p.y, p.size);
-      
-      p.x += p.vx;
-      p.y += p.vy;
+      if(p.x < gameLayer.width + gameX - 10 && 
+        p.y < gameLayer.height + gameY - 10 && 
+        p.x > gameX + 10 && p.y > gameY + 10){
+        p.x += p.vx;
+        p.y += p.vy;
+      } else {
+        this.particles.splice(i,1);
+      }
 
       // Fade and remove after set time is up
       if (millis() - p.born > 1500) {
@@ -101,11 +107,11 @@ class Actor {
     let remaining = max(this.timer - this.timeAlive, 0);
     if(this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2))
     {
-      let scaleFactor = paintLayer.width / width;
-      let px = (this.x + this.size / 2) * scaleFactor;
-      let py = (this.y + this.size / 2) * scaleFactor;
-      let pPrevX = (this.prevX + this.size / 2) * scaleFactor;
-      let pPrevY = (this.prevY + this.size / 2) * scaleFactor;
+      let scaleFactor = paintLayer.width / gameLayer.width;
+      let px = (this.x + this.size / 2 - gameX) * scaleFactor;
+      let py = (this.y + this.size / 2 - gameY) * scaleFactor;
+      let pPrevX = (this.prevX + this.size / 2 - gameX) * scaleFactor;
+      let pPrevY = (this.prevY + this.size / 2 - gameY) * scaleFactor;
 
       // Growth curve for stroke weight
       let lifeProgress = constrain(this.timeAlive / this.timer, 0, 1);
@@ -137,7 +143,7 @@ class Actor {
     for (let i = 0; i < numParticles; i++) {
       
       let vx = random(-10, 10);
-      let vy = random(-10, 1);
+      let vy = random(-10, 10);
 
       let p = {
         x: this.x + this.size/2,
@@ -222,7 +228,7 @@ class Actor {
       randColor = lerpColor(randColor, color(255,255,255), 0.7); // Gives the colors a pastel look
   
       // Chooses and pushes a random bucket to be spawned
-      ourCharacters.push(new Actor(newX, newY, chrSprite[randIndex], randColor));
+      ourCharacters.push(new Actor(newX - gameX, newY - gameY, chrSprite[randIndex], randColor));
       ++spawnLogic.activeActors;
     }
 
@@ -267,8 +273,8 @@ class Actor {
     actor.prevX = actor.x; //save coordinate
     actor.prevY = actor.y;
   
-    actor.x += velocity.x;//update coordinates
-    actor.y += velocity.y;
+    actor.x += velocity.x * gs;//update coordinates
+    actor.y += velocity.y * gs;
   
     
   
@@ -308,8 +314,8 @@ class Actor {
       actor.y = zoneY1;
       actor.yspeed *= -1;
     }
-    if (actor.y > height - actor.size - (height - (zoneY2 + zoneHeight))) {
-      actor.y = height - actor.size - (height - (zoneY2 + zoneHeight));
+    if (actor.y > gs * (height - actor.size - (height - (zoneY2 + zoneHeight)))) {
+      actor.y = gs * (height - actor.size - (height - (zoneY2 + zoneHeight)));
       actor.yspeed *= -1;
     }
   
@@ -425,10 +431,10 @@ class Actor {
   }
   
   
-  function grabbedMovement(actor) {
-    actor.x = constrain(mouseX - actor.size/2, zoneX, width - actor.size - zoneX);
-    actor.y = constrain(mouseY - actor.size/2, zoneY1, height - actor.size - (height - (zoneY2 + zoneHeight)));
-  }
+function grabbedMovement(actor) {
+  actor.x = constrain(mouseX - actor.size/2, zoneX, width - (actor.size * gs) - zoneX);
+  actor.y = constrain(mouseY - actor.size/2, zoneY1, gs * (height - (20 * gs) - actor.size - (height - (zoneY2 + zoneHeight))));
+}
   
   // Checks the actors timer
   function checkTimer(actor) {
@@ -441,7 +447,7 @@ class Actor {
   
     if (remaining <= 0) {
       // Totem Powerup
-      if(player.hasItem("Blatant Copyright") && player.health < 2){
+      if(player.hasItem("Totem of Varnish") && player.health < 2){
         mouseReleased();
         idx = chrSprite.indexOf(actor.sprite); // The actor that would explode shows their death sprite
         if (idx >= 0) actor.sprite = deathSprite[idx];  
@@ -453,7 +459,7 @@ class Actor {
             spawnLogic.activeActors--;
           }
         }
-        player.removeItem("Blatant Copyright");
+        player.removeItem("Totem of Varnish");
         flashScreen = true;   // Makes a cool flashing screen effect
         flashTimer = millis();
       } else if(player.health >= 2){
@@ -486,7 +492,7 @@ class Actor {
       }
     }
     
-    if (remaining <= actor.shakeThreshold) {
+    if (remaining <= actor.shakeThreshold || millis() < actor.impactShakeEnd) {
     let speedMultiplier = 1 / (t + 0.05);  // tweak 0.1 to control max speed
     speedMultiplier = constrain(speedMultiplier, 0, 7);  // never shake faster than 7x normal
     actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
@@ -542,8 +548,9 @@ class Actor {
 
   function spawnRougeActor(speed, unsnapInterval) {
   
-    let spawnX = width / 2 - 25;
-    let spawnY = height / 2 - 25;
+    let spawnX = gameLayer.width / 2 - 25;
+    let spawnY = gameLayer.height / 2 - 25;
+
   
     rougeCharacter = new rougeActor(spawnX, spawnY, rougeBucketSprite);
     rougeCharacter.speed = speed;
@@ -554,7 +561,7 @@ class Actor {
     constructor(x, y, sprite) {
       super(x, y, sprite, color(255, 255, 0));
       this.state = "IDLE";  
-      this.speed = 3;       
+      this.speed = 3;     
       this.targetZone = null;  // current target zone
       this.lastZone = null; //last target zone
       this.currentBuckets = [];  //buckets rougeActor is trying to free
@@ -858,7 +865,145 @@ class Actor {
       push();
       translate(this.x + this.size / 2, this.y + this.size / 2);
       imageMode(CENTER);
-      image(this.sprite, 0, 0, this.size, this.size);
+      image(this.sprite, 0, 0, 60 * gs, 60 * gs);
+      pop();
+    }
+  }
+
+   function spawnCat(speed, swipeStrength) {
+  
+    let spawnX = gameLayer.width / 2 - 25;
+    let spawnY = gameLayer.height / 2 - 25;
+  
+    cat = new Cat(spawnX, spawnY, catSprite);
+    cat.speed = speed;
+    cat.swipeStrength = swipeStrength;
+  }
+
+
+  class Cat extends Actor {
+    constructor(x, y, sprite) {
+      super(x, y, sprite, color(200, 150, 255));
+      this.state = "IDLE";
+      this.size = 60;
+      this.swipeCooldown = 1000; //wait after each swipe
+      this.lastAction = millis();
+      this.targetBucket = null;
+      this.speed = 2.75;
+      this.swipeRange = 30; 
+      this.swipeStrength = 2;
+      this.timer = Infinity; 
+    }
+  
+    update() {
+      if (gamePaused || levelUpActive) return;
+  
+      //if no target roam randomly
+      if (!this.targetBucket) {
+        roamingMovement(this);
+  
+        //pick a new target
+        if (millis() - this.lastAction >= this.swipeCooldown) {
+          this.pickNewTarget();
+        }
+      } else {
+        //if targetBucket gets sorted untarget it
+        if (this.targetBucket.state !== "FREE") {
+          this.targetBucket = null;
+          this.lastAction = millis();
+          return;
+        }
+  
+        this.moveTowardTarget();
+  
+        //check if close enough to swipe
+        const distToTarget = dist(
+          this.x + this.size / 2,
+          this.y + this.size / 2,
+          this.targetBucket.x + this.targetBucket.size / 2,
+          this.targetBucket.y + this.targetBucket.size / 2
+        );
+  
+        if (distToTarget < this.swipeRange) {
+          this.swipeAtBucket();
+          this.targetBucket = null;
+          this.lastAction = millis();
+        }
+      }
+    }
+  
+    pickNewTarget() {
+      const unsortedBuckets = ourCharacters.filter(b => b.state === "FREE");
+  
+      if (unsortedBuckets.length === 0) return;
+  
+      this.targetBucket = random(unsortedBuckets); //pick random bucket to target
+      console.log("cat picked new target bucket!");
+    }
+  
+    moveTowardTarget() {
+      if (!this.targetBucket) return;
+  
+      const dx = this.targetBucket.x + this.targetBucket.size / 2 - (this.x + this.size / 2);
+      const dy = this.targetBucket.y + this.targetBucket.size / 2 - (this.y + this.size / 2);
+  
+      const distToTarget = Math.sqrt(dx * dx + dy * dy);
+  
+      if (distToTarget > 1) {
+        this.x += (dx / distToTarget) * this.speed;
+        this.y += (dy / distToTarget) * this.speed;
+      }
+    }
+  
+    swipeAtBucket() {
+      const target = this.targetBucket;
+      if (!target) return;
+  
+      const remaining = max(target.timer - target.timeAlive);
+
+      //increase time alive so buckets explode faster
+      switch (levelSet[currentLevel].difficulty) {
+        case 1: 
+          if (remaining >= 2) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 1 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
+        case 2: 
+          if (remaining >= 3) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 2 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
+        case 3: 
+          if (remaining >= 4) {
+            target.timeAlive += cat.swipeStrength;
+            console.log("strength: " + cat.swipeStrength);
+            console.log("cat swiped bucket - timer reduced by 3 sec: " + target.timeAlive);
+          } else {
+            target.timeAlive = 14;
+            console.log("cat made bucket explode: " + target.timeAlive);
+          }
+          break;
+      }
+  
+      target.splode();
+      target.impactShakeEnd = millis() + 500; //buckets shake after being swiped
+    }
+  
+    draw() {
+      push();
+      translate(this.x + this.size / 2, this.y + this.size / 2);
+      imageMode(CENTER);
+      image(this.sprite, 0, 0, 100 * gs, 100 * gs);
       pop();
     }
   }

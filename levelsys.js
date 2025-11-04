@@ -1,3 +1,9 @@
+//transition vars
+let fade = 0;
+let fadeSpeed = 5;
+let slide = 0;
+let slideSpeed = 5;
+
 class Level{
     constructor(levelBoss, difficulty, obstacles, colorZones, loaded = false){
         this.levelBoss = levelBoss;
@@ -20,17 +26,17 @@ class Level{
         switch(this.difficulty){
         case 1:
             spawnRateIncrease = 0.01;
-            this.scoreThreshold = 30;
+            this.scoreThreshold = 1;
             maxVents = 2;
             break;
         case 2:
             spawnRateIncrease = 0.05;
-            this.scoreThreshold = 40;
+            this.scoreThreshold = 1;
             maxVents = 4;
             break;
         case 3:
             spawnRateIncrease = 0.08;
-            this.scoreThreshold = 50;
+            this.scoreThreshold = 1;
             maxVents = 4;
             break;
         }
@@ -67,6 +73,26 @@ class Level{
                 }
               }, 2000);
               break;
+            case "Cat":
+              console.log("Spawning:", obstacleName);
+              let catSpeed;
+              let swipeStrength;
+              switch (this.difficulty){
+                case 1: catSpeed = 1.5; swipeStrength = 1.0; break;
+                case 2: catSpeed = 2; swipeStrength = 2.0; break;
+                case 3: catSpeed = 2.75; swipeStrength = 3.0; break;
+                default: catSpeed = 2; swipeStrength = 2.0;
+              }
+              setTimeout(() => {
+                spawnCat(catSpeed, swipeStrength);
+                if (cat) {
+                  this.obstacles.push(cat);
+                  console.log("Cat added to obstacles");
+                  //console.log("speed = " + rougeCharacter.speed, "unsap = " +  rougeCharacter.unsnapInterval);
+
+                }
+              }, 2000);
+              break;
           }
         }
       }
@@ -74,47 +100,45 @@ class Level{
 }  
 
 function clearObstacles() {
-    // if (levelSet[currentLevel]) {
-    //     levelSet[currentLevel].obstacles = [];
-    // }
     rougeCharacter = null;
+    cat = null;
 }
 
 function randomColorZone(level) {
-    let randPreset = floor(random(0,2));
+    let randPreset = floor(random(0,3));
 
     switch (randPreset) {
     case 0: // Corners
         level.colorZones = [
-        new Zone(50, 100, 150, 150, "red"),
-        new Zone(50, 620, 150, 150, "blue"),
-        new Zone(width - 150 - 50, 620, 150, 150, "purple"),
-        new Zone(width - 150 - 50, 100, 150, 150, "green")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "blue"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "purple"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "green")
         ];
         break;
     case 1:
         level.colorZones = [
-        new Zone(50, 100, 150, 150, "blue"),
-        new Zone(50, 620, 150, 150, "green"),
-        new Zone(width - 150 - 50, 620, 150, 150, "red"),
-        new Zone(width - 150 - 50, 100, 150, 150, "purple")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple")
         ];
         break;
     case 2:
         level.colorZones = [
-        new Zone(50, 100, 150, 150, "purple"),
-        new Zone(50, 620, 150, 150, "red"),
-        new Zone(width - 150 - 50, 620, 150, 150, "green"),
-        new Zone(width - 150 - 50, 100, 150, 150, "blue")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue")
         ];
         break;
         
     default:
         level.colorZones = [
-        new Zone(50, 100, 150, 150, "red"),
-        new Zone(50, 620, 150, 150, "blue"),
-        new Zone(width - 150 - 50, 620, 150, 150, "purple"),
-        new Zone(width - 150 - 50, 100, 150, 150, "green")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue"),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple")
         ];
     }
 }
@@ -135,40 +159,48 @@ function setBoss(){
     case 1:
         levelSet = [
         //change rougeBucket(s) to different obstacle
-        new Level(0, 1, ["rougeBucket"], []), 
-        new Level(0, 2, ["rougeBucket"], []),
-        new Level(1, 3, ["rougeBucket"], [])
+        new Level(0, 1, ["Cat"], []), 
+        new Level(0, 2, ["Cat"], []),
+        new Level(1, 3, ["Cat"], [])
         ];
         break;
     case 2:
         levelSet = [
         //change rougeBucket(s) to different obstacle
-        new Level(0, 1, ["rougeBucket"], []),
-        new Level(0, 2, ["rougeBucket"], []),
-        new Level(1, 3, ["rougeBucket"], [])
+        new Level(0, 1, ["rogueBucket"], []),
+        new Level(0, 2, ["rogueBucket"], []),
+        new Level(1, 3, ["Cat"], [])
         ];
         break;
     case 3:
         levelSet = [
         //change rougeBucket(s) to different obstacle
-        new Level(0, 1, ["rougeBucket"], []),
-        new Level(0, 2, ["rougeBucket"], []),
-        new Level(1, 3, ["rougeBucket"], [])
+        new Level(0, 1, ["Cat"], []),
+        new Level(0, 2, ["Cat"], []),
+        new Level(1, 3, ["Cat"], [])
         ];
         break;
     }
 }
 
 function levelTransition(){
-  background(117, 2, 0);
+  clear();
+  drawBorder();
+  if (fade < 255){fade += fadeSpeed;}
+  if (slide < width / 2){slide += slideSpeed}
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(117, 2, 0);
 
-  push();
-  fill(237, 204, 42);
-  textAlign(CENTER, CENTER);
-  textSize(30);
-  text("Level " + levelSet[currentLevel].difficulty + " Complete", width / 2, height / 2 - 50);
-  textSize(12);
-  pop();
+  if (levelSet[currentLevel].difficulty != 3){
+    push();
+    fill(237, 204, 42);
+    textAlign(CENTER, CENTER);
+    textSize(30 * gs);
+
+    text("Level " + levelSet[currentLevel].difficulty + " Complete", gameLayer.width / 2 + gameX, slide - (500 * gs));
+    textSize(12 * gs);
+    pop();
+  }
 
   pauseButton.remove();
   scoreDisplay.remove();
@@ -177,19 +209,26 @@ function levelTransition(){
   currentCombo = 0;
 
   if(!transitionCreated){
-    quitButton = new Sprite(400, 550);
+    quitButton = new Sprite(400 * gs + gameX, 550 * gs + gameY);
     quitButton.text = "Quit";
-    quitButton.width = 200;
-    quitButton.height = 50;
+    quitButton.width = 200 * gs;
+    quitButton.height = 50 * gs;
     quitButton.color = "red";
 
-    nextLevelButton = new Sprite(400, 500);
+    nextLevelButton = new Sprite(400 * gs + gameX, 500 * gs + gameY);
     nextLevelButton.text = "Next Level";
-    nextLevelButton.width = 400;
-    nextLevelButton.height = 50;
+    nextLevelButton.width = 400 * gs;
+    nextLevelButton.height = 50 * gs;
     nextLevelButton.color = "red";
 
     transitionCreated = true;
+    fade = 0;
+    slide = 0;
+  }
+
+  if (transitionCreated && nextLevelButton && quitButton) {
+    nextLevelButton.x = slide;
+    quitButton.x = slide;
   }
 
   mouseOverButton(nextLevelButton, "lightred", "red");
@@ -199,13 +238,17 @@ function levelTransition(){
 
   if(levelSet[currentLevel].difficulty == 3){
     nextLevelButton.remove();
-    background(117, 2, 0);
+    image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+    gameLayer.background(0, 0, 0, fade);
     push();
     fill(237, 204, 42);
     textAlign(CENTER, CENTER);
-    textSize(50)
-    text("Victory", width / 2, height / 2 - 50);
-    textSize(12);
+    textSize(50 * gs)
+    text("Victory", gameLayer.width / 2 + gameX, slide - (500 * gs));
+    if (transitionCreated && nextLevelButton && quitButton) {
+      quitButton.x = slide;
+    }
+    textSize(12 * gs);
     pop();
   }
 
@@ -234,6 +277,8 @@ function levelTransition(){
     spawnLogic.rate = 1;
     spawnLogic.activeActors = 0;
     clearObstacles();
+    fade = 0;
+    slide = 0;
 
     setup();
     transitionCreated = false;
@@ -247,6 +292,8 @@ function levelTransition(){
     currentLevel++;
     // reset game
     transitionCreated = false;
+    fade = 0;
+    slide = 0;
     time = 0;
     score = 0;
     levelSet[currentLevel].setup();
@@ -258,10 +305,10 @@ function levelTransition(){
     spawnLogic.rate = 1;
     spawnLogic.activeActors = 0;
     paintLayer.background(255);
-    pauseButton = new Sprite(750, 50);
+    pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
-    pauseButton.width = 70;
-    pauseButton.height = 50;
+    pauseButton.width = 70 * gs;
+    pauseButton.height = 50 * gs;
     pauseButton.color = "lightgreen";
     drawScore();
   }
