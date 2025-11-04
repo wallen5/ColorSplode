@@ -102,16 +102,21 @@ let bombisReady = false;
 //let explosion;
 
 function dropBomb(){
-  if (key.toLowerCase() === 'b' && bombisReady){
+  if (bPressed && bombisReady){
+    //reset animation timer: used in drawExplosion()
+    timer = 0;
+
+    //reset animation
+    explodeGif.reset();
+
     //play sound effect
     bombSound.play();
-    explodeGif.play();
     
     //Remove bomb fron inventory
     bombisReady = false;
     player.removeItem("Bomb");
 
-    // Start explosion animation
+    // activates explosion animation, in drawExplosion()
     explosionActive = true;
 
     //remove paint buckets
@@ -119,7 +124,7 @@ function dropBomb(){
     ourCharacters = [];
     time = 0;
     
-    // Store original
+    // Store original spawn logic
     const originalTimer = spawnLogic.timer;
     const originalTimeToSpawn = spawnLogic.timeToSpawn;
     
@@ -128,14 +133,15 @@ function dropBomb(){
     let actorsDestroyed = spawnLogic.activeActors; 
     score += actorsDestroyed;  // Add score based on number of actors destroyed
 
-    // Resume spawning after 5 seconds
+    bPressed = false;
+
+    // Resume spawning after 3 seconds
     setTimeout(() => {
       spawnLogic.rate = 1;
       spawnLogic.timer = originalTimer;
       spawnLogic.timeToSpawn = originalTimeToSpawn;
-    }, 5000);
+    }, 3000);
 
-    //explodeGif.position(50,350);
   }
 }
 

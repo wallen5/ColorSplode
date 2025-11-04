@@ -48,6 +48,8 @@ let chooseButton7;
 let chooseButton8;
 let chooseButton9;
 
+let bPressed = false;
+
 let nextLevelButton;
 let transitionCreated = false;
 
@@ -239,8 +241,8 @@ function draw() {
       spawnRate();
       setGameCusor();
       player.drawInventory();
-      drawExplosion();
       dropBomb();
+      drawExplosion();
       player.checkTotem();    
   } else if (state == 3){ //gameover
       gameOver();
@@ -667,6 +669,10 @@ function keyPressed() // Generic Keypress function
   if(['0', '1', '2', '3', '4', '5', '6', '7'].includes(key)) // Simple test function that let's us give ourselves an item for testing
   {
     player.addItem(allItems[key - 0]);
+  }
+
+  if (key === 'b' || key === 'B') {
+    bPressed = true;
   }
 }
 
