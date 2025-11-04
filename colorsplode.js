@@ -114,7 +114,6 @@ function preload(){
   pickup = loadSound('sounds/pickup.wav');
   bombSound = loadSound('sounds/nuclear-explosion.mp3');
   explodeGif = loadImage("images/explosion.gif");
-  explodeGif = createImg("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
   chrSprite[1] = loadImage("images/bluepaintupdate.gif");
   chrSprite[2] = loadImage("images/purplepaintupdate.gif");
@@ -659,7 +658,7 @@ function colorFluctuation(){
 
 function keyPressed() // Generic Keypress function
 {
-  if((keyCode === ESCAPE || key === 'p') && (state == 1 || state == 2)) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
+  if((keyCode === ESCAPE || key === 'p') && (state == 1 || state == 2) && levelUpActive === false) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
   {
     pauseGame();
   } else if(state == 0 || state == 3){
@@ -676,6 +675,7 @@ function keyPressed() // Generic Keypress function
   if (key === 'b' || key === 'B') {
     bPressed = true;
   }
+
 }
 
 function pauseGame(){
