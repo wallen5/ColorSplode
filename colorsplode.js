@@ -3,6 +3,13 @@ let spawnTime = 25;
 let score = 0;
 
 let state = 0;
+let uiState = Object.freeze({
+    MAINMENU: 0,
+    CLASSIC: 1,
+    ROUGE: 2,
+    GAMEOVER: 3,
+    LEVELTRANS: 4
+});
 let currentMode = null;
 let startButton1 //classic mode
 let startButton2; //roguelike mode
@@ -258,15 +265,15 @@ let timer = 0;
 function draw() {
   cursor("images/pointerHand.png", 10, 10);
   
-  if(state == 0){ //start screen
+  if(state == uiState.MAINMENU){ //start screen
     startMenu();
 
-  } else if (state == 1){ //play classic mode
+  } else if (state == uiState.CLASSIC){ //play classic mode
       gameMenu1();
       spawnActor();
       spawnRate();
       setGameCusor();
-  } else if (state == 2){ //play roguelike mode
+  } else if (state == uiState.ROUGE){ //play roguelike mode
       gameMenu2();
       spawnActor();
       spawnRate();
@@ -275,9 +282,9 @@ function draw() {
       dropBomb();
       drawExplosion();
       player.checkTotem();    
-  } else if (state == 3){ //gameover
+  } else if (state == uiState.GAMEOVER){ //gameover
       gameOver();
-  } else if(state == 4){
+  } else if(state == uiState.LEVELTRANS){
       levelTransition();
   }
 }
@@ -307,14 +314,14 @@ function startMenu(){
   mouseOverButton(startButton2, "darkred", "red");
 
   if (startButton1.mouse.pressing()){
-    state = 1;
+    state = uiState.CLASSIC;
     currentMode = "classic";
     activateRandomVent();
     player.startHealth = 0;
     player.health = player.startHealth;
   } 
   if (startButton2.mouse.pressing()) {
-    state = 2;
+    state = uiState.ROUGE;
     currentMode = "roguelike";
     switchVent(vents[1]);
     levelSet[currentLevel].setup();
@@ -478,7 +485,7 @@ function gameMenu2(){ //game menu for roguelike mode
   }
 
   if(score >= levelSet[currentLevel].scoreThreshold && !levelUpActive && state != 0){
-    state = 4;
+    state = uiState.LEVELTRANS;
   }
 
   if(!gamePaused && !levelUpActive){time++;}
@@ -586,7 +593,7 @@ function exit(){
   time = 0;
 
   setup();
-  state = 0;
+  state = uiState.MAINMENU;
 }
 
 function restart(){
@@ -685,8 +692,8 @@ function retry(){
   spawnLogic.activeActors = 0;
 
   //return to game screen
-  if (currentMode == "classic") state = 1;
-  if (currentMode == "roguelike") state = 2;
+  if (currentMode == "classic") state = uiState.CLASSIC;
+  if (currentMode == "roguelike") state = uiState.ROUGE;
   paintLayer.background(255);
 
   makeItems();
@@ -709,10 +716,10 @@ function colorFluctuation(){
 
 function keyPressed() // Generic Keypress function
 {
-  if((keyCode === ESCAPE || key === 'p') && (state == 1 || state == 2) && levelUpActive === false) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
+  if((keyCode === ESCAPE || key === 'p') && (state == uiState.CLASSIC || state == uiState.ROUGE ) && levelUpActive === false) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
   {
     pauseGame();
-  } else if(state == 0 || state == 3){
+  } else if(state == uiState.MAINMENU || state == uiState.GAMEOVER){
     if (resumeButton) {
       resumeButton.remove();
       resumeButton = null;
@@ -842,7 +849,7 @@ function drawPauseMenu(){
 
   pop(); // restore settings
   if(quitButton.mouse.pressed()){
-    state = 0;
+    state = uiState.MAINMENU;
     quitGame();
   }
   if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
