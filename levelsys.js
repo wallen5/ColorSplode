@@ -267,6 +267,7 @@ function levelTransition(){
     score = 0;
     time = 0;
     ourCharacters = [];
+    chooseButtons = []; //needed for buttons to appear on buy menu
     levelUpTriggered = {};
     player.inventory = [];
     player.health = player.startHealth;

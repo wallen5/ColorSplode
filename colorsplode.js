@@ -20,7 +20,7 @@ let doneSpotlight = 0;
 
 // Items arrays
 let allItems;
-let levelChoices;
+let Choices;
 
 let chrSprite =[]; //array of character sprits
 let grabSprite =[]; //array of grab animations
@@ -44,9 +44,18 @@ let pauseButton;
 let resumeButton; // Stored here so we can detect drawing it ONCE
 let quitButton;
 let restartButton;
+
+let chooseButtons;
 let chooseButton1;
 let chooseButton2;
 let chooseButton3;
+let chooseButton4;
+let chooseButton5;
+let chooseButton6;
+let chooseButton7;
+let chooseButton8;
+let chooseButton9;
+
 let nextLevelButton;
 let transitionCreated = false;
 let volumeSlider;
@@ -74,6 +83,9 @@ const BASE_GAME_WIDTH = 800;
 const BASE_GAME_HEIGHT = 800;
 
 let gs = 1;
+
+//used to check if b is pressed.
+let bPressed = false;
 
 //start menu text. acts as namespace
 let titleColor = {
@@ -104,6 +116,10 @@ let bombSound;
 let explodeGif;
 let explosionActive = false;
 let explosionDuration = 500/3; // 1 second duration
+
+
+//const levelChoices = [];
+
 
 function preload(){
   myFont = loadFont('font/PressStart2P-Regular.ttf');
@@ -256,8 +272,8 @@ function draw() {
       spawnRate();
       setGameCusor();
       player.drawInventory();
-      drawExplosion();
       dropBomb();
+      drawExplosion();
       player.checkTotem();    
   } else if (state == 3){ //gameover
       gameOver();
@@ -452,8 +468,8 @@ function gameMenu2(){ //game menu for roguelike mode
 
   for (let s of levelUpTrigger) {  // Level ups trigger based on the arrays, can alter when they happen
     if (score >= s && !levelUpTriggered[s]) {
-        levelUp();
-        levelUpTriggered[s] = true;
+      levelUp();
+      levelUpTriggered[s] = true;
     }
   }
 
@@ -592,6 +608,9 @@ function restart(){
   score = 0;
   time = 0;
 
+  //clear buttons
+  chooseButtons = [];
+
   clearObstacles();
 
   //reset spawn logic after quit
@@ -690,7 +709,7 @@ function colorFluctuation(){
 
 function keyPressed() // Generic Keypress function
 {
-  if((keyCode === ESCAPE || key === 'p') && (state == 1 || state == 2)) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
+  if((keyCode === ESCAPE || key === 'p') && (state == 1 || state == 2) && levelUpActive === false) // When press 'p', pause the game (We can probably change this to esc too, just not sure what key it is)
   {
     pauseGame();
   } else if(state == 0 || state == 3){
@@ -703,6 +722,11 @@ function keyPressed() // Generic Keypress function
   {
     player.addItem(allItems[key - 0]);
   }
+
+  if (key === 'b' || key === 'B') {
+    bPressed = true;
+  }
+
 }
 
 function pauseGame(){
@@ -847,27 +871,12 @@ function levelUp(){
   }
 
   if(levelUpActive){
-    levelChoices = [random(allItems), random(allItems), random(allItems)];
+    levelChoices = [allItems[0], allItems[1], allItems[2], allItems[3], allItems[4], allItems[5], allItems[6], allItems[7], allItems[8]];
 
     push();
+    textSize(15);
+
     textSize(15 * gs);
-    chooseButton1 = new Sprite(150 * gs + gameX, 500 * gs + gameY);
-    chooseButton1.text = "Choose";
-    chooseButton1.width = 100 * gs;
-    chooseButton1.height = 30 * gs;
-    chooseButton1.color = "red";
-
-    chooseButton2 = new Sprite(400 * gs + gameX, 500 * gs + gameY);
-    chooseButton2.text = "Choose";
-    chooseButton2.width = 100 * gs;
-    chooseButton2.height = 30 * gs;
-    chooseButton2.color = "green";
-
-    chooseButton3 = new Sprite(650 * gs + gameX, 500 *gs + gameY);
-    chooseButton3.text = "Choose";
-    chooseButton3.width = 100 * gs;
-    chooseButton3.height = 30 * gs;
-    chooseButton3.color = "blue";
 
     pop();
 
@@ -888,6 +897,18 @@ function levelUp(){
     chooseButton2 = null;
     chooseButton3.remove();
     chooseButton3 = null;
+    chooseButton4.remove();
+    chooseButton4 = null;
+    chooseButton5.remove();
+    chooseButton5 = null;
+    chooseButton6.remove();
+    chooseButton6 = null;
+    chooseButton7.remove();
+    chooseButton7 = null;
+    chooseButton8.remove();
+    chooseButton8 = null;
+    chooseButton9.remove();
+    chooseButton9 = null;
 
     pauseSound.play();
     levelMusic.setVolume(0.05, 0.2); 
@@ -911,47 +932,148 @@ function drawLevelMenu(){
   noStroke();
   rect(gameX, gameY, gameLayer.width, gameLayer.height);
 
-  image(levelUpChoice, gameX, gameY, 800 * gs, 800 *gs);
+  image(levelUpChoice, 15*gs + gameX, 60*gs + gameY, 770*gs, 750*gs);
 
-  image(levelChoices[0].sprite, 120 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
-  image(levelChoices[1].sprite, 370 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
-  image(levelChoices[2].sprite, 610 * gs + gameX, 250 * gs + gameY, 60 * gs, 60 * gs);
+  // create/keep an array of choose buttons so we can manage them collectively
+  if (typeof chooseButtons === 'undefined' || !Array.isArray(chooseButtons)) {
+    chooseButtons = [];
+  }
 
-  fill(0);
+  drawItemMenu();
+  itemButtonLogic();
+}
 
-  textSize(15 * gs)
-  text(levelChoices[0].name, 70 * gs + gameX, 220 * gs + gameY, 150 * gs);
-  text(levelChoices[1].name, 320 * gs + gameX, 220 * gs + gameY, 150 * gs);
-  text(levelChoices[2].name, 570 * gs + gameX, 220 * gs + gameY, 150 * gs);
+function drawItemMenu(){
+  // Draw level choices in a 3x3 grid
+  let cols = 3;
+  let imageSize = 60;
+  let startX = 130;
+  let startY = 160;
 
-  textSize(12 * gs);
-  text(levelChoices[0].description, 70 * gs + gameX, 370 * gs + gameY, 180 * gs);
-  text(levelChoices[1].description, 320 * gs + gameX, 370 * gs + gameY, 180 * gs);
-  text(levelChoices[2].description, 570 * gs + gameX, 370 * gs + gameY, 180 * gs);
+  let items = 3;
+  let itemSpacing = 240;
+  let buyScreenWidth = 800;
 
+  for (let i = 0; i < levelChoices.length; i++) {
+    let row = Math.floor(i / cols);
+    let x = startX + (((i%items)*itemSpacing)%buyScreenWidth) // controls column spacing
+    let y = startY + row * 235; // controls row spacing
 
+    if (levelChoices[i] && levelChoices[i].sprite) {
+                                    //scale to fit screen
+      image(levelChoices[i].sprite, x * gs + gameX, (y-20) * gs + gameY , imageSize * gs, imageSize * gs);
+      textSize(14 * gs);
+      fill(0);
+      text(levelChoices[i].name, (x - 20) * gs + gameX, (y - 40) * gs + gameY , 150 * gs);
+      textSize(12 * gs);
+      text(levelChoices[i].description, (x - 50) * gs + gameX, (y + 60) * gs + gameY , 200 * gs);
+
+      // Only create "Choose" buttons for the first three visible choices
+      if (i < 9) {
+        // place button roughly centered under the block (column width 150)
+        let btnX = (x + 25) * gs + gameX;
+        let btnY = (y + imageSize + 70) * gs + gameY;
+
+        if (!chooseButtons[i]) {
+          chooseButtons[i] = new Sprite(btnX, btnY);
+          chooseButtons[i].text = "Buy: $X";
+          chooseButtons[i].width = 100;
+          chooseButtons[i].height = 20;
+          // color by index for quick visual distinction
+          const btnColors = ["red", "green", "blue"];
+          chooseButtons[i].color = btnColors[i%3] || "lightgreen";
+        } else {
+          // update position each frame so the button follows layout changes
+          chooseButtons[i].x = btnX;
+          chooseButtons[i].y = btnY;
+        }
+      }
+    }
+  }
+}
+
+function itemButtonLogic(){
+   // assign buttons
+  chooseButton1 = chooseButtons[0];
+  chooseButton2 = chooseButtons[1];
+  chooseButton3 = chooseButtons[2];
+  chooseButton4 = chooseButtons[3];
+  chooseButton5 = chooseButtons[4];
+  chooseButton6 = chooseButtons[5];
+  chooseButton7 = chooseButtons[6];
+  chooseButton8 = chooseButtons[7];
+  chooseButton9 = chooseButtons[8];
 
   // changes color of button when mouse hovers over
   mouseOverButton(chooseButton1, "pink", "red");
   mouseOverButton(chooseButton2, "lightgreen", "green");
-  mouseOverButton(chooseButton3, "lightblue", "blue");
+  mouseOverButton(chooseButton3, "lightblue", "deepskyblue"); //"steelblue","dodgerblue","deepskyblue","skyblue","cornflowerblue","lightblue"
+  mouseOverButton(chooseButton4, "pink", "red");
+  mouseOverButton(chooseButton5, "lightgreen", "green");
+  mouseOverButton(chooseButton6, "lightblue", "deepskyblue"); //"steelblue","dodgerblue","deepskyblue","skyblue","cornflowerblue","lightblue"
+  mouseOverButton(chooseButton7, "pink", "red");
+  mouseOverButton(chooseButton8, "lightgreen", "green");
+  mouseOverButton(chooseButton9, "lightblue", "deepskyblue");
 
 
   pop(); // restore settings
-  if(chooseButton1.mouse.pressed()){
+  if (chooseButton1 && chooseButton1.mouse.pressed() && !player.hasItem("Magnet")) {
     player.addItem(levelChoices[0]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
   }
-  if(chooseButton2 && chooseButton2.mouse.pressed()){
+  if (chooseButton2 && chooseButton2.mouse.pressed() && !player.hasItem("Freeze")) {
     player.addItem(levelChoices[1]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
+
   }
-  if(chooseButton3 && chooseButton3.mouse.pressed()){
+  if (chooseButton3 && chooseButton3.mouse.pressed() && !player.hasItem("Blatant Copyright")) {
     player.addItem(levelChoices[2]);
     levelUp();
+    makeItems();
+    chooseButtons = [];
+
+  }
+  if (chooseButton4 && chooseButton4.mouse.pressed() && !player.hasItem("Bomb")) {
+    player.addItem(levelChoices[3]);
+    levelUp();
+    makeItems();
+    chooseButtons = [];
+  }
+  if (chooseButton5 && chooseButton5.mouse.pressed() && !player.hasItem("Paint Scraper")) {
+    player.addItem(levelChoices[4]);
+    levelUp();
+    makeItems();
+    chooseButtons = [];
+  }
+  if (chooseButton6 && chooseButton6.mouse.pressed() && !player.hasItem("Paint Thinner")) {
+    player.addItem(levelChoices[5]);
+    levelUp();
+    makeItems();
+    chooseButtons = [];
+  }
+  if (chooseButton7 && chooseButton7.mouse.pressed() && !player.hasItem("Heart Canister")) {
+    player.addItem(levelChoices[6]);
+    levelUp();
+    makeItems();
+    chooseButtons = [];
+  }
+  if (chooseButton8 && chooseButton8.mouse.pressed()) {
+    player.addItem(levelChoices[7]);
+    levelUp();
+    makeItems();
+    chooseButtons = [];
+  }
+  if (chooseButton9 && chooseButton9.mouse.pressed()) {
+    player.addItem(levelChoices[8]);
+    levelUp();
+    makeItems();
+    chooseButtons = [];
   }
 }
-
 
 // Quits the game, resets game state
 function quitGame(){
@@ -989,13 +1111,16 @@ function quitGame(){
   comboMultiplier = 1;
   time = 0;
 
-
+  chooseButtons = [];
   ourCharacters = []; // Removes all enemies to prevent duplicates
   levelUpTriggered = {};
   player.inventory = [];
   player.health = player.startHealth;
   currentLevel = 0;
   clearObstacles();
+
+  //remove buy-menu buttons
+  chooseButtons = [];
 
   //reset spawn logic after quit
   closeAllVents();
