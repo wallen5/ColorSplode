@@ -130,7 +130,7 @@ class Actor {
 
   paintTrail(){
     // paintLayer stores a lower-resolution representation of the game layer.
-    // Convert the actor's game coordinates into paintLayer coordinates before drawing.
+    // gotta convert the actor's game coordinates into paintLayer coordinates before drawing.
     if (typeof paintLayer === 'undefined' || typeof gameLayer === 'undefined') return;
     let remaining = max(this.timer - this.timeAlive, 0);
     if (this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2)) {
@@ -523,9 +523,11 @@ function grabbedMovement(actor) {
   
   
       } else {
+        if (!player.isInvFrames()) {
         player.health--;
         onTimerFinished(actor);
         return;
+        }
       }
     }
     
@@ -547,6 +549,7 @@ function grabbedMovement(actor) {
     console.log("Timer finished for actor!");
   
     mouseReleased();
+    player.startInvFrames();
   
     if (actor.state === "SNAPPED" || actor.state === "EXPLODED") return;
   

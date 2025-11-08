@@ -13,8 +13,19 @@ class Player {
         this.inventory = [];
         this.health = 3;
         this.startHealth = 3;
+        this.invFrames = 2000;
+        this.invStartTime = null;
     }
 
+  startInvFrames() {
+    this.invStartTime = millis();
+  }
+
+  isInvFrames() {
+    
+    if (this.invStartTime === null) return false;
+    return (this.invStartTime !== null && (millis() - this.invStartTime) < this.invFrames);
+  }
 
   addItem(item) {
     this.inventory.push(item);

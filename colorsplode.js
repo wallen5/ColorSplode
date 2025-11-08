@@ -345,6 +345,7 @@ function gameMenu1(){
   if (gamePaused) {
     drawPauseMenu();
   }
+  console.log(player.isInvFrames());
 
   if(!gamePaused){time++;}
   if(time == 60 * spawnTime  || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime ){ //spawnTime is the interval at which a new vent spawns
