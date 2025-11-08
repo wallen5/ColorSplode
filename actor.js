@@ -129,14 +129,28 @@ class Actor {
   }
 
   paintTrail(){
+    // paintLayer stores a lower-resolution representation of the game layer.
+    // Convert the actor's game coordinates into paintLayer coordinates before drawing.
+    if (typeof paintLayer === 'undefined' || typeof gameLayer === 'undefined') return;
     let remaining = max(this.timer - this.timeAlive, 0);
-    if(this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2))
-    {
-      let scaleFactor = paintLayer.width / width;
-      let px = (this.x + this.size / 2) * scaleFactor;
-      let py = (this.y + this.size / 2) * scaleFactor;
-      let pPrevX = (this.prevX + this.size / 2) * scaleFactor;
-      let pPrevY = (this.prevY + this.size / 2) * scaleFactor;
+    if (this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2)) {
+      // scale from gameLayer -> paintLayer
+      let scaleFactor = paintLayer.width / gameLayer.width;
+
+      // Actor.x and prevX include the game offset (constructed as x + gameX). Convert
+      // back to game-local coordinates by subtracting gameX/gameY, then scale into paintLayer.
+      const gx = (typeof gameX !== 'undefined') ? gameX : 0;
+      const gy = (typeof gameY !== 'undefined') ? gameY : 0;
+
+      let localX = (this.x - gx);
+      let localY = (this.y - gy);
+      let localPrevX = (this.prevX - gx);
+      let localPrevY = (this.prevY - gy);
+
+      let px = (localX + this.size / 2) * scaleFactor;
+      let py = (localY + this.size / 2) * scaleFactor;
+      let pPrevX = (localPrevX + this.size / 2) * scaleFactor;
+      let pPrevY = (localPrevY + this.size / 2) * scaleFactor;
 
       // Growth curve for stroke weight
       let lifeProgress = constrain(this.timeAlive / this.timer, 0, 1);
@@ -248,7 +262,6 @@ class Actor {
       if(randIndex == 1) randColor = color(0, 0, 255)
       if(randIndex == 2) randColor = color(128, 0, 128)
       if(randIndex == 3) randColor = color(0, 255, 0);    
-
       // Chooses and pushes a random bucket to be spawned
       randColor = lerpColor(randColor, color(255,255,255), 0.75);
       ourCharacters.push(new Actor(newX, newY, chrSprite[randIndex], randColor));
@@ -260,7 +273,7 @@ class Actor {
 
   
   function spawnRate(){
-                    //needs to be whole number
+    //needs to be whole number
     let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   
     if(spawnLogic.timer == Math.round(rate)){

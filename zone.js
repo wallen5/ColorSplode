@@ -106,13 +106,17 @@ let spawnLogic = new Vent;
 let vents = [];
 const wall = ["left","right","top","bottom"];
 
+
+
 // For now coords are set, could randomize later
 function makeVents(){
+
+
   vents = [
-    new Vent((-50 * gs) + gameX, (350 * gs) + gameY, 100 * gs, 75 * gs, "left", false, ventLeft),
-    new Vent((350 * gs) + gameX, (650 * gs) + gameY, 75 * gs, 100 * gs, "bottom", false, ventBottom),
-    new Vent(gameLayer.width - (150 * gs) + gameX, (350 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight),
-    new Vent((350 * gs) + gameX, (-50 * gs) + gameY, 75 * gs, 100 * gs, "top", false, ventTop)
+    new Vent((-50 * gs), (350 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
+    new Vent((350 * gs), (650 * gs), 75 * gs, 100 * gs, "bottom", false, ventBottom),
+    new Vent(gameLayer.width - (150 * gs), (350 * gs), 100 * gs, 75 * gs, "right", false, ventRight),
+    new Vent((350 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop)
   ];
 }
 
@@ -125,7 +129,9 @@ function drawVents() {
     else if (vent.wall === "top") spriteToDraw = vent.sprite;
     else if (vent.wall === "bottom") spriteToDraw = vent.sprite;
     if (vent.active == true){
-      image(vent.sprite, vent.x + vent.w/2, vent.y + vent.h/2, vent.w, vent.h);
+      let drawX = vent.x + vent.w/2 + (typeof gameX !== 'undefined' ? gameX : 0);
+      let drawY = vent.y + vent.h/2 + (typeof gameY !== 'undefined' ? gameY : 0);
+      image(vent.sprite, drawX, drawY, vent.w, vent.h);
     }
   }
 }

@@ -161,7 +161,7 @@ function setup() {
   baseScore = 1;
   comboMultiplier = 1;
   createCanvas(windowWidth, windowHeight);
-  paintLayer = createGraphics(200, 200);
+  paintLayer = createGraphics(BASE_GAME_WIDTH/4, BASE_GAME_HEIGHT/4);
   paintLayer.background(255);
   paintLayer.noSmooth();
 
@@ -278,7 +278,6 @@ function startMenu(){
   text("ColorSplode", 250 * gs + gameX, 350 * gs + gameY);
 
   currentMode = null;
-
 
   //button colors
   mouseOverButton(startButton1, "green", "lightgreen");
