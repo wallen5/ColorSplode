@@ -173,6 +173,8 @@ function preload(){
   catSprite = loadImage("images/catimage.gif");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
+  levelBackground = loadImage("images/levelBackground.png");
+  
 }
 
 function setup() {
@@ -182,7 +184,7 @@ function setup() {
   comboMultiplier = 1;
   createCanvas(windowWidth, windowHeight);
   paintLayer = createGraphics(200, 200);
-  paintLayer.background(255);
+  //paintLayer.background(255);
   paintLayer.noSmooth();
 
   currentColor = color(0)
@@ -209,7 +211,7 @@ function setup() {
   startButton2.height = 50 * gs;
   startButton2.color = "red";
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
-  gameLayer.background(220);
+  //gameLayer.background(220);
   
   compressor = new p5.Compressor();
   for (let s of pickupSounds) {
@@ -244,7 +246,7 @@ function setup() {
   zoneHeight = 150;
 
   setBoss();
-  makeColorZones();
+  makeColorZones(); //classic mode only
   makeVents();
   //randomizeZonePlacements();
 
@@ -341,7 +343,7 @@ function gameMenu1(){
   drawBorder();
   baseScore = 1;
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
-  gameLayer.background(220);
+  gameLayer.background(levelBackground);
   image(paintLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   drawColorZones();
   drawVents();
@@ -379,7 +381,7 @@ function gameMenu2(){ //game menu for roguelike mode
   clear();
   drawBorder();
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
-  gameLayer.background(220);
+  gameLayer.background(levelBackground);
   image(paintLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   drawColorZones();
   drawVents();
@@ -626,7 +628,7 @@ function restart(){
   baseScore = 1;
   comboMultiplier = 1;
 
-  paintLayer.background(255);
+  //paintLayer.background(255);
 
   makeItems();
   if (currentMode === "roguelike") {
@@ -647,7 +649,7 @@ function retry(){
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
-  paintLayer.background(255);
+  //paintLayer.background(255);
   
   
 
@@ -687,7 +689,7 @@ function retry(){
   //return to game screen
   if (currentMode == "classic") state = 1;
   if (currentMode == "roguelike") state = 2;
-  paintLayer.background(255);
+  //paintLayer.background(255);
 
   makeItems();
   if (currentMode === "roguelike") {
