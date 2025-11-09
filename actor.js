@@ -836,8 +836,21 @@ function grabbedMovement(actor) {
         bucket.state = "FREE";
         bucket.timeAlive = 0;
         if (bucket.originalSprite) bucket.sprite = bucket.originalSprite;
-        bucket.x += random(-10, 10);
-        bucket.y += random(-10, 10);
+
+        //freed buckets move towards the center of the canvas
+        const canvasCenterX = gameLayer.width / 2;
+        const canvasCenterY = gameLayer.height / 2;
+        const dirX = canvasCenterX - (bucket.x + bucket.size / 2);
+        const dirY = canvasCenterY - (bucket.y + bucket.size / 2);
+        const dist = Math.max(1, Math.sqrt(dirX * dirX + dirY * dirY));
+
+        //keep from getting stuck
+        const pushStrength = 5 * gs;
+        bucket.x += (dirX / dist) * pushStrength + random(-5, 5);
+        bucket.y += (dirY / dist) * pushStrength + random(-5, 5);
+
+        bucket.xspeed = (dirX / dist) * 2 * gs + random(-1, 1);
+        bucket.yspeed = (dirY / dist) * 2 * gs + random(-1, 1);
       }
 
       this.currentBuckets.shift(); //remove and return bucket
