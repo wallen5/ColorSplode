@@ -117,28 +117,28 @@ function makeVents(){
   if (zoneMap === 0){ //corner zones
     console.log("map = corners");
     vents = [
-        new Vent((-50 * gs) + gameX, (350 * gs) + gameY, 100 * gs, 75 * gs, "left", false, ventLeft),
-        new Vent((350 * gs) + gameX, (650 * gs) + gameY, 75 * gs, 100 * gs, "bottom", false, ventBottom),
-        new Vent(gameLayer.width - (150 * gs) + gameX, (350 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight),
-        new Vent((350 * gs) + gameX, (-50 * gs) + gameY, 75 * gs, 100 * gs, "top", false, ventTop)
+        new Vent((-50 * gs), (350 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
+        new Vent((350 * gs), (650 * gs), 75 * gs, 100 * gs, "bottom", false, ventBottom),
+        new Vent(gameLayer.width - (150 * gs), (350 * gs), 100 * gs, 75 * gs, "right", false, ventRight),
+        new Vent((350 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop)
       ];
   } else if (zoneMap === 1){ // middle ends
     //console.log("map = middle");
     vents = [
-      new Vent((-50 * gs) + gameX, (150 * gs) + gameY, 100 * gs, 75 * gs, "left", false, ventLeft),
-      new Vent((-50 * gs) + gameX, (600 * gs) + gameY, 100 * gs, 75 * gs, "left", false, ventLeft),
-      new Vent((300 * gs) + gameX, (-50 * gs) + gameY, 75 * gs, 100 * gs, "top", false, ventTop),
-      new Vent((350 * gs) + gameX, (650 * gs) + gameY, 75 * gs, 100 * gs, "bottom", false, ventBottom),
-      new Vent(gameLayer.width - (150 * gs) + gameX, (150 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight),
-      new Vent(gameLayer.width - (150 * gs) + gameX, (600 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight)
+      new Vent((-50 * gs), (150 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
+      new Vent((-50 * gs), (600 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
+      new Vent((300 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop),
+      new Vent((350 * gs), (650 * gs), 75 * gs, 100 * gs, "bottom", false, ventBottom),
+      new Vent(gameLayer.width - (150 * gs), (150 * gs), 100 * gs, 75 * gs, "right", false, ventRight),
+      new Vent(gameLayer.width - (150 * gs), (600 * gs), 100 * gs, 75 * gs, "right", false, ventRight)
     ];
   } else if (zoneMap === 2){ //bottom
     //console.log("map = bottom");
     vents = [
-      new Vent((-50 * gs) + gameX, (150 * gs) + gameY, 100 * gs, 75 * gs, "left", false, ventLeft),
-      new Vent(gameLayer.width - (150 * gs) + gameX, (150 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight),
-      new Vent((275 * gs) + gameX, (-50 * gs) + gameY, 75 * gs, 100 * gs, "top", false, ventTop), 
-      new Vent((375 * gs) + gameX, (-50 * gs) + gameY, 75 * gs, 100 * gs, "top", false, ventTop)
+      new Vent((-50 * gs), (150 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
+      new Vent(gameLayer.width - (150 * gs), (150 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight),
+      new Vent((275 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop), 
+      new Vent((375 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop)
     ];
   }
 }
