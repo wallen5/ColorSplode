@@ -33,6 +33,10 @@ let rougeBucketSprite;
 let cat = null;
 let catSprite;
 
+let graffitiActors = [];
+let graffiti; // Graffiti Sprite
+let graffitiTime = 1000;
+ 
 // The mouse's 'grabbed' character
 let grabbedCharacter; 
 let backgroundImage;
@@ -173,6 +177,7 @@ function preload(){
   catSprite = loadImage("images/catimage.gif");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
+  graffiti = loadImage("images/Graffiti.png");
   levelBackground = loadImage("images/levelBackground.png");
   
 }
@@ -183,7 +188,7 @@ function setup() {
   baseScore = 1;
   comboMultiplier = 1;
   createCanvas(windowWidth, windowHeight);
-  paintLayer = createGraphics(200, 200);
+  paintLayer = createGraphics(BASE_GAME_WIDTH/4, BASE_GAME_HEIGHT/4);
   //paintLayer.background(255);
   paintLayer.noSmooth();
 
@@ -252,7 +257,6 @@ function setup() {
 
   makeItems();
   player = new Player();
-
 }
 
 let timer = 0;
@@ -282,6 +286,7 @@ function draw() {
   } else if(state == 4){
       levelTransition();
   }
+
 }
 
 
@@ -302,7 +307,6 @@ function startMenu(){
   text("ColorSplode", 250 * gs + gameX, 350 * gs + gameY);
 
   currentMode = null;
-
 
   //button colors
   mouseOverButton(startButton1, "green", "lightgreen");
@@ -370,6 +374,7 @@ function gameMenu1(){
   if (gamePaused) {
     drawPauseMenu();
   }
+  console.log(player.isInvFrames());
 
   if(!gamePaused){time++;}
   if(time == 60 * spawnTime  || time == 60 * spawnTime * 2 || time == 60 * 3 * spawnTime ){ //spawnTime is the interval at which a new vent spawns
@@ -420,6 +425,20 @@ function gameMenu2(){ //game menu for roguelike mode
   
   actor.draw();
   pop();
+  }
+
+  // if graffiti
+  if (levelSet[currentLevel].obstacleTypes.includes("graffiti")) {
+  if ((random() < 0.8) && (time % graffitiTime == 0)) { // chance to spawn a graffiti
+        console.log("Time to do some graffiti!");
+        let burstAmt = levelSet[currentLevel].graffitiBurst;
+        spawnGraffitiActor(burstAmt);
+    }
+   for (let grafActor of graffitiActors) {
+      grafActor.update();
+      grafActor.draw();
+      
+    }
   }
 
   // only run these if rougeCharacter exists
@@ -1289,7 +1308,7 @@ function generateRandomSplat(amt){
   let splatImages = [splat1, splat2, splat3, splat4, splat5, splat6, splatD];
   let randSplat = random(splatImages);
   let randColor = int(random(0, 4));
-  let randRot = random(-180,180);
+  //let randRot = random(-180,180);
 
   switch(randColor){
         case 0: // red
@@ -1317,8 +1336,10 @@ function generateRandomSplat(amt){
   let h = randSplat.height * sizeMult;
   imageMode(CENTER);
   //rotate(randRot); //Makes the splatters go offscreen sometimes? Weird. Fix l8r
+  console.log("Splat sprite:", randSplat);
   image(randSplat, x, y, w, h);
   noTint();
-  imageMode(CORNER);
   smooth();
+  imageMode(CORNER);
 }
+

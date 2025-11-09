@@ -13,8 +13,19 @@ class Player {
         this.inventory = [];
         this.health = 3;
         this.startHealth = 3;
+        this.invFrames = 2000;
+        this.invStartTime = null;
     }
 
+  startInvFrames() {
+    this.invStartTime = millis();
+  }
+
+  isInvFrames() {
+    
+    if (this.invStartTime === null) return false;
+    return (this.invStartTime !== null && (millis() - this.invStartTime) < this.invFrames);
+  }
 
   addItem(item) {
     this.inventory.push(item);
@@ -79,6 +90,126 @@ class Player {
     pop();
   }
 }
+
+//
+// The graffiti can moves over buckets (doesnt collide), then sprays an AOE
+// and changes the color of the bucket
+class Graffiti{
+  constructor(x,y) {
+    this.spawnX = x;
+    this.spawnY = y;
+    this.x = x;
+    this.y = y;
+    this.sprite = graffiti;
+    this.size = 50;
+
+    this.destX = 0;
+    this.destY = 0;
+
+    this.speed = 6.0; // Pixels per frame
+    this.progress = 0.0; 
+    this.active = true;
+
+    this.target = random(ourCharacters);
+    if (this.target) {
+      this.destX = this.target.x + this.target.size / 2;
+      this.destY = this.target.y + this.target.size / 2;
+    } else {
+      this.active = false;
+    }
+
+    this.sprayRadius = 150; // how far graffiti affects
+    this.sprayed = false;   // ensure AOE happens once
+  }
+
+
+  update() {
+    if (!this.active || !this.target || gamePaused) return;
+
+    // Move toward destination
+    let dx = this.destX - this.x;
+    let dy = this.destY - this.y;
+    let distToTarget = sqrt(dx * dx + dy * dy);
+
+    if (distToTarget > this.speed) {
+      this.x += (dx / distToTarget) * this.speed;
+      this.y += (dy / distToTarget) * this.speed;
+    } else if (!this.sprayed) {
+      // reached the target
+      this.spray();
+      this.sprayed = true;
+      // dissappear 
+      setTimeout(() => {
+      
+        this.active = false;
+        let index = graffitiActors.indexOf(this);
+        if (index !== -1) {
+        graffitiActors.splice(index, 1);
+        }
+      
+      }, 2000);
+    }
+  }
+
+spray() {
+  for( let actor of ourCharacters) {
+    let distToActor = dist(actor.x,actor.y, this.x,this.y);
+    if (distToActor < this.sprayRadius) {
+      actor.newRandomColor();
+      actor.splode();   
+    }
+  }
+
+  setTimeout(() => {
+    let tempX = this.destX;
+    let tempY = this.destY;
+
+    this.destX = this.spawnX;
+    this.destY = this.spawnY;
+
+    this.x = tempX;
+    this.y = tempY;
+    }, 1000);
+
+}
+
+draw() {
+  push();
+  translate(this.x + this.size / 2, this.y + this.size / 2);
+  imageMode(CENTER);
+  //console.log("Graffiti sprite:", this.sprite);
+  image(this.sprite, 0, 0, this.size, this.size);
+  pop();
+  }
+
+  
+}
+
+function spawnGraffitiActor(amtSpawn) {
+
+  if (gamePaused) {
+    // Try again after 500ms
+    setTimeout(() => spawnGraffitiActor(amtSpawn), 500);
+    return;
+  }
+
+  let spawnFlip = random([ -1, 1 ]);
+
+  let spawnX = width * 1.2 * spawnFlip;
+  spawnFlip = random([-1, 1]);
+  let spawnY = height * 1.2 * spawnFlip;
+  let g = new Graffiti(spawnX, spawnY);
+  graffitiActors.push(g);
+  console.log("TRYING TO MAKE GRAFFITI");
+  setTimeout(() => {
+    if ((amtSpawn > 0) && (state === 2)) {
+      spawnGraffitiActor(amtSpawn-1);
+    }
+    }, 1000);
+
+}
+
+
 
 function makeItems(){
   allItems = [
@@ -158,3 +289,4 @@ function drawExplosion(){
         ++timer;
       }
 }
+

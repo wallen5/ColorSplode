@@ -42,6 +42,31 @@ class Actor {
     this.state = newState;
   }
 
+  newRandomColor() {
+
+    let newColors = [color(255,0,0), color(0,0,255), color(128,0,128), color(0,255,0)];
+  
+    let randIndex = int(random(0, newColors.length));
+    let randColor = newColors[randIndex];
+    randColor = lerpColor(randColor, color(255,255,255), 0.75);
+    // Avoid choosing the same color
+    // Im like 80% sure this doesnt work as intended but im too sick of messing with it for now - FIX
+    if (chrSprite[randIndex] === this.sprite) {
+      this.newRandomColor();
+      console.log("COLOR CHANGED!");
+    }
+    console.log("OUR NEW COLOR: " + randColor);
+    console.log("OUR OLD COLOR: " + this.color);
+
+    this.sprite = chrSprite[randIndex];
+    this.color = randColor;
+    if (this.state === "SNAPPED") { 
+      this.state = "FREE";
+      this.timeAlive = 0.0;
+      this.angle = 0.0;
+    }
+  }
+
   // Update the position of the character
   update() {
     if(!gamePaused && !levelUpActive){ // If the game ISN'T Paused then we update their movement
@@ -104,14 +129,28 @@ class Actor {
   }
 
   paintTrail(){
+    // paintLayer stores a lower-resolution representation of the game layer.
+    // gotta convert the actor's game coordinates into paintLayer coordinates before drawing.
+    if (typeof paintLayer === 'undefined' || typeof gameLayer === 'undefined') return;
     let remaining = max(this.timer - this.timeAlive, 0);
-    if(this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2))
-    {
+    if (this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2)) {
+      // scale from gameLayer -> paintLayer
       let scaleFactor = paintLayer.width / gameLayer.width;
-      let px = (this.x + this.size / 2 - gameX) * scaleFactor;
-      let py = (this.y + this.size / 2 - gameY) * scaleFactor;
-      let pPrevX = (this.prevX + this.size / 2 - gameX) * scaleFactor;
-      let pPrevY = (this.prevY + this.size / 2 - gameY) * scaleFactor;
+
+      // Actor.x and prevX include the game offset (constructed as x + gameX). Convert
+      // back to game-local coordinates by subtracting gameX/gameY, then scale into paintLayer.
+      const gx = (typeof gameX !== 'undefined') ? gameX : 0;
+      const gy = (typeof gameY !== 'undefined') ? gameY : 0;
+
+      let localX = (this.x - gx);
+      let localY = (this.y - gy);
+      let localPrevX = (this.prevX - gx);
+      let localPrevY = (this.prevY - gy);
+
+      let px = (localX + this.size / 2) * scaleFactor;
+      let py = (localY + this.size / 2) * scaleFactor;
+      let pPrevX = (localPrevX + this.size / 2) * scaleFactor;
+      let pPrevY = (localPrevY + this.size / 2) * scaleFactor;
 
       // Growth curve for stroke weight
       let lifeProgress = constrain(this.timeAlive / this.timer, 0, 1);
@@ -219,24 +258,22 @@ class Actor {
       }
   
       let randIndex = int(random(0, chrSprite.length));
-      let randColor;
       if(randIndex == 0) randColor = color(255, 0, 0)
       if(randIndex == 1) randColor = color(0, 0, 255)
       if(randIndex == 2) randColor = color(128, 0, 128)
-      if(randIndex == 3) randColor = color(0, 255, 0);
-  
-      randColor = lerpColor(randColor, color(255,255,255), 0.7); // Gives the colors a pastel look
-  
+      if(randIndex == 3) randColor = color(0, 255, 0);    
       // Chooses and pushes a random bucket to be spawned
-      ourCharacters.push(new Actor(newX - gameX, newY - gameY, chrSprite[randIndex], randColor));
+      randColor = lerpColor(randColor, color(255,255,255), 0.75);
+      ourCharacters.push(new Actor(newX, newY, chrSprite[randIndex], randColor));
       ++spawnLogic.activeActors;
     }
-
-    
   }
+
+
+
   
   function spawnRate(){
-                    //needs to be whole number
+    //needs to be whole number
     let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
   
     if(spawnLogic.timer == Math.round(rate)){
@@ -486,9 +523,11 @@ function grabbedMovement(actor) {
   
   
       } else {
+        if (!player.isInvFrames()) {
         player.health--;
         onTimerFinished(actor);
         return;
+        }
       }
     }
     
@@ -510,6 +549,7 @@ function grabbedMovement(actor) {
     console.log("Timer finished for actor!");
   
     mouseReleased();
+    player.startInvFrames();
   
     if (actor.state === "SNAPPED" || actor.state === "EXPLODED") return;
   
@@ -875,6 +915,8 @@ function grabbedMovement(actor) {
     }
   
     draw() {
+      if (!this.sprite) return; // prevents crash
+      
       push();
       translate(this.x + this.size / 2, this.y + this.size / 2);
       imageMode(CENTER);
@@ -882,6 +924,7 @@ function grabbedMovement(actor) {
       pop();
     }
   }
+
 
    function spawnCat(speed, swipeStrength) {
   
