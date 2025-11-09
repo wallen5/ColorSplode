@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HOST: cassini.cs.kent.edu
-      USER: colorsplode   # change if your login user is different
+      USER: colorsplode            # change if needed
       REMOTE_DIR: ~/ColorSplode
     steps:
       - name: Install SSH client
@@ -18,15 +18,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y openssh-client
 
-      - name: Set up SSH
+      - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           printf "%s" "${{ secrets.CASSINI_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          printf "%s" "${{ secrets.KNOW_HOSTS }}" > ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+
+      - name: Trust server host key
+        run: |
+          # If your server only exposes ed25519, limit to -t ed25519
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
       - name: Pull latest on Cassini
         run: |
-          ssh colorsplode@cassini.cs.kent.edu
-          cd ColorSplode && git pull
+          ssh -o BatchMode=yes "$USER@$HOST" 'cd "$REMOTE_DIR" && git pull --ff-only'
