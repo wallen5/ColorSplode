@@ -2,7 +2,7 @@
 let fade = 0;
 let fadeSpeed = 5;
 let slide = 0;
-let slideSpeed = 5;
+let slideSpeed = 15.0;
 
 class Level{
     constructor(levelBoss, difficulty, obstacles, colorZones, loaded = false){
@@ -62,7 +62,7 @@ class Level{
                 case 1: speed = 1; unsnapInterval = 25; break;
                 case 2: speed = 1.7; unsnapInterval = 50; break;
                 case 3: speed = 2.2; unsnapInterval = 75; break;
-                default: speed = 2; unsnapInterval = 50;
+                default: speed = 1.7; unsnapInterval = 50;
               }
               setTimeout(() => {
                 spawnRougeActor(speed, unsnapInterval);
@@ -173,7 +173,6 @@ function setBoss(){
         break;
     case 1:
         levelSet = [
-        //change rougeBucket(s) to different obstacle
         new Level(0, 1, ["Cat"], []), 
         new Level(0, 2, ["Cat"], []),
         new Level(1, 3, ["Cat"], [])
@@ -181,18 +180,9 @@ function setBoss(){
         break;
     case 2:
         levelSet = [
-        //change rougeBucket(s) to different obstacle
         new Level(0, 1, ["graffiti"], []), 
         new Level(0, 2, ["graffiti"], []),
         new Level(1, 3, ["graffiti"], [])
-        ];
-        break;
-    case 3:
-        levelSet = [
-        //change rougeBucket(s) to different obstacle
-        new Level(0, 1, ["Cat"], []),
-        new Level(0, 2, ["Cat"], []),
-        new Level(1, 3, ["Cat"], [])
         ];
         break;
     }
