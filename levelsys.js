@@ -300,6 +300,7 @@ function levelTransition(){
     slide = 0;
     time = 0;
     score = 0;
+    makeVents();
     levelSet[currentLevel].setup();
     gameLayer.image(levelBackground, 0, 0, gameLayer.width, gameLayer.height);
     player.health = player.startHealth;
