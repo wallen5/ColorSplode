@@ -120,6 +120,8 @@ function clearObstacles() {
 }
 
 function randomColorZone(level) {
+    if (!level) return;
+    
     let zoneMap = level.zoneMap;
     //console.log("level: " + level.zoneMap);
     let colors = ["red", "purple", "blue", "green"];
