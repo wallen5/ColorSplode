@@ -105,31 +105,35 @@ function clearObstacles() {
 }
 
 function randomColorZone(level) {
-    let randPreset = floor(random(0,3));
+    let zoneMap = level.zoneMap;
+    //console.log("level: " + level.zoneMap);
+    let colors = ["red", "purple", "blue", "green"];
+    let colorSet = shuffle(colors);
+    //console.log(colorSet);
 
-    switch (randPreset) {
+    switch (zoneMap) {
     case 0: // Corners
         level.colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "red"),
-        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "blue"),
-        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "purple"),
-        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "green")
+        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, colorSet[0]),
+        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, colorSet[1]),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, colorSet[2]),
+        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, colorSet[3])
         ];
         break;
-    case 1:
+    case 1: // sidelines
         level.colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue"),
-        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
-        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
-        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple")
+        new Zone((645 * gs) + gameX, gameLayer.height - (485 * gs) + gameY, 125 * gs, 125 * gs, colorSet[0]), //top
+        new Zone((645 * gs) + gameX, gameLayer.height - (350 * gs) + gameY, 125 * gs, 125 * gs, colorSet[1]), //second
+        new Zone((30 * gs) + gameX, gameLayer.height - (485 * gs) + gameY, 125 * gs, 125 * gs, colorSet[2]), //third
+        new Zone((30 * gs) + gameX, gameLayer.height - (350 * gs) + gameY, 125 * gs, 125 * gs, colorSet[3]) //bottom
         ];
         break;
-    case 2:
+    case 2: // bottom alignment
         level.colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple"),
-        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
-        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
-        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue")
+        new Zone((50 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, colorSet[0]),
+        new Zone((235 * gs) + gameX, gameLayer.height - (250 * gs) + gameY, 150 * gs, 150 * gs, colorSet[1]),
+        new Zone((415 * gs) + gameX, gameLayer.height - (250 * gs) + gameY, 150 * gs, 150 * gs, colorSet[2]),
+        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, colorSet[3])
         ];
         break;
         
@@ -189,7 +193,7 @@ function levelTransition(){
   if (fade < 255){fade += fadeSpeed;}
   if (slide < width / 2){slide += slideSpeed}
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
-  gameLayer.background(117, 2, 0);
+  gameLayer.background(0, 0, 0);
 
   if (levelSet[currentLevel].difficulty != 3){
     push();
@@ -296,7 +300,9 @@ function levelTransition(){
     slide = 0;
     time = 0;
     score = 0;
+    makeVents();
     levelSet[currentLevel].setup();
+    gameLayer.image(levelBackground, 0, 0, gameLayer.width, gameLayer.height);
     player.health = player.startHealth;
     ourCharacters = [];
     closeAllVents();
@@ -305,7 +311,7 @@ function levelTransition(){
     spawnLogic.timeToSpawn =  100;
     spawnLogic.rate = 1;
     spawnLogic.activeActors = 0;
-    paintLayer.background(255);
+    paintLayer.background(levelBackground);
     pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
     pauseButton.width = 70 * gs;
