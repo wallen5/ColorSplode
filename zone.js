@@ -108,7 +108,7 @@ const wall = ["left","right","top","bottom"];
 
 // For now coords are set, could randomize later
 function makeVents(){
-  let zoneMap = floor(random(0, 4));
+  let zoneMap = floor(random(0, 3));
   levelSet[currentLevel].zoneMap = zoneMap;
 
   //console.log("makeVents: " + zoneMap);
