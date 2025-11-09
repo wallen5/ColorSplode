@@ -217,8 +217,8 @@ function makeItems(){
     new Item("Freeze", freeze, "Hovering over a bucket freezes it for a short time"),
     //new Item("Yarn Ball", placeholder, "Unfinished: Control the meow thing"),
     //new Item("Mixer", placeholder, "Unfinished: Combine two colors"),
+    new Item("Bomb", bomb, "Destroy all the paint buckets. Press 'b' to use." ),
     new Item("Totem of Varnish", totem, "Revive...like in Minecraft"),
-    new Item("Bomb", bomb, "Destroy all the paint buckets in the click of a button. Press 'b' to use." ),
     new Item("Paint Scraper", scraper, "Heal after a combo of 5+"),
     //new Item("Lock", placeholder, "Unfinished: Lock a zone to prevent movement"),
     //new Item("Sponge", placeholder, "Unfinished: Will soak up paint")
@@ -233,16 +233,21 @@ let bombisReady = false;
 //let explosion;
 
 function dropBomb(){
-  if (key.toLowerCase() === 'b' && bombisReady){
+  if (bPressed && bombisReady){
+    //reset animation timer: used in drawExplosion()
+    timer = 0;
+
+    //reset animation
+    explodeGif.reset();
+
     //play sound effect
     bombSound.play();
-    explodeGif.play();
     
     //Remove bomb fron inventory
     bombisReady = false;
     player.removeItem("Bomb");
 
-    // Start explosion animation
+    // activates explosion animation, in drawExplosion()
     explosionActive = true;
 
     //remove paint buckets
@@ -250,7 +255,7 @@ function dropBomb(){
     ourCharacters = [];
     time = 0;
     
-    // Store original
+    // Store original spawn logic
     const originalTimer = spawnLogic.timer;
     const originalTimeToSpawn = spawnLogic.timeToSpawn;
     
@@ -259,14 +264,14 @@ function dropBomb(){
     let actorsDestroyed = spawnLogic.activeActors; 
     score += actorsDestroyed;  // Add score based on number of actors destroyed
 
-    // Resume spawning after 5 seconds
+    bPressed = false;
+
+    // Resume spawning after 3 seconds
     setTimeout(() => {
       spawnLogic.rate = 1;
       spawnLogic.timer = originalTimer;
       spawnLogic.timeToSpawn = originalTimeToSpawn;
-    }, 5000);
-
-    //explodeGif.position(50,350);
+    }, 3000);
   }
 }
 

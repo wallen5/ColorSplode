@@ -1,0 +1,35 @@
+name: Pull on Cassini
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  pull-remote:
+    runs-on: ubuntu-latest
+    env:
+      HOST: cassini.cs.kent.edu
+      USER: colorsplode            # change if needed
+      REMOTE_DIR: ~/ColorSplode
+    steps:
+      - name: Install SSH client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-client
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s" "${{ secrets.CASSINI_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Trust server host key
+        run: |
+          # If your server only exposes ed25519, limit to -t ed25519
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Pull latest on Cassini
+        run: |
+          echo "${{ secrets.CASSINI_KEY }}"
+          ssh -o BatchMode=yes "$USER@$HOST" 'cd "$REMOTE_DIR" && git pull --ff-only'
