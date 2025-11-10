@@ -1,0 +1,24 @@
+name: Run Jest Tests
+
+on:
+  push:        # runs on every push
+  pull_request: # runs on PRs too
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version:
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
