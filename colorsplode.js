@@ -26,6 +26,7 @@ let chrSprite =[]; //array of character sprits
 let grabSprite =[]; //array of grab animations
 let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
+let icons = [];
 
 //obstacles
 let rougeCharacter = null;
@@ -783,7 +784,7 @@ function pauseGame(){
     
     pauseSound.play();
     levelMusic.rate(0.8, 0.3); // slower
-    smoothCompressorChange(-50, 10, 0.4);
+    //smoothCompressorChange(-50, 10, 0.4);
 
   }
   else{ // Remove the resume button
@@ -796,7 +797,7 @@ function pauseGame(){
 
     pauseSound.play();
     levelMusic.rate(1.0, 0.3); // restore speed
-    smoothCompressorChange(-24, 4, 0.4);
+    //smoothCompressorChange(-24, 4, 0.4);
   }
 }
 
@@ -841,11 +842,11 @@ function drawPauseMenu(){
 }
 
   pop(); // restore settings
-  if(quitButton.mouse.pressed()){
+  if(quitButton && quitButton.mouse.pressed()){
     state = 0;
     quitGame();
   }
-  if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
+  else if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
     gamePaused = false; 
 
     if (resumeButton) { resumeButton.remove(); resumeButton = null; }
@@ -855,7 +856,7 @@ function drawPauseMenu(){
     if (volumeLabel) { volumeLabel.remove(); volumeLabel = null; }
     if (colorBlindCheckbox) { colorBlindCheckbox.remove(); colorBlindCheckbox = null; }
   }
-  if(restartButton && restartButton.mouse.pressed())
+  else if(restartButton && restartButton.mouse.pressed())
   {
     restart();
   }
@@ -1167,6 +1168,19 @@ function mousePressed() {
     console.log("rougeBucket picked up")
     console.log("pickup state = " + grabbedCharacter.state);
     return;
+  }
+
+  // Press bomb icon
+  // We can copy syntax like this if we want to try having more items that activate upon being clicked
+  if(player.hasItem("Bomb"))
+  {
+    for(let i of icons)
+    {
+      if((mouseX > i.x && mouseX < i.x + i.size) && (mouseY > i.y && mouseY < i.y + i.size) && i.item.name == "Bomb")
+      {
+        bPressed = true;
+      }
+    }
   }
 }
 
