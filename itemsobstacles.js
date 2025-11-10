@@ -6,7 +6,9 @@ class Item {
     }
 }
 
-  // Item Logic
+module.exports = Item;
+
+// Item Logic
 class Player {
 
     constructor() {

@@ -1,0 +1,13 @@
+{
+  "name": "colorsplode",
+  "version": "1.0.0",
+  "description": "A p5js sorting game.\r Goal:\r Drag the paint buckets into their corresponding zones before they spill over!",
+  "main": "actor.js",
+  "scripts": {
+  "test": "jest"
+  },
+
+ "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}
