@@ -784,7 +784,7 @@ function pauseGame(){
     
     pauseSound.play();
     levelMusic.rate(0.8, 0.3); // slower
-    //smoothCompressorChange(-50, 10, 0.4);
+    smoothCompressorChange(-50, 10, 0.4);
 
   }
   else{ // Remove the resume button
@@ -847,7 +847,7 @@ function drawPauseMenu(){
     quitGame();
   }
   else if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
-    gamePaused = false; 
+    pauseGame();
 
     if (resumeButton) { resumeButton.remove(); resumeButton = null; }
     if (restartButton) { restartButton.remove(); restartButton = null; }
