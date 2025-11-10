@@ -1,6 +1,6 @@
 const Item = require('./itemsobstacles');
 
-describe('Item Class', () => {
+describe('Item Class', () => { 
     test('testing constructor', () => {
         const name = "Health";
         const sprite = "heart.png";
