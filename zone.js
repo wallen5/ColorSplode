@@ -104,6 +104,7 @@ function randomizeZonePlacements()
 
 let spawnLogic = new Vent;
 let vents = [];
+let classicVents = [];
 const wall = ["left","right","top","bottom"];
 
 
@@ -112,6 +113,13 @@ const wall = ["left","right","top","bottom"];
 function makeVents(){
   let zoneMap = floor(random(0, 3));
   levelSet[currentLevel].zoneMap = zoneMap;
+
+  classicVents = [
+    new Vent((-50 * gs), (350 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
+    new Vent((350 * gs), (650 * gs), 75 * gs, 100 * gs, "bottom", false, ventBottom),
+    new Vent(gameLayer.width - (150 * gs), (350 * gs), 100 * gs, 75 * gs, "right", false, ventRight),
+    new Vent((350 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop)
+  ];
 
   //console.log("makeVents: " + zoneMap);
   if (zoneMap === 0){ //corner zones
@@ -123,7 +131,7 @@ function makeVents(){
         new Vent((350 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop)
       ];
   } else if (zoneMap === 1){ // middle ends
-    //console.log("map = middle");
+    console.log("map = middle");
     vents = [
       new Vent((-50 * gs), (150 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
       new Vent((-50 * gs), (600 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
@@ -133,7 +141,7 @@ function makeVents(){
       new Vent(gameLayer.width - (150 * gs), (600 * gs), 100 * gs, 75 * gs, "right", false, ventRight)
     ];
   } else if (zoneMap === 2){ //bottom
-    //console.log("map = bottom");
+    console.log("map = bottom");
     vents = [
       new Vent((-50 * gs), (150 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
       new Vent(gameLayer.width - (150 * gs), (150 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight),
@@ -145,17 +153,32 @@ function makeVents(){
 
 // Draw the vents if active with correct sprite
 function drawVents() {
-  for (let vent of vents) {
-    let spriteToDraw;
-    if (vent.wall === "left") spriteToDraw = vent.sprite;
-    else if (vent.wall === "right") spriteToDraw = vent.sprite;
-    else if (vent.wall === "top") spriteToDraw = vent.sprite;
-    else if (vent.wall === "bottom") spriteToDraw = vent.sprite;
-    if (vent.active == true){
-      let drawX = vent.x + vent.w/2 + (typeof gameX !== 'undefined' ? gameX : 0);
-      let drawY = vent.y + vent.h/2 + (typeof gameY !== 'undefined' ? gameY : 0);
-      image(vent.sprite, drawX, drawY, vent.w, vent.h);
+  if (state == 1){
+    for (let vent of classicVents){
+      let spriteToDraw;
+      if (vent.wall === "left") spriteToDraw = vent.sprite;
+      else if (vent.wall === "right") spriteToDraw = vent.sprite;
+      else if (vent.wall === "top") spriteToDraw = vent.sprite;
+      else if (vent.wall === "bottom") spriteToDraw = vent.sprite;
+      if (vent.active == true){
+        let drawX = vent.x + vent.w/2 + (typeof gameX !== 'undefined' ? gameX : 0);
+        let drawY = vent.y + vent.h/2 + (typeof gameY !== 'undefined' ? gameY : 0);
+        image(vent.sprite, drawX, drawY, vent.w, vent.h);
+      }
     }
+  } else if (state == 2){
+    for (let vent of vents) {
+      let spriteToDraw;
+      if (vent.wall === "left") spriteToDraw = vent.sprite;
+      else if (vent.wall === "right") spriteToDraw = vent.sprite;
+      else if (vent.wall === "top") spriteToDraw = vent.sprite;
+      else if (vent.wall === "bottom") spriteToDraw = vent.sprite;
+      if (vent.active == true){
+        let drawX = vent.x + vent.w/2 + (typeof gameX !== 'undefined' ? gameX : 0);
+        let drawY = vent.y + vent.h/2 + (typeof gameY !== 'undefined' ? gameY : 0);
+        image(vent.sprite, drawX, drawY, vent.w, vent.h);
+      }
+    } 
   }
 }
 
@@ -164,8 +187,14 @@ function activateRandomVent(){
   let inactiveVents = vents.filter(vent => !vent.active);
   if (inactiveVents.length === 0) return;
 
+  let inactiveVents2 = classicVents.filter(vent => !vent.active);
+  if (inactiveVents2.length === 0) return;
+
   let randomVent = random(inactiveVents);
   randomVent.active = true;
+
+  let randVent = random(inactiveVents2);
+  randVent.active = true;
 }
 
 function switchVent(vent){
@@ -179,6 +208,11 @@ function switchVent(vent){
 // Closes every vent and resets gif, could change to selected vent later for items
 function closeAllVents(){
   for (let vent of vents) {
+    vent.active = false;
+    vent.sprite.reset();
+  }
+
+  for (let vent of classicVents) {
     vent.active = false;
     vent.sprite.reset();
   }
