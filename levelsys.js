@@ -318,7 +318,7 @@ function levelTransition(){
     spawnLogic.timeToSpawn =  100;
     spawnLogic.rate = 1;
     spawnLogic.activeActors = 0;
-    paintLayer.background(levelBackground);
+    //paintLayer.background(levelBackground); //add back in to remove paint trails after every level
     pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
     pauseButton.width = 70 * gs;
