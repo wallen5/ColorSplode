@@ -239,10 +239,6 @@ function setup() {
   compressor.attack(0.003);
   compressor.release(0.25);
 
-  // Color zone spawn method (comment one in or out as needed)
-  //makeColorZones();
-  //randomizeZonePlacements();
-
   // Define missing zone variables for makeColorZones()
   // Initialize global zone placement variables defined in zone.js (defaults match zone.js)
   zoneX = 50 + gameX;
@@ -252,7 +248,7 @@ function setup() {
   zoneHeight = 150;
 
   setBoss();
-  makeColorZones(); //classic mode only
+  makeColorZones();
   makeVents();
   //randomizeZonePlacements();
 
@@ -648,7 +644,7 @@ function restart(){
   baseScore = 1;
   comboMultiplier = 1;
 
-  //paintLayer.background(255);
+  //paintLayer.background(levelBackground);
 
   makeItems();
   if (currentMode === "roguelike") {
@@ -669,7 +665,7 @@ function retry(){
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
-  //paintLayer.background(255);
+  //paintLayer.background(levelBackground);
   
   
 
