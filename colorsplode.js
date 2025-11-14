@@ -644,7 +644,7 @@ function restart(){
   baseScore = 1;
   comboMultiplier = 1;
 
-  //paintLayer.background(levelBackground);
+  paintLayer.background(levelBackground);
 
   makeItems();
   if (currentMode === "roguelike") {
@@ -665,7 +665,7 @@ function retry(){
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
-  //paintLayer.background(levelBackground);
+  paintLayer.background(levelBackground);
   
   
 
