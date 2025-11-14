@@ -25,6 +25,11 @@ deathSprite =[];
 const canvasWidth = 800;
 const canvasHeight = 800;
 
+let gameOffsetX = 0;
+let gameOffsetY = 0;
+let currentColor = SOFTPALETTE[0]; // used in showMainMenu color cycling
+
+
 const ITEM_SCORE_STEP = 5;       // gain an item every 5 points
 let nextItemScoreThreshold = ITEM_SCORE_STEP;
 let inventory = [];              // all items you’ve picked so far (if you want)
@@ -40,6 +45,36 @@ function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
          ay < by + bh &&
          ay + ah > by;
 }
+
+// helper to update offsets so the game screen is centered
+function updateGameOffsets() {
+  gameOffsetX = (width  - canvasWidth)  * 0.5;
+  gameOffsetY = (height - canvasHeight) * 0.5;
+}
+
+// convert screen mouse to game-space mouse
+function getGameMouse() {
+  return {
+    x: mouseX - gameOffsetX,
+    y: mouseY - gameOffsetY
+  };
+}
+
+// check if the mouse is over the 800x800 game area at all
+function mouseInGameArea() {
+  return (
+    mouseX >= gameOffsetX &&
+    mouseX <= gameOffsetX + canvasWidth &&
+    mouseY >= gameOffsetY &&
+    mouseY <= gameOffsetY + canvasHeight
+  );
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  updateGameOffsets();
+}
+
 
 // ,__________
 // | Preload |
@@ -126,8 +161,10 @@ const gameStates = {
 // | Entrypoint   |
 // |______________|
 function setup() {
+  // canvas is full-page
+  createCanvas(windowWidth, windowHeight);
 
-  createCanvas(canvasWidth, canvasHeight);
+  // 800x800 paint layer for your game world
   paintLayer = createGraphics(canvasWidth, canvasHeight);
   paintLayer.background(255);
 
@@ -141,23 +178,43 @@ function setup() {
     new Item("FREEZE", freeze),
     new Item("TOTEM", totem)
   ];
-  
+
+  updateGameOffsets();
 }
 // ,_______________
 // | Main loop    |
 // |______________|
 function draw() {
+  // full-page background
   background(220);
-  // calls function based on currentState
+
+  // keep offsets up-to-date (in case window was resized)
+  updateGameOffsets();
+
+  // draw the game centered
+  push();
+  translate(gameOffsetX, gameOffsetY);
+
+  // optional: draw a border/backdrop for the game area
+  push();
+  noStroke();
+  fill(255);
+  rect(0, 0, canvasWidth, canvasHeight);
+  pop();
+
+  // everything inside here is in "game space" (0..800)
   if (gameStates[currentState]) {
     gameStates[currentState]();
   }
 
-  // draw pause overlay on top of CLASSIC or ROUGE
+  pop(); // back to full-page coordinates
+
+  // pause overlay covers the whole page
   if (isPaused && (currentState === "CLASSIC" || currentState === "ROUGE")) {
     drawPauseOverlay();
   }
 }
+
 
 
 // ,______________________
@@ -230,15 +287,16 @@ function keyPressed() {
 // | Mouse  |
 // |________|
 function mousePressed() {
-
   if (isPaused) return;
+
+  const { x: gx, y: gy } = getGameMouse();
 
   for (let actor of level.allActors) {
     if (
-      mouseX >= actor.x &&
-      mouseX <= actor.x + actor.width &&
-      mouseY >= actor.y &&
-      mouseY <= actor.y + actor.height &&
+      gx >= actor.x &&
+      gx <= actor.x + actor.width &&
+      gy >= actor.y &&
+      gy <= actor.y + actor.height &&
       !actor.sorted &&
       actor.alive
     ) {
@@ -263,7 +321,7 @@ function mouseReleased() {
 let lastSecond = -1;
 
 function showMainMenu() {
-  background(bg, canvasWidth, canvasHeight);
+  image(bg, 0, 0, canvasWidth, canvasHeight)
   fill(255);
   stroke(0);
   strokeWeight(4);
@@ -276,11 +334,11 @@ function showMainMenu() {
     currentColor = random(SOFTPALETTE);
   }
   fill(currentColor);
-  text("ColorSplode", width/2, height/2 - 50);
+  text("ColorSplode", canvasWidth/2, canvasHeight/2 - 50);
   pop();
   textSize(20);
-  text("Press 1 for Classic Mode", width/2, height/2);
-  text("Press 2 for Rouge Mode", width/2, height/2 + 30);
+  text("Press 1 for Classic Mode", canvasWidth/2, canvasHeight/2);
+  text("Press 2 for Rouge Mode", canvasWidth/2, canvasHeight/2 + 30);
 
 }
 
@@ -377,18 +435,19 @@ function drawItemChoiceUI() {
   if (!pendingItemChoices) return;
 
   push();
-  // dark overlay
+
+  // dark overlay for the 800x800 game screen
   noStroke();
   fill(0, 180);
-  rect(0, 0, width, height);
+  rect(0, 0, canvasWidth, canvasHeight);
 
   textAlign(CENTER, CENTER);
   fill(255);
   textSize(24);
-  text("Choose an item! keyboard 1-3", width / 2, height / 2 - 150);
+  text("Choose an item! (1-3)", canvasWidth / 2, canvasHeight / 2 - 150);
 
-  const baseX = width / 2;
-  const baseY = height / 2;
+  const baseX = canvasWidth / 2;
+  const baseY = canvasHeight / 2;
   const spacing = 220;
 
   imageMode(CENTER);
@@ -399,20 +458,23 @@ function drawItemChoiceUI() {
     const x = baseX + (i - 1) * spacing;
     const y = baseY;
 
-    // item card
+    // item card background
     fill(50, 50, 50, 220);
     rect(x - 80, y - 80, 160, 160, 10);
 
+    // item icon
     if (item.sprite) {
       image(item.sprite, x, y - 20, 64, 64);
     }
 
+    // label
     fill(255);
     text(`${i + 1}: ${item.id}`, x, y + 50);
   }
 
   pop();
 }
+
 
 // optional: small helper to set the currently active item
 function setCurrentItem(item) {

@@ -109,9 +109,9 @@ class Bucket extends Actor {
 
     // canvas edge bounce
     if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
-    else if (this.x > width - this.width) { this.x = width - this.width; this.moveAngle = PI - this.moveAngle; }
+    else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
     if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
-    else if (this.y > height - this.height) { this.y = height - this.height; this.moveAngle = -this.moveAngle; }
+    else if (this.y > canvasHeight - this.height) { this.y = canvasHeight - this.height; this.moveAngle = -this.moveAngle; }
   }
 
   collideWithActors(level) {
@@ -201,8 +201,10 @@ class Bucket extends Actor {
     }
 
     if (this.grabbed) {
-      this.x = mouseX;
-      this.y = mouseY;
+      const gx = mouseX - gameOffsetX;
+      const gy = mouseY - gameOffsetY;
+      this.x = gx;
+      this.y = gy;
     }
 
     this.sprite = this.sorted

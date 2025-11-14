@@ -12,8 +12,8 @@ let ITEM_POOL = [];
 function itemEffectMagnet(level) {
   const magnetWidth = 25;
   const magnetHeight = 25;
-  const mx = mouseX;
-  const my = mouseY;
+  const mx = mouseX - gameOffsetX;
+  const my = mouseY - gameOffsetY;
   const x = mx - magnetWidth / 2;
   const y = my - magnetHeight / 2;
 
@@ -46,8 +46,8 @@ function itemEffectMagnet(level) {
 function itemEffectFreeze(level) {
   const magnetWidth = 15;
   const magnetHeight = 15;
-  const mx = mouseX;
-  const my = mouseY;
+  const mx = mouseX - gameOffsetX;
+  const my = mouseY - gameOffsetY;
   const x = mx - magnetWidth / 2;
   const y = my - magnetHeight / 2;
 
