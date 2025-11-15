@@ -167,7 +167,7 @@ function randomColorZone(level) {
 let levelSet = [];
 
 function setBoss(){
-    let randPreset = round(random(0, 3));
+    let randPreset = random([0,1,2]);
 
     switch (randPreset) {
     case 0:

@@ -6,7 +6,13 @@ let state = 0;
 let currentMode = null;
 let startButton1 //classic mode
 let startButton2; //roguelike mode
+let itemsButton; // permanent items menu
 let ventSprite;
+
+// Perm Item Stuff
+let permItemButtons = [];
+let ourItems = [];
+let permItems = [];
 
 let compressor;
 let pickupSounds = [];
@@ -121,11 +127,9 @@ let explodeGif;
 let explosionActive = false;
 let explosionDuration = 500/3; // 1 second duration
 
-
 //const levelChoices = [];
 
-
-function preload(){
+function preload() {
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
   gameOverBG = loadImage("images/gameoverbackground.png");
@@ -179,7 +183,7 @@ function preload(){
   selectivePallet = loadImage("images/SelectivePallet.png");
   graffiti = loadImage("images/Graffiti.png");
   levelBackground = loadImage("images/levelBackground.png");
-  
+
 }
 
 function setup() {
@@ -215,6 +219,15 @@ function setup() {
   startButton2.width = 200 * gs;
   startButton2.height = 50 * gs;
   startButton2.color = "red";
+
+  itemsButton = new Sprite(420 * gs + gameX, 510 * gs + gameY);
+  itemsButton.text = "Upgrades";
+  itemsButton.width = 200 * gs;
+  itemsButton.height = 50 * gs;
+  itemsButton.color = "lightblue";
+
+
+  chooseButtons = [];
   image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
   //gameLayer.background(220);
   
@@ -254,9 +267,12 @@ function setup() {
   makeColorZones(); //classic mode only
   makeVents();
   //randomizeZonePlacements();
+  player = new Player(ourItems); 
 
   makeItems();
-  player = new Player();
+  console.log("setup");
+  permItems = [{ name: "Wet Palette", desc: "Longer iframes.", cost: 10, sprite: totem }, {name: "Start Health", desc: "Start with more HP.", cost: 20, sprite: heart}];
+  player.permItemSetup();
 }
 
 let timer = 0;
@@ -268,6 +284,7 @@ function draw() {
     startMenu();
 
   } else if (state == 1){ //play classic mode
+      console.log("STATE IS 1.");
       gameMenu1();
       spawnActor();
       spawnRate();
@@ -280,13 +297,15 @@ function draw() {
       player.drawInventory();
       dropBomb();
       drawExplosion();
-      player.checkTotem();    
+      player.checkTotem();
+      console.log(player.invFrames);
   } else if (state == 3){ //gameover
       gameOver();
   } else if(state == 4){
       levelTransition();
+  } else if (state == 5) { // Item Options
+      drawPermItemMenu();
   }
-
 }
 
 
@@ -294,7 +313,7 @@ function startMenu(){
   drawBorder();
   image(gameLayer, gameX, gameY);
   gameLayer.background(bg);
-
+  
   colorFluctuation();
 
   fill(titleColor.r, titleColor.g, titleColor.b);
@@ -303,16 +322,42 @@ function startMenu(){
   strokeWeight(5 * gs);
   textSize(30 * gs);
   textStyle("bold");
-    
+  textAlign(LEFT, CENTER);
+
   text("ColorSplode", 250 * gs + gameX, 350 * gs + gameY);
 
   currentMode = null;
 
+  if (!startButton1) {
+    console.log("MADE NEW STARTBUTTON");
+    startButton1 = new Sprite(320 * gs + gameX, 450 * gs + gameY);
+    startButton1.text = "Play\n Classic Mode";
+    startButton1.width = 180 * gs;
+    startButton1.height = 50 * gs;
+    startButton1.color = "lightgreen";
+  }
+  if (!startButton2) {
+    startButton2 = new Sprite(520 * gs + gameX, 450 * gs + gameY);
+    startButton2.text = "Play\n Rougelike Mode";
+    startButton2.width = 200 * gs;
+    startButton2.height = 50 * gs;
+    startButton2.color = "red";
+  }
+  if (!itemsButton) {
+    itemsButton = new Sprite(420 * gs + gameX, 510 * gs + gameY);
+    itemsButton.text = "Upgrades";
+    itemsButton.width = 200 * gs;
+    itemsButton.height = 50 * gs;
+    itemsButton.color = "lightblue";
+  }
+
   //button colors
   mouseOverButton(startButton1, "green", "lightgreen");
   mouseOverButton(startButton2, "darkred", "red");
+  mouseOverButton(itemsButton, "darkblue", "lightblue");
 
   if (startButton1.mouse.pressing()){
+    console.log("START PRESSED");
     state = 1;
     currentMode = "classic";
     activateRandomVent();
@@ -325,11 +370,19 @@ function startMenu(){
     switchVent(vents[1]);
     levelSet[currentLevel].setup();
     player.health = player.startHealth;
-  }   
+
+  }
+
+  if (itemsButton.mouse.pressing()) {
+    state = 5;
+    createPermItemButtons();
+  }
 
   if (currentMode != null){
     startButton1.remove();
     startButton2.remove();
+    itemsButton.remove();
+    cleanupPermItemButtons();
     pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
     pauseButton.text = "||";
     pauseButton.width = 70 * gs;
@@ -343,6 +396,7 @@ function startMenu(){
 
 
 function gameMenu1(){
+  console.log("GODDD !!!!");
   clear();
   drawBorder();
   baseScore = 1;
@@ -572,6 +626,8 @@ function gameOver(){
 }
 
 function mouseOverButton(button1, hoverColor, defualtColor){ 
+  if(!button1) return;
+
   if(button1.mouse.hovering()){
      button1.color = hoverColor;
   } else{
@@ -895,8 +951,6 @@ function levelUp(){
     levelChoices = [allItems[0], allItems[1], allItems[2], allItems[3], allItems[4], allItems[5], allItems[6], allItems[7], allItems[8]];
 
     push();
-    textSize(15);
-
     textSize(15 * gs);
 
     pop();
@@ -907,30 +961,48 @@ function levelUp(){
     compressor.threshold(-50);
     compressor.ratio(10);
 
+    
     if (pauseButton) {
       pauseButton.remove();
     }
   }
   else{
+    if (chooseButton1) {
     chooseButton1.remove();
     chooseButton1 = null;
+    }
+    if (chooseButton2) {
     chooseButton2.remove();
     chooseButton2 = null;
+    }
+    if (chooseButton3) {
     chooseButton3.remove();
     chooseButton3 = null;
+    }
+    if (chooseButton4) {
     chooseButton4.remove();
     chooseButton4 = null;
+    }
+    if (chooseButton5) {
     chooseButton5.remove();
     chooseButton5 = null;
+    }
+    if (chooseButton6) {
     chooseButton6.remove();
     chooseButton6 = null;
+    }
+    if (chooseButton7) {
     chooseButton7.remove();
     chooseButton7 = null;
+    }
+    if (chooseButton8) {
     chooseButton8.remove();
     chooseButton8 = null;
+    }
+    if (chooseButton9) {
     chooseButton9.remove();
-    chooseButton9 = null;
-
+    chooseButton9 = null; 
+    }
     pauseSound.play();
     levelMusic.setVolume(0.05, 0.2); 
     levelMusic.rate(1.0, 0.2);
@@ -964,6 +1036,116 @@ function drawLevelMenu(){
   itemButtonLogic();
 }
 
+
+function drawPermItemMenu() {
+
+  if (!permItems) return;
+  textAlign(CENTER, CENTER);
+  fill(60);
+  rect(gameX, gameY, gameLayer.width, gameLayer.height);
+  textSize(28 * gs);
+  fill(255);
+  text("Permanent Upgrades", width / 2, 160 * gs + gameY);
+  
+
+  // Create Back button (only once)
+  if (!pauseButton) {
+    pauseButton = new Sprite(100 * gs + gameX, 70 * gs + gameY);
+    pauseButton.text = "Back";
+    pauseButton.width = 120 * gs;
+    pauseButton.height = 40 * gs;
+    pauseButton.color = "lightgreen";
+  }
+  if (pauseButton) mouseOverButton(pauseButton, "green", "lightgreen");
+  if (pauseButton.mouse.pressed()) {
+    // Remove buttons when leaving the menu
+    cleanupPermItemButtons();
+    state = 0;
+    pauseButton.remove();
+    pauseButton = null;
+    setup();
+    return;
+  }
+
+  // Create item buttons only once
+  if (permItemButtons.length === 0) {
+    createPermItemButtons();
+  }
+
+  // Draw items & handle buy logic
+  let startY = 400 * gs;
+  let spacingY = 120 * gs;
+
+  for (let i = 0; i < permItems.length; i++) {
+    let item = permItems[i];
+    let y = startY + i * spacingY;
+    // Draw icon and text
+    if (item.sprite) image(item.sprite, 250 * gs + gameX, y - 25, 50 * gs, 50 * gs);
+    fill(255);
+    textSize(12 * gs);
+    textAlign(LEFT, CENTER);
+    text(item.name, 320 * gs + gameX, y);
+    textSize(10 * gs);
+    fill(200);
+    text(item.desc, 320 * gs + gameX, y + 20 * gs);
+    textSize(7 * gs);
+    // Handle button
+    let button = permItemButtons[i];
+    if (button) {
+      mouseOverButton(button, "blue", "lightblue");
+      if (button.mouse.pressed()) {
+        // commented out because there is no coin implementation yet 
+        //if (score >= item.cost) {
+          //score -= item.cost;
+          item.cost += round(item.cost / 3);
+          player.addPermItem(item);
+          console.log("Bought: " + item.name);
+
+        //} else {
+          //console.log("Not enough points to buy " + item.name);
+       // }
+      }
+    }
+  }
+}
+
+// Helper: Create buttons once
+function createPermItemButtons() {
+
+  startButton1.remove();
+  startButton2.remove();
+  itemsButton.remove();
+
+  startButton1 = null;
+  startButton2 = null;
+  itemsButton = null;
+
+  let startY = height/2 * gs;
+  let spacingY = 100 * gs;
+
+  textSize(11 * gs);
+  for (let i = 0; i < permItems.length; i++) {
+    let y = startY + i * spacingY;
+    let btn = new Sprite(600 * gs + gameX, y);
+    btn.text = "Buy $" + permItems[i].cost;
+    btn.width = 100 * gs;
+    btn.height = 30 * gs;
+    btn.color = "lightblue";
+    permItemButtons.push(btn);
+  }
+}
+
+// Helper: Clean up buttons when leaving menu
+function cleanupPermItemButtons() {
+  for (let btn of permItemButtons) btn.remove();
+  permItemButtons = [];
+  chooseButtons = [];
+  clear(); 
+  levelUpActive = false;
+  //state = 0;
+}
+
+
 function drawItemMenu(){
   // Draw level choices in a 3x3 grid
   let cols = 3;
@@ -981,7 +1163,7 @@ function drawItemMenu(){
     let y = startY + row * 235; // controls row spacing
 
     if (levelChoices[i] && levelChoices[i].sprite) {
-                                    //scale to fit screen
+      //scale to fit screen
       image(levelChoices[i].sprite, x * gs + gameX, (y-20) * gs + gameY , imageSize * gs, imageSize * gs);
       textSize(14 * gs);
       fill(0);
@@ -1153,7 +1335,7 @@ function quitGame(){
   if (levelMusic && levelMusic.isPlaying()) {
     levelMusic.rate(1.0);           // normal speed
     levelMusic.setVolume(currentVolume); // keep same volume
-  }
+  } 
   compressor.threshold(-24); // restore default compression
   compressor.ratio(4);
 
