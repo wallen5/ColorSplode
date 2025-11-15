@@ -9,8 +9,9 @@ class Item {
   // Item Logic
 class Player {
 
-    constructor() {
+    constructor(ourItems) {
         this.inventory = [];
+        this.permanentInventory = ourItems;
         this.health = 3;
         this.startHealth = 3;
         this.invFrames = 2000;
@@ -40,6 +41,34 @@ class Player {
     else  // Only remove items that AREN'T the brush and pallet
       allItems.splice(allItems.indexOf(item), 1);
   }
+
+  addPermItem(item) {
+    console.log("ADDING A: " + item.name);
+    this.permanentInventory.push(item);
+  }
+
+  permItemSetup() {
+
+    // Reset player variables so they dont stack 
+    // Probably a better way to do this.
+    this.health = 3;
+    this.startHealth = 3;
+    this.invFrames = 2000;
+
+
+    for (let perm of this.permanentInventory) {
+      if (perm.name == "Wet Palette") {
+        this.invFrames += 500;
+      }
+      else if (perm.name == "Start Health") {
+        this.health++;
+        this.startHealth++;
+      }
+    }
+
+  }
+
+
 
   removeItem(itemName) {
     this.inventory = this.inventory.filter(i => i.name !== itemName);
