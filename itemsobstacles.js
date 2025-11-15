@@ -104,6 +104,7 @@ class Player {
   }
 
   drawInventory() { // Draws player inventory so they can see their items
+    icons = [];
     push();
     let startX = 550 * gs;
     let startY = 950 * gs;
@@ -113,7 +114,15 @@ class Player {
     for (let i = 0; i < player.inventory.length; i++) {
       let item = player.inventory[i];
       if (item.sprite) {
-        image(item.sprite, startX + i * (size + spacing) + size, startY + size, size, size);
+        let icon = image(item.sprite, startX + i * (size + spacing) + size, startY + size, size, size);
+        icons.push(
+          {
+            x: startX + i * (size + spacing) + size,
+            y: startY + size,
+            size: size,
+            item: item
+          }
+        );
       }
     }
     pop();

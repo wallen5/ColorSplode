@@ -231,6 +231,10 @@ class Actor {
   
     let activeVents = vents.filter(v => v.active); // Will only choose from active vents
     if (activeVents.length === 0) return;
+    if (state == 1){
+      activeVents = classicVents.filter(v => v.active);
+      if (activeVents.length === 0) return;
+    }
     
     // Chooses a random active vent to spawn from
     let randomVent = random(activeVents);

@@ -32,6 +32,7 @@ let chrSprite =[]; //array of character sprits
 let grabSprite =[]; //array of grab animations
 let deathSprite =[]; //array of death animations
 let ourCharacters = []; //array of character objects
+let icons = [];
 
 //obstacles
 let rougeCharacter = null;
@@ -251,10 +252,6 @@ function setup() {
   compressor.attack(0.003);
   compressor.release(0.25);
 
-  // Color zone spawn method (comment one in or out as needed)
-  //makeColorZones();
-  //randomizeZonePlacements();
-
   // Define missing zone variables for makeColorZones()
   // Initialize global zone placement variables defined in zone.js (defaults match zone.js)
   zoneX = 50 + gameX;
@@ -264,7 +261,7 @@ function setup() {
   zoneHeight = 150;
 
   setBoss();
-  makeColorZones(); //classic mode only
+  makeColorZones();
   makeVents();
   //randomizeZonePlacements();
   player = new Player(ourItems); 
@@ -703,7 +700,7 @@ function restart(){
   baseScore = 1;
   comboMultiplier = 1;
 
-  //paintLayer.background(255);
+  paintLayer.background(levelBackground);
 
   makeItems();
   if (currentMode === "roguelike") {
@@ -724,7 +721,7 @@ function retry(){
   buttonCreated = false;
   retryButton.remove();
   exitButton.remove();
-  //paintLayer.background(255);
+  paintLayer.background(levelBackground);
   
   
 
@@ -873,7 +870,7 @@ function pauseGame(){
 
     pauseSound.play();
     levelMusic.rate(1.0, 0.3); // restore speed
-    smoothCompressorChange(-24, 4, 0.4);
+    //smoothCompressorChange(-24, 4, 0.4);
   }
 }
 
@@ -918,12 +915,12 @@ function drawPauseMenu(){
 }
 
   pop(); // restore settings
-  if(quitButton.mouse.pressed()){
+  if(quitButton && quitButton.mouse.pressed()){
     state = 0;
     quitGame();
   }
-  if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
-    gamePaused = false; 
+  else if(resumeButton && resumeButton.mouse.pressed()){ // I dunno why, but an instance check is required specifically for this button :/
+    pauseGame();
 
     if (resumeButton) { resumeButton.remove(); resumeButton = null; }
     if (restartButton) { restartButton.remove(); restartButton = null; }
@@ -932,7 +929,7 @@ function drawPauseMenu(){
     if (volumeLabel) { volumeLabel.remove(); volumeLabel = null; }
     if (colorBlindCheckbox) { colorBlindCheckbox.remove(); colorBlindCheckbox = null; }
   }
-  if(restartButton && restartButton.mouse.pressed())
+  else if(restartButton && restartButton.mouse.pressed())
   {
     restart();
   }
@@ -1370,6 +1367,19 @@ function mousePressed() {
     console.log("rougeBucket picked up")
     console.log("pickup state = " + grabbedCharacter.state);
     return;
+  }
+
+  // Press bomb icon
+  // We can copy syntax like this if we want to try having more items that activate upon being clicked
+  if(player.hasItem("Bomb"))
+  {
+    for(let i of icons)
+    {
+      if((mouseX > i.x && mouseX < i.x + i.size) && (mouseY > i.y && mouseY < i.y + i.size) && i.item.name == "Bomb")
+      {
+        bPressed = true;
+      }
+    }
   }
 }
 

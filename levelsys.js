@@ -26,17 +26,17 @@ class Level{
         switch(this.difficulty){
         case 1:
             spawnRateIncrease = 0.01;
-            this.scoreThreshold = 1;
+            this.scoreThreshold = 15;
             maxVents = 2;
             break;
         case 2:
             spawnRateIncrease = 0.05;
-            this.scoreThreshold = 1;
+            this.scoreThreshold = 20;
             maxVents = 4;
             break;
         case 3:
             spawnRateIncrease = 0.08;
-            this.scoreThreshold = 1;
+            this.scoreThreshold = 25;
             maxVents = 4;
             break;
         }
