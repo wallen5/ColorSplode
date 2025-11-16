@@ -369,6 +369,7 @@ function runClassicMode() {
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
+  text(`Combo: ${level.currentCombo}`, 100,250, 25);
 
 }
 

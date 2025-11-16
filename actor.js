@@ -190,10 +190,11 @@ class Bucket extends Actor {
           zone.x, zone.y, zone.width, zone.height
         );
 
-        if (overlap) {
+        if (overlap && !this.sorted && !this.grabbed) {
           if (this.color === zone.color) {
             this.sorted = true;
-            zone.count += 1;
+            level.addScore(this);
+            this.freed = true;
           }
           break;
         }
