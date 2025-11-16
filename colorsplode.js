@@ -239,7 +239,8 @@ function setup() {
   menuMusic.setVolume(0.01);
   levelMusic.setVolume(0.05);
   pauseSound.setVolume(0.02);
-  menuMusic.play();
+  
+  if (!menuMusic.isPlaying()) menuMusic.play();
   
 
   levelMusic.disconnect();
