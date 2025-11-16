@@ -5,6 +5,9 @@ class Level {
     this.colorZones = [];
     this.allActors = [];
     this.vents = [];
+    this.maxVents = 4;
+    this.ventSpawnTimer = 0;
+    this.ventSpawnInterval = 10000;
     this.initLevel = false;
     this.score = 0;
     this.currentColor;
@@ -15,30 +18,39 @@ class Level {
   }
 
   setup() {
+    if (this.initLevel) return;
     if(this.mode == "ROUGE"){
       this.setObstacle();
     }
     this.createRandomZones();
-    this.createRandomVent();
+    if (this.vents.length < this.maxVents){
+      this.createRandomVent();
+    }
     this.initLevel = true;
+    this.ventSpawnTimer = millis();
   }
 
   setObstacle() {
-    const rand = random(3);
+    const rand = random(2);
     const w = 50, h = 50;
 
     if (rand <= 1) {
-      this.obstacle = new Cat(canvasWidth / 2, canvasHeight / 2, w, h, catSprite);
-
+      this.obstacle = new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.2, h * 1.2, catSprite);
+      console.log("cat");
     } else if (rand <= 2) {
-      this.obstacle = new EnemyBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite);
-
+      this.obstacle = new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite);
+      console.log("rougeBucket");
     } else {
       this.obstacle = null;
+    }
+
+    if (this.obstacle && this.obstacle.constructor.name === "rougeBucket") {
+      this.allActors.push(this.obstacle);
     }
   }
 
   update(){
+    //if (!this.initLevel) return;
 
     for (let sp of this.vents) {
       if(!this.gameOver) sp.update(this);
@@ -55,6 +67,13 @@ class Level {
       this.obstacle.update(this);
     }
 
+    // Auto-spawn vents
+    if (!this.gameOver && this.vents.length < this.maxVents) {
+      if (millis() - this.ventSpawnTimer >= this.ventSpawnInterval) {
+        this.createRandomVent();
+        this.ventSpawnTimer = millis();
+      }
+    }
   }
 
   addScore(actor)
@@ -83,10 +102,11 @@ class Level {
     }
     for (let sp of this.vents) {
       push();
-      fill(PALETTE[sp.color]);
+      imageMode(CORNER);
       image(sp.texture, sp.x, sp.y, sp.width, sp.height);
       pop();
     }
+    //this.score = 0;
     for (let actor of this.allActors) {
       actor.draw();
     }
@@ -104,46 +124,71 @@ class Level {
   createRandomZones() {
     const zoneWidth = 150, zoneHeight = 150, inset = 25;
     let zoneColor = shuffle([0, 1, 2, 3]);
+    let zoneMap; 
+    if (this.mode === "ROUGE"){
+      zoneMap = floor(random(0, 3));
+    } else {zoneMap = 0;}
+    this.currentZoneMap = zoneMap;
 
-    this.colorZones = [
-      new Zone(canvasWidth - zoneWidth - inset, canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[0]),
-      new Zone(inset,                        canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[1]),
-      new Zone(canvasWidth - zoneWidth - inset, inset,                         zoneWidth, zoneHeight, zoneColor[2]),
-      new Zone(inset,                        inset,                         zoneWidth, zoneHeight, zoneColor[3]),
-    ];
+    switch(zoneMap){
+      case 0: //corners
+        this.colorZones = [
+          new Zone(canvasWidth - zoneWidth - inset, canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[0]),
+          new Zone(inset,                        canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[1]),
+          new Zone(canvasWidth - zoneWidth - inset, inset,                         zoneWidth, zoneHeight, zoneColor[2]),
+          new Zone(inset,                        inset,                         zoneWidth, zoneHeight, zoneColor[3]),
+        ];
+        break;
+      case 1: //middle ends
+        this.colorZones = [
+          new Zone(canvasWidth - zoneWidth - inset, (canvasHeight / 2) + (inset * 3.5), zoneWidth, zoneHeight, zoneColor[0]), //bottom right
+          new Zone(inset,                        (canvasHeight / 2) + (inset * 3.5), zoneWidth, zoneHeight, zoneColor[1]), //bottom left
+          new Zone(canvasWidth - zoneWidth - inset, (canvasHeight / 2) - (inset * 3.5),                         zoneWidth, zoneHeight, zoneColor[2]), //top right
+          new Zone(inset,                        (canvasHeight / 2) - (inset * 3.5),                         zoneWidth, zoneHeight, zoneColor[3]), //top left
+        ];
+        break;
+      case 2: //bottom
+        this.colorZones = [
+          new Zone(canvasWidth - zoneWidth - inset, canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[0]),
+          new Zone(inset,                        canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[1]),
+          new Zone(canvasWidth - zoneWidth - (inset * 9), canvasHeight - zoneHeight - inset,                         zoneWidth, zoneHeight, zoneColor[2]),
+          new Zone(inset * 9,                        canvasHeight - zoneHeight - inset,                         zoneWidth, zoneHeight, zoneColor[3]),
+        ];
+    }
   }
 
   createRandomVent() {
-    const wall = int(random(4)); // 0=top, 1=bottom, 2=left, 3=right
-    let ventWidth = 50, ventHeight = 75;
-    let x, y, texture;
+    if (this.vents.length >= this.maxVents) return;
 
-    switch (wall) {
-      case 0: // top
-        x = canvasWidth / 2 - ventWidth / 2;
-        y = 0;
-        texture = ventTop;
-        break;
-      case 1: // bottom
-        x = canvasWidth / 2 - ventWidth / 2;
-        y = canvasHeight - ventHeight;
-        texture = ventBottom;
-        break;
-      case 2: // left
-        ventWidth = 75; ventHeight = 50;
-        x = 0;
-        y = canvasHeight / 2 - ventHeight / 2;
-        texture = ventLeft;
-        break;
-      default: // right
-        ventWidth = 75; ventHeight = 50;
-        x = canvasWidth - ventWidth;
-        y = canvasHeight / 2 - ventHeight / 2;
-        texture = ventRight;
-        break;
+    const walls = [
+      { x: () => random(50, canvasWidth-100), y: () => 0, w: 70, h: 40, wallIndex: 0, tex: ventTop },
+      { x: () => random(50, canvasWidth-100), y: () => canvasHeight-40, w: 70, h: 40, wallIndex: 1, tex: ventBottom },
+      { x: () => 0, y: () => random(50, canvasHeight-100), w: 40, h: 70, wallIndex: 2, tex: ventLeft },
+      { x: () => canvasWidth-40, y: () => random(50, canvasHeight-100), w: 40, h: 70, wallIndex: 3, tex: ventRight }
+    ];
+
+    const margin = 60, maxPerWall = this.currentZoneMap === 2 ? 2 : 1;
+
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const wall = random(walls.filter(w => this.vents.filter(v =>
+        (w.wallIndex===0 && v.y===0) || (w.wallIndex===1 && v.y+v.height===canvasHeight) ||
+        (w.wallIndex===2 && v.x===0) || (w.wallIndex===3 && v.x+v.width===canvasWidth)
+      ).length < maxPerWall));
+
+      if (!wall) continue;
+
+      const vent = { x: wall.x(), y: wall.y(), width: wall.w, height: wall.h, tex: wall.tex };
+      const conflict = this.colorZones.concat(this.vents).some(z =>
+        vent.x < z.x + z.width + margin &&
+        vent.x + vent.width > z.x - margin &&
+        vent.y < z.y + z.height + margin &&
+        vent.y + vent.height > z.y - margin
+      );
+
+      if (!conflict) { this.vents.push(new SpawnPoint(vent.x, vent.y, vent.width, vent.height, Color.GRAY, vent.tex)); return; }
     }
 
-    this.vents.push(new SpawnPoint(x, y, ventWidth, ventHeight, Color.GRAY, texture));
+    this.vents.push(new SpawnPoint(vent.x, vent.y, vent.width, vent.height, Color.GRAY, vent.tex));
   }
 }
 
@@ -185,7 +230,7 @@ class SpawnPoint {
 
   update(level) {
     // Check time elapsed since last spawn
-    if (millis() - this.lastSpawnTime >= this.spawnRate * 1000 && this.shouldSpawn) {
+    if (millis() - this.lastSpawnTime >= this.spawnRate * 2000 && this.shouldSpawn) {
       this.spawnActor(level);
       this.lastSpawnTime = millis();
     }

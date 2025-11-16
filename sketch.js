@@ -124,6 +124,7 @@ function preload(){
   catSprite = loadImage("images/catimage.gif");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
+  levelBackground = loadImage("images/levelBackground.png");
 
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
@@ -136,12 +137,17 @@ function preload(){
 // | State   |
 // |_________|
 function reset() {
+  currentState = "MAINMENU";
   level = null;
   level = new Level(5, 1, 1);
   level.initLevel = false;
   level.mode = "NONE";
   paintLayer = createGraphics(canvasWidth, canvasHeight);
-  paintLayer.background(255);
+  paintLayer.background(levelBackground);
+  ventTop = loadImage("images/ventTopUpdate.gif");
+  ventBottom = loadImage("images/ventBottomUpdate.gif");
+  ventLeft = loadImage("images/ventLeftUpdate.gif");
+  ventRight = loadImage("images/ventRightUpdate.gif");
   // reset item system
   inventory = [];
   currentItem = null;
@@ -166,7 +172,7 @@ function setup() {
 
   // 800x800 paint layer for your game world
   paintLayer = createGraphics(canvasWidth, canvasHeight);
-  paintLayer.background(255);
+  paintLayer.background(levelBackground);
 
   textFont(myFont);
 
@@ -238,7 +244,7 @@ function keyPressed() {
       if (music) music.stop();
       music = menuMusic;
       music.play();
-      currentState = "MAINMENU";
+      //currentState = "MAINMENU";
       isPaused = false;
     }
     return;
@@ -279,7 +285,7 @@ function keyPressed() {
       music.stop();
       music = menuMusic;
       music.play();
-      currentState = "MAINMENU";
+      //currentState = "MAINMENU";
     }
   }
 }
@@ -287,9 +293,11 @@ function keyPressed() {
 // | Mouse  |
 // |________|
 function mousePressed() {
+  console.log("Mouse pressed!", mouseX, mouseY);
   if (isPaused) return;
 
   const { x: gx, y: gy } = getGameMouse();
+
 
   for (let actor of level.allActors) {
     if (
