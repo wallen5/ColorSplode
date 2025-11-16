@@ -36,6 +36,8 @@ let inventory = [];              // all items you’ve picked so far (if you wan
 let currentItem = null;          // the item you can currently use
 let pendingItemChoices = null;   // when non-null, the item choice UI is open
 
+let ourPlayer = null;
+
 // ,_________
 // | Helper |
 // |________|
@@ -176,8 +178,15 @@ function setup() {
   ITEM_POOL = [
     new Item("MAGNET", magnet),
     new Item("FREEZE", freeze),
-    new Item("TOTEM", totem)
+    new Item("TOTEM", totem),
+    new Item("SCRAPER", scraper)
+    
   ];
+
+  if (!ourPlayer) {
+    // Player starts with 2 hearts by default
+    ourPlayer = new Player(2,2);
+  }
 
   updateGameOffsets();
 }
@@ -290,13 +299,15 @@ function mousePressed() {
   if (isPaused) return;
 
   const { x: gx, y: gy } = getGameMouse();
+  
 
   for (let actor of level.allActors) {
+    const padding = actor.width/4; // Feels better when slightly more forgiving
     if (
-      gx >= actor.x &&
-      gx <= actor.x + actor.width &&
-      gy >= actor.y &&
-      gy <= actor.y + actor.height &&
+      gx >= (actor.x-padding) &&
+      gx <= (actor.x + actor.width + padding) &&
+      gy >= (actor.y-padding) &&
+      gy <= (actor.y + actor.height + padding) &&
       !actor.sorted &&
       actor.alive
     ) {
@@ -400,7 +411,7 @@ function runRougeMode(){
       itemEffectFreeze(level);
     } else if (item.id === "TOTEM") {
       
-    }
+    } 
   }
 
   // everything is updated when the level gets drawn

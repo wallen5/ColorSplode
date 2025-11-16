@@ -24,6 +24,9 @@ class Actor {
     image(this.sprite, this.cx, this.cy, this.width, this.height);
     pop();
   }
+
+
+
 }
 
 class Bucket extends Actor {
@@ -66,8 +69,8 @@ class Bucket extends Actor {
     const ageMs = this.lifeMs;  // use game-time instead of millis() directly
     let progress = constrain(ageMs / this.maxTimeAlive, 0, 1);
 
-    const baseAmp = PI / 6;  // 30°
-    const wobbleSpeed = 6.0 * lerp(1.0, 4.0, progress);
+    const baseAmp = PI / 8;  // 22.5°
+    const wobbleSpeed = 2.0 * lerp(1.0, 4.0, progress);
     const wobbleAmp   = baseAmp * lerp(1.0, 2.0, progress);
 
     // When paused, draw a static sprite (no wobble), but still tint if frozen
@@ -81,6 +84,10 @@ class Bucket extends Actor {
       return;
     }
 
+
+    const flip = cos(this.moveAngle) > 0 ? -1 : 1;
+
+
     if (ageMs >= wobbleStart && !this.sorted && this.alive) {
       const t = (ageMs - wobbleStart) / 1000.0;
       const theta = sin(t * wobbleSpeed) * wobbleAmp;
@@ -88,6 +95,7 @@ class Bucket extends Actor {
       push();
       imageMode(CENTER);
       translate(this.x + this.width / 2, this.y + this.height / 2);
+      scale(flip, 1);
       rotate(theta);
       if (this.freeze) tint('blue');
       image(this.sprite, 0, 0, this.width, this.height);
@@ -172,6 +180,17 @@ class Bucket extends Actor {
     }
   }
 
+  flipActor() { // WTA FIX
+
+  }
+
+  fixDeathAnim() {
+    if (this.alive || this.sorted) return;
+    // multiply normal size (45) by 2.
+    this.width = (45*2); 
+    this.height = (45*2);
+  }
+
   update(level) {
     // compute dt every frame based on real time
     const now = millis();
@@ -201,8 +220,8 @@ class Bucket extends Actor {
     }
 
     if (this.grabbed) {
-      const gx = mouseX - gameOffsetX;
-      const gy = mouseY - gameOffsetY;
+      const gx = mouseX - gameOffsetX - this.width/2;
+      const gy = mouseY - gameOffsetY - this.height/2;
       this.x = gx;
       this.y = gy;
     }
@@ -226,8 +245,14 @@ class Bucket extends Actor {
 
     // advance life only when not paused
     this.lifeMs += dt;
-    if (this.lifeMs >= this.maxTimeAlive) this.alive = false;
-
+    if ((this.lifeMs >= this.maxTimeAlive) && (this.alive)) {
+      this.fixDeathAnim();
+      this.alive = false;
+      for(item of inventory){
+        if (item.id === "SCRAPER") itemEffectScrape(level, this);
+      }
+    } 
+    
     // motion/collisions
     if (!this.sorted && this.alive) {
       this.roam();
@@ -301,6 +326,8 @@ class Cat extends Actor {
     if (this.target?.alive && !this.target.sorted) {
       this.target.splode();
       this.target.maxTimeAlive -= 3000;
+      
+
     }
     this.lastSwipe = now; this.target = null;
   }
@@ -352,4 +379,46 @@ class EnemyBucket extends Actor {
     if (this.target && !this.grabbed) this.moveTowardTarget();
     if (this.grabbed) { this.x = mouseX; this.y = mouseY; }
   }
+}
+
+class Roller extends Actor {
+  constructor(x, y, width, height, sprite) {
+    super(x, y, width, height, sprite);
+    this.target = null;
+    this.speed = 2.5;
+    this.freeRange = 40;
+  }
+
+  findTarget(level) {
+    for (let actor of level.allActors) {
+      if (!actor.grabbed) { this.target = actor; if (random(10) <= 2) return; }
+    }
+    this.target = null;
+  }
+
+  moveTowardTarget() {
+    if (!this.target) return;
+    const dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
+    const d  = Math.hypot(dx, dy); if (d < 1) return;
+    this.x += (dx / d) * this.speed; this.y += (dy / d) * this.speed;
+    if (d < this.freeRange) this.freeTarget();
+  }
+
+  freeTarget() {
+    if (this.target) {
+      this.target.lifeMs = 0;
+      this.target.sorted = false;
+      this.target.freed = true;
+      this.target.alive = true;
+    }
+    this.target = null;
+  }
+
+  update(level) {
+    if (!this.target) this.findTarget(level);
+    if (this.target && !this.grabbed) this.moveTowardTarget();
+    if (this.grabbed) { this.x = mouseX; this.y = mouseY; }
+  }
+
+
 }

@@ -37,7 +37,7 @@ class Level {
   }
 
   update(){
-
+    console.log("player lives: " + this.player.lives);
     for (let sp of this.vents) {
       if(!this.gameOver) sp.update(this);
     }
@@ -45,7 +45,7 @@ class Level {
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
       if(actor.sorted){ this.score = this.score + 1; }
-      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; }
+      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; } // maybe put this somewhere else?
     }
     if(this.player.lives <= 0){
       this.player.alive = false;
@@ -82,7 +82,7 @@ class Level {
 
   splodeActors(){
     for (let actor of this.allActors) {
-      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.alive = false; }
+      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.alive = false; actor.fixDeathAnim();}
     }
   }
 
