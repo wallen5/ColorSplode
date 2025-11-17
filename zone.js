@@ -144,7 +144,7 @@ function makeVents(){
     console.log("map = bottom");
     vents = [
       new Vent((-50 * gs), (150 * gs), 100 * gs, 75 * gs, "left", false, ventLeft),
-      new Vent(gameLayer.width - (150 * gs), (150 * gs) + gameY, 100 * gs, 75 * gs, "right", false, ventRight),
+      new Vent(gameLayer.width - (150 * gs), (150 * gs), 100 * gs, 75 * gs, "right", false, ventRight),
       new Vent((275 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop), 
       new Vent((375 * gs), (-50 * gs), 75 * gs, 100 * gs, "top", false, ventTop)
     ];
