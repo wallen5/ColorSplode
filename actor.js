@@ -183,24 +183,6 @@ class Bucket extends Actor {
       return;
     }
 
-    if(!this.freed){
-      for (let zone of level.colorZones) {
-        const overlap = rectsOverlap(
-          this.x, this.y, this.width, this.height,
-          zone.x, zone.y, zone.width, zone.height
-        );
-
-        if (overlap && !this.sorted && !this.grabbed) {
-          if (this.color === zone.color) {
-            this.sorted = true;
-            level.addScore(this);
-            this.freed = true;
-          }
-          break;
-        }
-      }
-    }
-
     if (this.grabbed) {
       const gx = mouseX - gameOffsetX;
       const gy = mouseY - gameOffsetY;
@@ -259,6 +241,29 @@ class Bucket extends Actor {
       if (age > 1500) this.particles.splice(i, 1);
     }
   }
+
+  dropInZone(level)
+  {
+    console.log("Put into zone!");  
+    for (let zone of level.colorZones) {
+        const overlap = rectsOverlap(
+          this.x, this.y, this.width, this.height,
+          zone.x, zone.y, zone.width, zone.height
+        );
+        console.log(overlap)
+
+      if (overlap && !this.sorted) {
+        if (this.color === zone.color) {
+          this.sorted = true;
+          if(!this.freed)
+            level.addScore(this);
+          this.freed = true;
+        }
+        break;
+      }
+    }
+    
+  }  
 
   splode() {
     const n = 6, cx = this.cx, cy = this.cy;

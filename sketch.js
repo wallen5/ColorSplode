@@ -300,7 +300,6 @@ function mousePressed() {
       !actor.sorted &&
       actor.alive
     ) {
-      actor.freed = false;
       actor.grabbed = true;
       actor.splode();
       pickup.play();
@@ -310,6 +309,10 @@ function mousePressed() {
 
 function mouseReleased() {
   for (let actor of level.allActors) {
+    if(actor.grabbed)
+    {
+      actor.dropInZone(level)
+    }
     actor.grabbed = false;
   }
 }
@@ -418,6 +421,7 @@ function runRougeMode(){
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
+  text(`Combo: ${level.currentCombo}`, 100,250, 25);
   
 }
 
