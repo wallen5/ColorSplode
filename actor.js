@@ -11,6 +11,8 @@ class Actor {
     this.x = x; this.y = y;
     this.width = width; this.height = height;
     this.sprite = sprite;
+    this.speed = 0;
+    this.moveAngle = random(TWO_PI);
   }
   // center x and y
   get cx() { return this.x + this.width  * 0.5; }
@@ -18,10 +20,23 @@ class Actor {
   // radius 
   get r () { return 0.5 * Math.max(this.width, this.height); }
 
+  roam() {
+    this.moveAngle += random(-0.12, 0.12);
+    this.x += cos(this.moveAngle) * this.speed;
+    this.y += sin(this.moveAngle) * this.speed;
+
+    // canvas edge bounce
+    if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
+    else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
+    if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
+    else if (this.y > canvasHeight - this.height) { this.y = canvasHeight - this.height; this.moveAngle = -this.moveAngle; }
+  }
+
   draw() {
+    //if (!this.sprite) return;
     push();
     imageMode(CENTER);
-    image(this.sprite, this.cx, this.cy, this.width, this.height);
+    if (this.sprite){image(this.sprite, this.cx, this.cy, this.width, this.height);}
     pop();
   }
 }
@@ -46,6 +61,7 @@ class Bucket extends Actor {
     this.maxTimeAlive = 14000;
     this.wobbleTime   = 5000;
     this.alive        = true;
+    this.scored = false;
 
     this.freeze = false;
     this.maxTimeFreeze = 5;
@@ -100,18 +116,6 @@ class Bucket extends Actor {
       image(this.sprite, this.cx, this.cy, this.width, this.height);
       pop();
     }
-  }
-
-  roam() {
-    this.moveAngle += random(-0.12, 0.12);
-    this.x += cos(this.moveAngle) * this.speed;
-    this.y += sin(this.moveAngle) * this.speed;
-
-    // canvas edge bounce
-    if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
-    else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
-    if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
-    else if (this.y > canvasHeight - this.height) { this.y = canvasHeight - this.height; this.moveAngle = -this.moveAngle; }
   }
 
   collideWithActors(level) {
@@ -273,7 +277,6 @@ class Bucket extends Actor {
   }
 }
 
-
 // Cat
 class Cat extends Actor {
   constructor(x, y, width, height, sprite) {
@@ -283,7 +286,7 @@ class Cat extends Actor {
     this.swipeRange = 30;
     this.lastSwipe = 0;
     this.swipeCooldown = 2000; // ms
-    this.grabbed = false;
+    this.roamUntil = millis() + 2000;
   }
 
   findTarget(level) {
@@ -312,50 +315,126 @@ class Cat extends Actor {
   }
 
   update(level) {
-    if (!this.target || !this.target.alive || this.target.sorted) this.findTarget(level);
-    if (this.target && !this.grabbed) this.moveTowardTarget();
-    if (this.grabbed) { this.x = mouseX; this.y = mouseY; }
+    const now = millis();
+
+    if (!this.target || !this.target.alive || this.target.sorted) {
+      this.roam();
+      if (now >= this.roamUntil) {
+        this.findTarget(level);
+        this.roamUntil = now + random(500, 1500);
+      }
+    } else if (!this.target.grabbed) {this.moveTowardTarget();} 
+      else if (this.target.grabbed){this.roam();}
   }
 }
 
 // Enemy frees sorted actors
-class EnemyBucket extends Actor {
-  constructor(x, y, width, height, sprite) {
-    super(x, y, width, height, sprite);
-    this.target = null;
-    this.speed = 2.5;
+// Enemy frees sorted actors without state machine
+class rougeBucket extends Actor {
+  constructor(x, y, w, h, sprite) {
+    super(x, y, w, h, sprite);
+    this.speed = 1;
     this.freeRange = 30;
+
+    this.targetColor = null;
+    this.targets = [];
+    this.target = null;
     this.grabbed = false;
+    this.roamUntil = millis() + 1500;
+
+    this.alive = true;
+    this.freeze = false;
+    this.freezeElapsedMs = 0;
+    this.maxTimeFreeze = 5;
   }
 
-  findTarget(level) {
-    for (let actor of level.allActors) {
-      if (actor.sorted) { this.target = actor; if (random(10) <= 2) return; }
+  freezeActor() {
+    if (!this.freeze) {
+      this.freeze = true;
+      this.freezeElapsedMs = 0;
     }
-    this.target = null;
+  }
+
+  getClosestTarget() {
+    if (!this.targets.length) return null;
+    return this.targets.reduce((best, b) => {
+      const d2 = (b.cx - this.cx)**2 + (b.cy - this.cy)**2;
+      return (!best || d2 < best.d2) ? {b, d2} : best;
+    }, null)?.b || null;
+  }
+
+  acquireTargetColor(level) {
+    const sorted = level.allActors.filter(b => b.sorted);
+    if (!sorted.length) return;
+
+    const chosen = random(sorted);
+    this.targetColor = chosen.color;
+    this.targets = level.allActors.filter(b => b.sorted && b.color === this.targetColor);
+    this.target = this.getClosestTarget();
   }
 
   moveTowardTarget() {
     if (!this.target) return;
     const dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
-    const d  = Math.hypot(dx, dy); if (d < 1) return;
-    this.x += (dx / d) * this.speed; this.y += (dy / d) * this.speed;
-    if (d < this.freeRange) this.freeTarget();
+    const d = Math.hypot(dx, dy);
+    if (d < 1) return;
+    this.x += (dx / d) * this.speed;
+    this.y += (dy / d) * this.speed;
   }
 
   freeTarget() {
-    if (this.target) {
-      this.target.lifeMs = 0;
-      this.target.sorted = false;
-      this.target.freed = true;
-      this.target.alive = true;
+    if (!this.target) return;
+    this.target.lifeMs = 0;
+    this.target.sorted = false;
+    this.target.freed = true;
+    this.target.alive = true;
+    this.target.scored = true;
+
+    // remove from current target list
+    this.targets = this.targets.filter(b => b !== this.target);
+    this.target = this.getClosestTarget();
+
+    // if none left → clear color and pause
+    if (!this.target) {
+      this.targetColor = null;
+      this.roamUntil = millis() + 3000;
     }
-    this.target = null;
   }
 
   update(level) {
-    if (!this.target) this.findTarget(level);
-    if (this.target && !this.grabbed) this.moveTowardTarget();
-    if (this.grabbed) { this.x = mouseX; this.y = mouseY; }
+    if (this.grabbed) {
+      this.x = mouseX - gameOffsetX; this.y = mouseY - gameOffsetY;
+      this.targetColor = null;
+      this.targets = [];
+      this.target = null;
+      this.roamUntil = millis() + 3000;
+      return;
+    }
+    
+    if (this.freeze) {
+      this.freezeElapsedMs += deltaTime || 16.67;
+      if (this.freezeElapsedMs >= this.maxTimeFreeze * 1000) this.freeze = false;
+      else return;
+    }
+
+    // pause before acquiring new target color
+    if (!this.targetColor) {
+      this.roam();
+      if (millis() >= this.roamUntil) this.acquireTargetColor(level);
+      return;
+    }
+
+    // no current target → reset color and pause
+    if (!this.target) {
+      this.targetColor = null;
+      this.roamUntil = millis() + 1000;
+      return;
+    }
+
+    // move and free
+    this.moveTowardTarget();
+    if (Math.hypot(this.target.cx - this.cx, this.target.cy - this.cy) < this.freeRange) {
+      this.freeTarget();
+    }
   }
 }
