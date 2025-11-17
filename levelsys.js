@@ -10,6 +10,8 @@ class Level {
     this.ventSpawnInterval = 10000;
     this.initLevel = false;
     this.score = 0;
+    this.currentColor;
+    this.currentCombo = 0;
     this.gameOver = false; 
     this.player = new Player(lives, maxLives);
     this.mode = "NONE";
@@ -53,10 +55,8 @@ class Level {
     for (let sp of this.vents) {
       if(!this.gameOver) sp.update(this);
     }
-    //this.score = 0;
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
-      if(actor.sorted && actor.scored == false){ this.score = this.score + 1; actor.scored = true;}
       if(!actor.alive && !actor.sorted){ this.player.lives -= 1; }
     }
     if(this.player.lives <= 0){
@@ -74,6 +74,22 @@ class Level {
         this.ventSpawnTimer = millis();
       }
     }
+  }
+
+  addScore(actor)
+  {
+    console.log("Add score");
+    if(this.currentColor != actor.color)
+    {
+      console.log("New combo");
+      console.log(this.currentColor)
+      this.currentColor = actor.color;
+      this.currentCombo = 1;
+    }else
+    {
+      this.currentCombo++;
+    }
+    this.score += this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
   }
 
   draw() {
@@ -181,6 +197,8 @@ class Player {
     this.alive = true;
     this.lives = lives;
     this.maxLives = maxLives;
+    this.baseScore = 1;
+    this.comboMult = 1.0;
   }
 }
 
