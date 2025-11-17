@@ -10,6 +10,8 @@ class Level {
     this.ventSpawnInterval = 10000;
     this.initLevel = false;
     this.score = 0;
+    this.currentColor;
+    this.currentCombo = 0;
     this.gameOver = false; 
     this.player = new Player(lives, maxLives);
     this.mode = "NONE";
@@ -58,7 +60,6 @@ class Level {
     const collected = [];
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
-      if(actor.sorted && actor.scored == false){ this.score = this.score + 1; actor.scored = true;}
       if(!actor.alive && !actor.sorted){ this.player.lives -= 1; }
 
       // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
@@ -91,6 +92,22 @@ class Level {
         this.ventSpawnTimer = millis();
       }
     }
+  }
+
+  addScore(actor)
+  {
+    console.log("Add score");
+    if(this.currentColor != actor.color)
+    {
+      console.log("New combo");
+      console.log(this.currentColor)
+      this.currentColor = actor.color;
+      this.currentCombo = 1;
+    }else
+    {
+      this.currentCombo++;
+    }
+    this.score += this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
   }
 
   draw() {
@@ -199,6 +216,8 @@ class Player {
     this.lives = lives;
     this.maxLives = maxLives;
     this.coins = 0;
+    this.baseScore = 1;
+    this.comboMult = 1.0;
   }
 }
 
