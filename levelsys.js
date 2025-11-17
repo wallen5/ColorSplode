@@ -54,10 +54,27 @@ class Level {
       if(!this.gameOver) sp.update(this);
     }
     //this.score = 0;
+    // collect any coins clicked this frame
+    const collected = [];
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
       if(actor.sorted && actor.scored == false){ this.score = this.score + 1; actor.scored = true;}
       if(!actor.alive && !actor.sorted){ this.player.lives -= 1; }
+
+      // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
+      if (typeof Coin !== 'undefined' && actor instanceof Coin) {
+        // many coin implementations use a 'grabbed' flag when clicked
+        if (actor.grabbed && !actor.scored) {
+          this.player.coins = (this.player.coins || 0) + (actor.walletValue || 1);
+          actor.scored = true; // mark handled
+          collected.push(actor);
+        }
+      }
+    }
+
+    // remove collected coins from the actor list
+    if (collected.length) {
+      this.allActors = this.allActors.filter(a => !collected.includes(a));
     }
     if(this.player.lives <= 0){
       this.player.alive = false;
@@ -181,6 +198,7 @@ class Player {
     this.alive = true;
     this.lives = lives;
     this.maxLives = maxLives;
+    this.coins = 0;
   }
 }
 
@@ -222,9 +240,16 @@ class SpawnPoint {
     // spawn new Actor inside the spawnpoint rectangle
     const x = this.x + this.width / 2 - 15;  // center it
     const y = this.y + this.height / 2 - 15;
-    const actor = new Bucket(x, y, 45, 45, floor(random(4)));
-
-    level.allActors.push(actor);
+    // Chance to spawn a Coin instead of a Bucket
+    const COIN_SPAWN_CHANCE = 0.15; // 15% chance
+    if (typeof Coin !== 'undefined' && random() < COIN_SPAWN_CHANCE) {
+      const coinSize = 24;
+      const coin = new Coin(x, y, coinSize, null);
+      level.allActors.push(coin);
+    } else {
+      const actor = new Bucket(x, y, 45, 45, floor(random(4)));
+      level.allActors.push(actor);
+    }
   }
 }
 

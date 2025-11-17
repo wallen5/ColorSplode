@@ -432,3 +432,57 @@ class rougeBucket extends Actor {
     }
   }
 }
+
+class Coin extends Actor {
+  constructor(x, y, size = 28, sprite = null) {
+    // Actor constructor signature: (x, y, width, height, sprite)
+    super(x, y, size, size, sprite);
+    this.width = size; this.height = size;
+    this.sprite = sprite;
+
+    this.walletValue = 1;
+    this.grabbed = false;
+    this.freed = false;
+    this.sorted = false;
+    this.alive = true;
+    this.scored = false;
+    this.speed = 1.5;
+    this.moveAngle = random(TWO_PI);
+  }
+
+  update(level) {
+    if (this.grabbed) {
+      // follow mouse (game-space coordinates expected)
+      const gx = mouseX - (typeof gameOffsetX !== 'undefined' ? gameOffsetX : 0);
+      const gy = mouseY - (typeof gameOffsetY !== 'undefined' ? gameOffsetY : 0);
+      this.x = gx - this.width * 0.5;
+      this.y = gy - this.height * 0.5;
+      return;
+    }
+
+    // wandering movement
+    this.roam();
+
+    // simple bounds correction handled by Actor.roam
+  }
+
+  draw() {
+    push();
+    imageMode(CENTER);
+    const cx = this.x + this.width * 0.5;
+    const cy = this.y + this.height * 0.5;
+    if (this.sprite) {
+      image(this.sprite, cx, cy, this.width, this.height);
+    } else {
+      // fallback gold coin drawing
+      noStroke();
+      fill(255, 215, 0);
+      ellipse(cx, cy, this.width, this.height);
+      stroke(120, 80, 0);
+      noFill();
+      ellipse(cx, cy, this.width * 0.7, this.height * 0.7);
+    }
+    pop();
+  }
+
+}
