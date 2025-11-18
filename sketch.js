@@ -126,6 +126,11 @@ function preload(){
   selectivePallet = loadImage("images/SelectivePallet.png");
   levelBackground = loadImage("images/levelBackground.png");
 
+  garnetIdle = loadImage("images/GrimjackIdle.gif");
+  garnetSpec = loadImage("images/Grimjack Gunfire.gif");
+  carmineIdle = loadImage("images/CarmineQueenIdle.gif");
+  carmineSpec = loadImage("images/CarmineQueenSpecial.gif");
+
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
   pauseSound = loadSound('sounds/pause.wav');
@@ -191,6 +196,7 @@ function setup() {
 // | Main loop    |
 // |______________|
 function draw() {
+  clear();
   // full-page background
   background(220);
 

@@ -1,7 +1,8 @@
 class Level {
   constructor(score, lives, maxLives) {
     this.scoreThreshold = score;
-    this.obstacle = null;
+    this.obstacle = [];
+    this.boss = null;
     this.colorZones = [];
     this.allActors = [];
     this.vents = [];
@@ -35,17 +36,24 @@ class Level {
     const w = 50, h = 50;
 
     if (rand <= 1) {
-      this.obstacle = new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.2, h * 1.2, catSprite);
+      this.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.2, h * 1.2, catSprite));
       console.log("cat");
+      this.boss = new Boss("Carmine Queen", 300, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
+      console.log("Carmine Queen");
     } else if (rand <= 2) {
-      this.obstacle = new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite);
+      this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
       console.log("rougeBucket");
+      this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
+      console.log("Garnet Grimjack");
     } else {
-      this.obstacle = null;
+      this.obstacle = [];
+      this.boss = null;
     }
 
-    if (this.obstacle && this.obstacle.constructor.name === "rougeBucket") {
-      this.allActors.push(this.obstacle);
+    for(let obstacle of this.obstacle){
+      if (obstacle && obstacle.name === "rougeBucket") {
+        this.allActors.push(obstacle);
+      }
     }
   }
 
@@ -81,8 +89,13 @@ class Level {
       this.player.alive = false;
       this.gameOver = true; 
     }
-    if(this.obstacle){
-      this.obstacle.update(this);
+
+    for(let obstacle of this.obstacle){
+      obstacle.update(this);
+    }
+
+    if(this.boss){
+      this.boss.update(this);
     }
 
     // Auto-spawn vents
@@ -108,6 +121,7 @@ class Level {
       this.currentCombo++;
     }
     this.score += this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
+    this.boss.health -= this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
   }
 
   draw() {
@@ -128,8 +142,11 @@ class Level {
     for (let actor of this.allActors) {
       actor.draw();
     }
-    if(this.obstacle){
-      this.obstacle.draw();
+    for(let obstacle of this.obstacle){
+      obstacle.draw();
+    }
+    if(this.boss){
+      this.boss.draw();
     }
   }
 
