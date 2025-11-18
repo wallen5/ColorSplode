@@ -58,7 +58,7 @@ class Bucket extends Actor {
     this.destinationX = x;
     this.destinationY = y;
 
-    this.maxTimeAlive = 14000;
+    this.maxTimeAlive = 40000;
     this.wobbleTime   = 5000;
     this.alive        = true;
     this.scored = false;
@@ -389,6 +389,22 @@ class rougeBucket extends Actor {
     this.target.freed = true;
     this.target.alive = true;
     this.target.scored = true;
+
+    const centerX = canvasWidth * 0.5;
+    const centerY = canvasHeight * 0.5;
+
+    // Use the bucket's center coordinates
+    const bucketCX = this.target.cx; 
+    const bucketCY = this.target.cy; 
+    // Calculate the difference vector (dx, dy) from the bucket to the center of screen
+    const dx = centerX - bucketCX;
+    const dy = centerY - bucketCY;
+    // This gives the exact angle pointing from (bucketCX, bucketCY) to (centerX, centerY).
+    this.target.moveAngle = Math.atan2(dy, dx);
+    //when bucket is freed, it is moved towards center of screen to prevent bucket from going off canvas
+    const nudgeDistance = this.target.width * 2.5;
+    this.target.x += Math.cos(this.target.moveAngle) * nudgeDistance;
+    this.target.y += Math.sin(this.target.moveAngle) * nudgeDistance;
 
     // remove from current target list
     this.targets = this.targets.filter(b => b !== this.target);
