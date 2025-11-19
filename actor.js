@@ -28,8 +28,17 @@ class Actor {
     // canvas edge bounce
     if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
     else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
-    if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
-    else if (this.y > canvasHeight - this.height) { this.y = canvasHeight - this.height; this.moveAngle = -this.moveAngle; }
+
+   // Only for when all zones are located at the bottom of the canvas
+    let effectiveBottom = canvasHeight; // Default to the absolute canvas bottom
+    const zoneHeight = 150, inset = 25;
+    // Create new boundary if conditions are met
+    if (level?.currentZoneMap === 2 && !this.grabbed) {
+        effectiveBottom = canvasHeight - zoneHeight - inset;
+    }
+    //(map with zones at bottom) new boundary to stop buckets from moving past zones.
+     if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
+     else if (this.y > effectiveBottom - this.height) { this.y = effectiveBottom - this.height; this.moveAngle = -this.moveAngle; }
   }
 
   draw() {
