@@ -269,6 +269,15 @@ function keyPressed() {
     return;
   }
 
+  if (currentState === "ROUGE");
+
+  if(currentState === "LEVELTRANS") {
+    if(key === '1') {
+      currentState = "ROUGE";
+
+    }
+  }
+
   if (currentState === "MAINMENU") {
     if (key === '1') {
       currentState = "CLASSIC";

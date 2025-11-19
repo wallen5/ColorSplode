@@ -51,7 +51,7 @@ class Level {
     }
 
     for(let obstacle of this.obstacle){
-      if (obstacle && obstacle.name === "rougeBucket") {
+      if (obstacle instanceof rougeBucket) {
         this.allActors.push(obstacle);
       }
     }

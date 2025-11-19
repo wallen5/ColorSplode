@@ -346,6 +346,10 @@ class rougeBucket extends Actor {
     this.maxTimeFreeze = 5;
   }
 
+  splode(){};
+
+  dropInZone(){};
+
   freezeActor() {
     if (!this.freeze) {
       this.freeze = true;
@@ -564,10 +568,13 @@ class Boss extends Actor{
     this.sprite.play();
     switch(this.name){
     case "Garnet Grimjack":
-      level.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, 50, 50, rougeBucketSprite));
+      let rouge = new rougeBucket(canvasWidth / 2, canvasHeight / 2, 50, 50, rougeBucketSprite);
+      level.obstacle.push(rouge);
+      level.allActors.push(rouge);
       break;
     case "Carmine Queen":
-      level.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, 60, 60, catSprite));
+      let cat = new Cat(canvasWidth / 2, canvasHeight / 2, 60, 60, catSprite);
+      level.obstacle.push(cat);
       break;
     };
   }
