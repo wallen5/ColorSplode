@@ -91,7 +91,7 @@ class Bucket extends Actor {
       this.lastUpdateTime = millis();
       push();
       imageMode(CENTER);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, this.cx, this.cy, this.width, this.height);
       pop();
       return;
@@ -105,14 +105,14 @@ class Bucket extends Actor {
       imageMode(CENTER);
       translate(this.x + this.width / 2, this.y + this.height / 2);
       rotate(theta);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, 0, 0, this.width, this.height);
       pop();
 
     } else {
       push();
       imageMode(CENTER);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, this.cx, this.cy, this.width, this.height);
       pop();
     }

@@ -30,7 +30,7 @@ let gameOffsetY = 0;
 let currentColor = SOFTPALETTE[0]; // used in showMainMenu color cycling
 
 
-const ITEM_SCORE_STEP = 20;       // gain an item every 5 points
+const ITEM_SCORE_STEP = 5;       // gain an item every 5 points
 let nextItemScoreThreshold = ITEM_SCORE_STEP;
 let inventory = [];              // all items you’ve picked so far (if you want)
 let currentItem = null;          // the item you can currently use
