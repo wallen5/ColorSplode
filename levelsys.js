@@ -240,7 +240,7 @@ class SpawnPoint {
     this.height = height;
     this.color = color;
 
-    this.spawnRate = 3; // seconds per spawn
+    this.spawnRate = 1; // seconds per spawn
     this.lastSpawnTime = 0; // when the last spawn happened (ms)
     this.shouldSpawn = true;
 
