@@ -36,7 +36,7 @@ class Actor {
     if (level?.currentZoneMap === 2 && !this.grabbed) {
         effectiveBottom = canvasHeight - zoneHeight - inset;
     }
-    //(map with zones at bottom) new boundary to stop buckets from moving past zones.
+    //(map with zones at bottom) new boundary to stop buckets from moving past zones. Otherwise, boundaries stay the same
      if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
      else if (this.y > effectiveBottom - this.height) { this.y = effectiveBottom - this.height; this.moveAngle = -this.moveAngle; }
   }
