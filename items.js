@@ -58,21 +58,21 @@ function itemEffectFreeze(level) {
   }
 }
 
-let bombTimer = 0; // 0 means "off"
+let bombTimer = 0;
 
 function itemEffectBomb(level){
-  // Start the countdown (140 frames)
+  //timer from bomb gif
   bombTimer = 140;
   
   explodeGif.reset();
   bombSound.play();
 
-  // 1. Add all scores
+  // add scores
   for (let actor of level.allActors) {
     level.addScore(actor);
   }
   
-  // 2. Wipe the array instantly
+  // erase buckets
   level.allActors = [];
 }
 
