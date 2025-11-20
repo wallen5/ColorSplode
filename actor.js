@@ -28,8 +28,17 @@ class Actor {
     // canvas edge bounce
     if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
     else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
-    if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
-    else if (this.y > canvasHeight - this.height) { this.y = canvasHeight - this.height; this.moveAngle = -this.moveAngle; }
+
+   // Only for when all zones are located at the bottom of the canvas
+    let effectiveBottom = canvasHeight; // Default to the absolute canvas bottom
+    const zoneHeight = 150, inset = 25;
+    // Create new boundary if conditions are met
+    if (level?.currentZoneMap === 2 && !this.grabbed) {
+        effectiveBottom = canvasHeight - zoneHeight - inset;
+    }
+    //(map with zones at bottom) new boundary to stop buckets from moving past zones. Otherwise, boundaries stay the same
+     if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
+     else if (this.y > effectiveBottom - this.height) { this.y = effectiveBottom - this.height; this.moveAngle = -this.moveAngle; }
   }
 
   draw() {
@@ -91,7 +100,7 @@ class Bucket extends Actor {
       this.lastUpdateTime = millis();
       push();
       imageMode(CENTER);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, this.cx, this.cy, this.width, this.height);
       pop();
       return;
@@ -105,14 +114,14 @@ class Bucket extends Actor {
       imageMode(CENTER);
       translate(this.x + this.width / 2, this.y + this.height / 2);
       rotate(theta);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, 0, 0, this.width, this.height);
       pop();
 
     } else {
       push();
       imageMode(CENTER);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, this.cx, this.cy, this.width, this.height);
       pop();
     }
@@ -389,6 +398,22 @@ class rougeBucket extends Actor {
     this.target.freed = true;
     this.target.alive = true;
     this.target.scored = true;
+
+    // -- Used to nudge bucket towards center of screen after freed by rogue bucket
+    const centerX = canvasWidth * 0.5;
+    const centerY = canvasHeight * 0.5;
+    // Use the bucket's center coordinates
+    const bucketCX = this.target.cx; 
+    const bucketCY = this.target.cy; 
+    // Calculate the difference vector (dx, dy) from the bucket to the center of screen
+    const dx = centerX - bucketCX;
+    const dy = centerY - bucketCY;
+    // This gives angle pointing from (bucketCX, bucketCY) to (centerX, centerY).
+    this.target.moveAngle = Math.atan2(dy, dx);
+    //when bucket is freed, it is moved towards center of screen to prevent bucket from going off canvas
+    const nudgeDistance = this.target.width * 2.5;
+    this.target.x += Math.cos(this.target.moveAngle) * nudgeDistance;
+    this.target.y += Math.sin(this.target.moveAngle) * nudgeDistance;
 
     // remove from current target list
     this.targets = this.targets.filter(b => b !== this.target);
