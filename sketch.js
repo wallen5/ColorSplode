@@ -182,7 +182,8 @@ function setup() {
   ITEM_POOL = [
     new Item("MAGNET", magnet),
     new Item("FREEZE", freeze),
-    new Item("TOTEM", totem)
+    new Item("TOTEM", totem),
+    new Item("BOMB", bomb)
   ];
 
   updateGameOffsets();
@@ -405,13 +406,20 @@ function runRougeMode(){
     return;
   }
 
+  drawExplosion(); // shows bomb explode gif when bomb dropped. Triggered by itemEffectBomb(level)
+
   for(item of inventory){
     if (item.id === "MAGNET") {
       itemEffectMagnet(level);
     } else if (item.id === "FREEZE") {
       itemEffectFreeze(level);
     } else if (item.id === "TOTEM") {
-      
+      ;
+    } else if (item.id === "BOMB" && (key === 'b' || key === 'B')) {
+      itemEffectBomb(level); // used to activate drawExplosion()
+      let index = inventory.indexOf(item);
+      inventory.splice(index,1); // remove bomb after it is used
+      break;
     }
   }
 
@@ -509,4 +517,17 @@ function drawPauseOverlay() {
   textSize(16);
   text("ESC - Resume\nM - Main Menu", width / 2, height / 2 + 10);
   pop();
+}
+
+function drawExplosion() {
+  // Only run if timer is active
+  if (bombTimer > 0) {
+    push();
+    imageMode(CENTER);
+    image(explodeGif, canvasWidth / 2, canvasHeight / 2, 800, 800);
+    pop();
+
+    // Count down
+    bombTimer--;
+  }
 }
