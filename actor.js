@@ -517,3 +517,146 @@ class Coin extends Actor {
   }
 
 }
+
+class Graffiti {
+    constructor(sprite) {
+        this.sprite = sprite;
+        this.size = 55;
+        this.speed = 5;
+        this.sprayRadius = 140;
+
+        this.active = false;
+        this.exiting = false;
+        this.sprayed = false;
+
+        this.x = -200;
+        this.y = -200;
+
+        this.cooldown = 2000; //wait time before picking a new target
+        this.lastActionTime = 0;
+    }
+
+    waitOffscreen() {
+        this.active = this.exiting = this.sprayed = false;
+        this.x = this.y = -200;
+        this.lastActionTime = millis();
+    }
+
+    pickEdge(pxOff = 80, pyOff = 80) {
+        const side = floor(random(4));
+        switch (side) {
+            case 0:
+                return { x: -pxOff, y: random(height) };
+            case 1:
+                return { x: width + pxOff, y: random(height) };
+            case 2:
+                return { x: random(width), y: -pyOff };
+            default:
+                return { x: random(width), y: height + pyOff };
+        }
+    }
+
+    pickEntryPoint() {
+        const p = this.pickEdge(80, 80);
+        this.x = p.x;
+        this.y = p.y;
+    }
+
+    pickExitPoint() {
+        const p = this.pickEdge(200, 200);
+        this.exitX = p.x;
+        this.exitY = p.y;
+    }
+
+    moveToward(tx, ty, s = this.speed) {
+        const dx = tx - this.x,
+            dy = ty - this.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < s * s) return true;
+        const inv = 1 / Math.sqrt(d2);
+        this.x += dx * inv * s;
+        this.y += dy * inv * s;
+        return false;
+    }
+
+    findTarget(level) {
+        const candidates = [];
+
+        for (let a of level.allActors) {
+            if (a instanceof Bucket && a.alive && !a.sorted) {
+                candidates.push(a);
+            }
+        }
+
+        if (candidates.length === 0) return null;
+
+        return random(candidates);
+    }
+
+
+    spray(level) {
+        if (this.sprayed) return;
+        this.sprayed = true;
+        this.exiting = true;
+        this.pickExitPoint();
+
+        const r2 = this.sprayRadius * this.sprayRadius;
+
+        for (let actor of level.allActors) {
+            if (!(actor instanceof Bucket) || !actor.alive || actor.sorted) continue;
+
+            const dx = (actor.x + actor.width / 2) - this.x;
+            const dy = (actor.y + actor.height / 2) - this.y;
+            const d2 = dx * dx + dy * dy;
+
+            if (d2 < r2) {
+                actor.color = floor(random(4));
+                if (actor.splode) actor.splode();
+            }
+        }
+    }
+
+    update(level) {
+
+        if (!this.active) {
+            if (millis() - this.lastActionTime < this.cooldown) return;
+
+            const t = this.findTarget(level);
+            if (t) {
+                this.active = true;
+                this.target = t;
+                this.pickEntryPoint();
+            }
+            return;
+        }
+
+        if (this.exiting) {
+            if (this.moveToward(this.exitX, this.exitY, this.speed * 1.3)) {
+                const offX = this.x < -150 || this.x > width + 150;
+                const offY = this.y < -150 || this.y > height + 150;
+                if (offX || offY) this.waitOffscreen();
+            }
+            return;
+        }
+
+        if (!this.target || !this.target.alive || this.target.sorted) {
+            this.target = this.findTarget(level);
+            if (!this.target) return;
+        }
+
+        if (this.moveToward(this.target.cx, this.target.cy)) {
+            this.spray(level);
+        }
+    }
+
+    draw() {
+        push();
+        imageMode(CENTER);
+        if (this.sprite) image(this.sprite, this.x, this.y, this.size, this.size);
+        else {
+            fill(255, 0, 0);
+            circle(this.x, this.y, this.size);
+        }
+        pop();
+    }
+}
