@@ -43,6 +43,26 @@ function itemEffectMagnet(level) {
   }
 }
 
+function itemEffectScrape(level, splodingActor) {
+  const scrapeRadius = 25;
+  const x = splodingActor.x
+  const y = splodingActor.y
+
+
+  for (let actor of level.allActors) {
+    if (rectsOverlap(x, y, scrapeRadius, scrapeRadius, actor.x, actor.y, actor.width, actor.height)) {
+      actor.maxTimeAlive += 3000;
+    }
+  }
+
+  // Scrape the paint (make a hole where the actor is)
+  paintLayer.push();
+  paintLayer.erase();
+  paintLayer.circle(x, y, scrapeRadius);   // or rect(), or line(), etc.
+  paintLayer.noErase();
+  paintLayer.pop();
+}
+
 function itemEffectFreeze(level) {
   const magnetWidth = 15;
   const magnetHeight = 15;
