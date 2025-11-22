@@ -31,7 +31,7 @@ class Level {
   }
 
   setObstacle() {
-    const rand = random(2);
+    const rand = random(3);
     const w = 50, h = 50;
 
     if (rand <= 1) {
@@ -40,6 +40,9 @@ class Level {
     } else if (rand <= 2) {
       this.obstacle = new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite);
       console.log("rougeBucket");
+    } else if (rand <= 3){
+      this.obstacle = new Graffiti(graffitiSprite);
+      console.log("graffiti");
     } else {
       this.obstacle = null;
     }
