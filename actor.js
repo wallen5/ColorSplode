@@ -590,7 +590,7 @@ class Graffiti {
 
         if (candidates.length === 0) return null;
 
-        return random(candidates);
+        return candidates[floor(random(candidates.length))];
     }
 
 
