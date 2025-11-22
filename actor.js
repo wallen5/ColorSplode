@@ -47,7 +47,7 @@ class Bucket extends Actor {
     this.destinationY = y;
 
     this.maxTimeAlive = 14000;
-    this.wobbleTime   = 5000;
+    this.wobbleTime   = 14000;//5000;
     this.alive        = true;
 
     this.freeze = false;
@@ -58,6 +58,9 @@ class Bucket extends Actor {
     this.lastBounceAt   = 0;   // ms
     this.bounceCooldown = 80;  // ms
 
+    this.timeSinceFlip = 0; // frames
+    this.lookDir = 1; // 1 left, -1 right
+
     // NEW: logical timers that only advance when not paused
     this.lifeMs = 0;             // how long this bucket has been alive in “game time”
     this.freezeElapsedMs = 0;    // how long it has been frozen
@@ -65,6 +68,8 @@ class Bucket extends Actor {
   }
 
   draw() {
+    this.flipActor();
+
     const wobbleStart = Number.isFinite(this.wobbleTime) ? this.wobbleTime : 0; // ms
     const ageMs = this.lifeMs;  // use game-time instead of millis() directly
     let progress = constrain(ageMs / this.maxTimeAlive, 0, 1);
@@ -84,10 +89,6 @@ class Bucket extends Actor {
       return;
     }
 
-
-    const flip = cos(this.moveAngle) > 0 ? -1 : 1;
-
-
     if (ageMs >= wobbleStart && !this.sorted && this.alive) {
       const t = (ageMs - wobbleStart) / 1000.0;
       const theta = sin(t * wobbleSpeed) * wobbleAmp;
@@ -95,7 +96,7 @@ class Bucket extends Actor {
       push();
       imageMode(CENTER);
       translate(this.x + this.width / 2, this.y + this.height / 2);
-      scale(flip, 1);
+      scale(this.lookDir, 1);
       rotate(theta);
       if (this.freeze) tint('blue');
       image(this.sprite, 0, 0, this.width, this.height);
@@ -104,8 +105,10 @@ class Bucket extends Actor {
     } else {
       push();
       imageMode(CENTER);
+      translate(this.x + this.width / 2, this.y + this.height / 2);
+      scale(this.lookDir, 1);
       if (this.freeze) tint('blue');
-      image(this.sprite, this.cx, this.cy, this.width, this.height);
+      image(this.sprite, 0, 0, this.width, this.height);
       pop();
     }
   }
@@ -180,18 +183,41 @@ class Bucket extends Actor {
     }
   }
 
-  flipActor() { // WTA FIX
+  flipActor() {
+    this.timeSinceFlip++;
+    if (this.timeSinceFlip < 12) return; // dont flip too often
 
+    // flips too much without flipPadding, play around with value
+    const flipPadding = 0.1;
+    const moveAmt = (cos(this.moveAngle) * this.speed);
+
+
+    console.log(moveAmt);
+    if (moveAmt > (flipPadding)) {
+      console.log("FLIPPING!");
+      this.lookDir = -1;
+      this.timeSinceFlip = 0;
+    } 
+    if (moveAmt < (-flipPadding)) {
+      console.log("FLIPPING!");
+      this.lookDir = 1;
+      this.timeSinceFlip = 0;
+    }
   }
 
+  // without this, death anim is too small 
   fixDeathAnim() {
-    if (this.alive || this.sorted) return;
-    // multiply normal size (45) by 2.
-    this.width = (45*2); 
-    this.height = (45*2);
+    if (!this.alive || this.sorted) return;
+    this.width  *= 2; 
+    this.height *= 2;
+    this.x -= this.width/4;
+    this.y -= this.height/4;
   }
 
   update(level) {
+
+    const oldX = this.x;
+    const oldY = this.y;
     // compute dt every frame based on real time
     const now = millis();
     const dt = now - this.lastUpdateTime;
@@ -231,7 +257,6 @@ class Bucket extends Actor {
       : (this.alive ? chrSprite[this.color] : deathSprite[this.color]);
 
     // time & freeze
-    this.prevX = this.x; this.prevY = this.y;
 
     if (this.freeze) {
       this.freezeElapsedMs += dt;
@@ -282,6 +307,10 @@ class Bucket extends Actor {
       pop();
       if (age > 1500) this.particles.splice(i, 1);
     }
+
+    // Change prevX
+    this.prevX = oldX; this.prevY = oldY;
+
   }
 
   splode() {

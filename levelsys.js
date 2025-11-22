@@ -82,7 +82,7 @@ class Level {
 
   splodeActors(){
     for (let actor of this.allActors) {
-      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.alive = false; actor.fixDeathAnim();}
+      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.fixDeathAnim(); actor.alive = false;}
     }
   }
 
