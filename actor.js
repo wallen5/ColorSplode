@@ -47,7 +47,7 @@ class Bucket extends Actor {
     this.destinationY = y;
 
     this.maxTimeAlive = 14000;
-    this.wobbleTime   = 14000;//5000;
+    this.wobbleTime   = 5000;
     this.alive        = true;
 
     this.freeze = false;
