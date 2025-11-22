@@ -126,6 +126,7 @@ function preload(){
   catSprite = loadImage("images/catimage.gif");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
+  levelBackground = loadImage("images/levelBackground.png");
 
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
@@ -138,12 +139,17 @@ function preload(){
 // | State   |
 // |_________|
 function reset() {
+  currentState = "MAINMENU";
   level = null;
   level = new Level(5, 1, 1);
   level.initLevel = false;
   level.mode = "NONE";
   paintLayer = createGraphics(canvasWidth, canvasHeight);
-  paintLayer.background(255);
+  paintLayer.background(levelBackground);
+  ventTop = loadImage("images/ventTopUpdate.gif");
+  ventBottom = loadImage("images/ventBottomUpdate.gif");
+  ventLeft = loadImage("images/ventLeftUpdate.gif");
+  ventRight = loadImage("images/ventRightUpdate.gif");
   // reset item system
   inventory = [];
   currentItem = null;
@@ -168,7 +174,7 @@ function setup() {
 
   // 800x800 paint layer for your game world
   paintLayer = createGraphics(canvasWidth, canvasHeight);
-  paintLayer.background(255);
+  paintLayer.background(levelBackground);
 
   textFont(myFont);
 
@@ -179,8 +185,8 @@ function setup() {
     new Item("MAGNET", magnet),
     new Item("FREEZE", freeze),
     new Item("TOTEM", totem),
-    new Item("SCRAPER", scraper)
-    
+    new Item("SCRAPER", scraper),
+    new Item("BOMB", bomb)
   ];
 
   if (!ourPlayer) {
@@ -247,7 +253,7 @@ function keyPressed() {
       if (music) music.stop();
       music = menuMusic;
       music.play();
-      currentState = "MAINMENU";
+      //currentState = "MAINMENU";
       isPaused = false;
     }
     return;
@@ -288,7 +294,7 @@ function keyPressed() {
       music.stop();
       music = menuMusic;
       music.play();
-      currentState = "MAINMENU";
+      //currentState = "MAINMENU";
     }
   }
 }
@@ -296,10 +302,12 @@ function keyPressed() {
 // | Mouse  |
 // |________|
 function mousePressed() {
+  console.log("Mouse pressed!", mouseX, mouseY);
   if (isPaused) return;
 
   const { x: gx, y: gy } = getGameMouse();
   
+
 
   for (let actor of level.allActors) {
     const padding = actor.width/4; // Feels better when slightly more forgiving
@@ -311,7 +319,6 @@ function mousePressed() {
       !actor.sorted &&
       actor.alive
     ) {
-      actor.freed = false;
       actor.grabbed = true;
       actor.splode();
       pickup.play();
@@ -321,6 +328,10 @@ function mousePressed() {
 
 function mouseReleased() {
   for (let actor of level.allActors) {
+    if(actor.grabbed)
+    {
+      actor.dropInZone(level)
+    }
     actor.grabbed = false;
   }
 }
@@ -380,6 +391,7 @@ function runClassicMode() {
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
+  text(`Combo: ${level.currentCombo}`, 100,250, 25);
 
 }
 
@@ -404,6 +416,8 @@ function runRougeMode(){
     return;
   }
 
+  drawExplosion(); // shows bomb explode gif when bomb dropped. Triggered by itemEffectBomb(level)
+
   for(item of inventory){
     if (item.id === "MAGNET") {
       itemEffectMagnet(level);
@@ -411,7 +425,12 @@ function runRougeMode(){
       itemEffectFreeze(level);
     } else if (item.id === "TOTEM") {
       
-    } 
+    } else if (item.id === "BOMB" && (key === 'b' || key === 'B')) {
+      itemEffectBomb(level); // used to activate drawExplosion()
+      let index = inventory.indexOf(item);
+      inventory.splice(index,1); // remove bomb after it is used
+      break;
+    }
   }
 
   // everything is updated when the level gets drawn
@@ -428,6 +447,7 @@ function runRougeMode(){
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
+  text(`Combo: ${level.currentCombo}`, 100,250, 25);
   
 }
 
@@ -507,4 +527,17 @@ function drawPauseOverlay() {
   textSize(16);
   text("ESC - Resume\nM - Main Menu", width / 2, height / 2 + 10);
   pop();
+}
+
+function drawExplosion() {
+  // Only run if timer is active
+  if (bombTimer > 0) {
+    push();
+    imageMode(CENTER);
+    image(explodeGif, canvasWidth / 2, canvasHeight / 2, 800, 800);
+    pop();
+
+    // Count down
+    bombTimer--;
+  }
 }

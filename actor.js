@@ -11,6 +11,8 @@ class Actor {
     this.x = x; this.y = y;
     this.width = width; this.height = height;
     this.sprite = sprite;
+    this.speed = 0;
+    this.moveAngle = random(TWO_PI);
   }
   // center x and y
   get cx() { return this.x + this.width  * 0.5; }
@@ -18,10 +20,32 @@ class Actor {
   // radius 
   get r () { return 0.5 * Math.max(this.width, this.height); }
 
+  roam() {
+    this.moveAngle += random(-0.12, 0.12);
+    this.x += cos(this.moveAngle) * this.speed;
+    this.y += sin(this.moveAngle) * this.speed;
+
+    // canvas edge bounce
+    if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
+    else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
+
+   // Only for when all zones are located at the bottom of the canvas
+    let effectiveBottom = canvasHeight; // Default to the absolute canvas bottom
+    const zoneHeight = 150, inset = 25;
+    // Create new boundary if conditions are met
+    if (level?.currentZoneMap === 2 && !this.grabbed) {
+        effectiveBottom = canvasHeight - zoneHeight - inset;
+    }
+    //(map with zones at bottom) new boundary to stop buckets from moving past zones. Otherwise, boundaries stay the same
+     if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
+     else if (this.y > effectiveBottom - this.height) { this.y = effectiveBottom - this.height; this.moveAngle = -this.moveAngle; }
+  }
+
   draw() {
+    //if (!this.sprite) return;
     push();
     imageMode(CENTER);
-    image(this.sprite, this.cx, this.cy, this.width, this.height);
+    if (this.sprite){image(this.sprite, this.cx, this.cy, this.width, this.height);}
     pop();
   }
 
@@ -49,6 +73,7 @@ class Bucket extends Actor {
     this.maxTimeAlive = 14000;
     this.wobbleTime   = 5000;
     this.alive        = true;
+    this.scored = false;
 
     this.freeze = false;
     this.maxTimeFreeze = 5;
@@ -83,7 +108,7 @@ class Bucket extends Actor {
       this.lastUpdateTime = millis();
       push();
       imageMode(CENTER);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, this.cx, this.cy, this.width, this.height);
       pop();
       return;
@@ -98,7 +123,7 @@ class Bucket extends Actor {
       translate(this.x + this.width / 2, this.y + this.height / 2);
       scale(this.lookDir, 1);
       rotate(theta);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, 0, 0, this.width, this.height);
       pop();
 
@@ -107,22 +132,10 @@ class Bucket extends Actor {
       imageMode(CENTER);
       translate(this.x + this.width / 2, this.y + this.height / 2);
       scale(this.lookDir, 1);
-      if (this.freeze) tint('blue');
-      image(this.sprite, 0, 0, this.width, this.height);
+      if (this.freeze) tint(173, 216, 230);
+      image(this.sprite, this.cx, this.cy, this.width, this.height);
       pop();
     }
-  }
-
-  roam() {
-    this.moveAngle += random(-0.12, 0.12);
-    this.x += cos(this.moveAngle) * this.speed;
-    this.y += sin(this.moveAngle) * this.speed;
-
-    // canvas edge bounce
-    if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
-    else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
-    if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
-    else if (this.y > canvasHeight - this.height) { this.y = canvasHeight - this.height; this.moveAngle = -this.moveAngle; }
   }
 
   collideWithActors(level) {
@@ -228,23 +241,6 @@ class Bucket extends Actor {
       return;
     }
 
-    if(!this.freed){
-      for (let zone of level.colorZones) {
-        const overlap = rectsOverlap(
-          this.x, this.y, this.width, this.height,
-          zone.x, zone.y, zone.width, zone.height
-        );
-
-        if (overlap) {
-          if (this.color === zone.color) {
-            this.sorted = true;
-            zone.count += 1;
-          }
-          break;
-        }
-      }
-    }
-
     if (this.grabbed) {
       const gx = mouseX - gameOffsetX - this.width/2;
       const gy = mouseY - gameOffsetY - this.height/2;
@@ -313,6 +309,29 @@ class Bucket extends Actor {
 
   }
 
+  dropInZone(level)
+  {
+    console.log("Put into zone!");  
+    for (let zone of level.colorZones) {
+        const overlap = rectsOverlap(
+          this.x, this.y, this.width, this.height,
+          zone.x, zone.y, zone.width, zone.height
+        );
+        console.log(overlap)
+
+      if (overlap && !this.sorted) {
+        if (this.color === zone.color) {
+          this.sorted = true;
+          if(!this.freed)
+            level.addScore(this);
+          this.freed = true;
+        }
+        break;
+      }
+    }
+    
+  }  
+
   splode() {
     const n = 6, cx = this.cx, cy = this.cy;
     for (let i = 0; i < n; i++) {
@@ -320,7 +339,6 @@ class Bucket extends Actor {
     }
   }
 }
-
 
 // Cat
 class Cat extends Actor {
@@ -331,7 +349,7 @@ class Cat extends Actor {
     this.swipeRange = 30;
     this.lastSwipe = 0;
     this.swipeCooldown = 2000; // ms
-    this.grabbed = false;
+    this.roamUntil = millis() + 2000;
   }
 
   findTarget(level) {
@@ -362,51 +380,161 @@ class Cat extends Actor {
   }
 
   update(level) {
-    if (!this.target || !this.target.alive || this.target.sorted) this.findTarget(level);
-    if (this.target && !this.grabbed) this.moveTowardTarget();
-    if (this.grabbed) { this.x = mouseX; this.y = mouseY; }
+    const now = millis();
+
+    if (!this.target || !this.target.alive || this.target.sorted) {
+      this.roam();
+      if (now >= this.roamUntil) {
+        this.findTarget(level);
+        this.roamUntil = now + random(500, 1500);
+      }
+    } else if (!this.target.grabbed) {this.moveTowardTarget();} 
+      else if (this.target.grabbed){this.roam();}
   }
 }
 
 // Enemy frees sorted actors
-class EnemyBucket extends Actor {
-  constructor(x, y, width, height, sprite) {
-    super(x, y, width, height, sprite);
-    this.target = null;
-    this.speed = 2.5;
+// Enemy frees sorted actors without state machine
+class rougeBucket extends Actor {
+  constructor(x, y, w, h, sprite) {
+    super(x, y, w, h, sprite);
+    this.speed = 1;
     this.freeRange = 30;
+
+    this.targetColor = null;
+    this.targets = [];
+    this.target = null;
     this.grabbed = false;
+    this.roamUntil = millis() + 1500;
+
+    this.alive = true;
+    this.freeze = false;
+    this.freezeElapsedMs = 0;
+    this.maxTimeFreeze = 5;
   }
 
-  findTarget(level) {
-    for (let actor of level.allActors) {
-      if (actor.sorted) { this.target = actor; if (random(10) <= 2) return; }
+  freezeActor() {
+    if (!this.freeze) {
+      this.freeze = true;
+      this.freezeElapsedMs = 0;
     }
-    this.target = null;
+  }
+
+  getClosestTarget() {
+    if (!this.targets.length) return null;
+    return this.targets.reduce((best, b) => {
+      const d2 = (b.cx - this.cx)**2 + (b.cy - this.cy)**2;
+      return (!best || d2 < best.d2) ? {b, d2} : best;
+    }, null)?.b || null;
+  }
+
+  acquireTargetColor(level) {
+    const sorted = level.allActors.filter(b => b.sorted);
+    if (!sorted.length) return;
+
+    const chosen = random(sorted);
+    this.targetColor = chosen.color;
+    this.targets = level.allActors.filter(b => b.sorted && b.color === this.targetColor);
+    this.target = this.getClosestTarget();
   }
 
   moveTowardTarget() {
     if (!this.target) return;
     const dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
-    const d  = Math.hypot(dx, dy); if (d < 1) return;
-    this.x += (dx / d) * this.speed; this.y += (dy / d) * this.speed;
-    if (d < this.freeRange) this.freeTarget();
+    const d = Math.hypot(dx, dy);
+    if (d < 1) return;
+    this.x += (dx / d) * this.speed;
+    this.y += (dy / d) * this.speed;
   }
 
   freeTarget() {
-    if (this.target) {
-      this.target.lifeMs = 0;
-      this.target.sorted = false;
-      this.target.freed = true;
-      this.target.alive = true;
+    if (!this.target) return;
+    this.target.lifeMs = 0;
+    this.target.sorted = false;
+    this.target.freed = true;
+    this.target.alive = true;
+    this.target.scored = true;
+
+    // -- Used to nudge bucket towards center of screen after freed by rogue bucket
+    const centerX = canvasWidth * 0.5;
+    const centerY = canvasHeight * 0.5;
+    // Use the bucket's center coordinates
+    const bucketCX = this.target.cx; 
+    const bucketCY = this.target.cy; 
+    // Calculate the difference vector (dx, dy) from the bucket to the center of screen
+    const dx = centerX - bucketCX;
+    const dy = centerY - bucketCY;
+    // This gives angle pointing from (bucketCX, bucketCY) to (centerX, centerY).
+    this.target.moveAngle = Math.atan2(dy, dx);
+    //when bucket is freed, it is moved towards center of screen to prevent bucket from going off canvas
+    const nudgeDistance = this.target.width * 2.5;
+    this.target.x += Math.cos(this.target.moveAngle) * nudgeDistance;
+    this.target.y += Math.sin(this.target.moveAngle) * nudgeDistance;
+
+    // remove from current target list
+    this.targets = this.targets.filter(b => b !== this.target);
+    this.target = this.getClosestTarget();
+
+    // if none left → clear color and pause
+    if (!this.target) {
+      this.targetColor = null;
+      this.roamUntil = millis() + 3000;
     }
-    this.target = null;
   }
 
   update(level) {
-    if (!this.target) this.findTarget(level);
-    if (this.target && !this.grabbed) this.moveTowardTarget();
-    if (this.grabbed) { this.x = mouseX; this.y = mouseY; }
+    if (this.grabbed) {
+      this.x = mouseX - gameOffsetX; this.y = mouseY - gameOffsetY;
+      this.targetColor = null;
+      this.targets = [];
+      this.target = null;
+      this.roamUntil = millis() + 3000;
+      return;
+    }
+    
+    if (this.freeze) {
+      this.freezeElapsedMs += deltaTime || 16.67;
+      if (this.freezeElapsedMs >= this.maxTimeFreeze * 1000) this.freeze = false;
+      else return;
+    }
+
+    // pause before acquiring new target color
+    if (!this.targetColor) {
+      this.roam();
+      if (millis() >= this.roamUntil) this.acquireTargetColor(level);
+      return;
+    }
+
+    // no current target → reset color and pause
+    if (!this.target) {
+      this.targetColor = null;
+      this.roamUntil = millis() + 1000;
+      return;
+    }
+
+    // move and free
+    this.moveTowardTarget();
+    if (Math.hypot(this.target.cx - this.cx, this.target.cy - this.cy) < this.freeRange) {
+      this.freeTarget();
+    }
+  }
+}
+
+class Coin extends Actor {
+  constructor(x, y, size = 28, sprite = null) {
+    // Actor constructor signature: (x, y, width, height, sprite)
+    super(x, y, size, size, sprite);
+    this.width = size; this.height = size;
+    this.sprite = sprite;
+
+    this.walletValue = 1;
+    this.grabbed = false;
+    this.freed = false;
+    this.sorted = false;
+    this.alive = true;
+    this.scored = false;
+    this.speed = 1.5;
+    this.moveAngle = random(TWO_PI);
   }
 }
 

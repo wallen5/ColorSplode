@@ -1,4 +1,4 @@
-const itemID = ["MAGNET", "FREEZE", "TOTEM"];
+const itemID = ["MAGNET", "FREEZE", "TOTEM", "BOMB"];
 
 class Item {
     constructor(id, sprite){
@@ -77,3 +77,22 @@ function itemEffectFreeze(level) {
     }
   }
 }
+
+let bombTimer = 0;
+
+function itemEffectBomb(level){
+  //timer from bomb gif
+  bombTimer = 140;
+  
+  explodeGif.reset();
+  bombSound.play();
+
+  // add scores
+  for (let actor of level.allActors) {
+    level.addScore(actor);
+  }
+  
+  // erase buckets
+  level.allActors = [];
+}
+
