@@ -433,6 +433,7 @@ class rougeBucket extends Actor {
       this.targets = [];
       this.target = null;
       this.roamUntil = millis() + 3000;
+      if (!mouseIsPressed) this.grabbed = false;
       return;
     }
     
