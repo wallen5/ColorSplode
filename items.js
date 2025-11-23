@@ -73,7 +73,9 @@ function itemEffectFreeze(level) {
 
   for (let actor of level.allActors) {
     if (rectsOverlap(x, y, magnetWidth, magnetHeight, actor.x, actor.y, actor.width, actor.height)) {
-      actor.freezeActor();
+      if (actor.freezeActor instanceof Function) {
+        actor.freezeActor();
+      }
     }
   }
 }
