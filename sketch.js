@@ -80,6 +80,7 @@ function windowResized() {
 // | Preload |
 // |_________|
 function preload(){
+  angleMode(RADIANS);
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
   gameOverBG = loadImage("images/gameoverbackground.png");
@@ -184,7 +185,9 @@ function setup() {
     new Item("MAGNET", magnet),
     new Item("FREEZE", freeze),
     new Item("TOTEM", totem),
-    new Item("BOMB", bomb)
+    new Item("BOMB", bomb),
+    new Item("PALLET", selectivePallet),
+    new Item("BRUSH", thickerBrush)
   ];
 
   updateGameOffsets();
@@ -236,6 +239,8 @@ function keyPressed() {
     if (!pendingItemChoices) {
       isPaused = !isPaused;
     }
+    if(this.resumeButton) this.resumeButton.remove();
+    if(this.quitButton) this.quitButton.remove();
     return;
   }
 
@@ -248,6 +253,8 @@ function keyPressed() {
       music.play();
       //currentState = "MAINMENU";
       isPaused = false;
+      if(this.resumeButton) this.resumeButton.remove();
+      if(this.quitButton) this.quitButton.remove();
     }
     return;
   }
@@ -261,6 +268,11 @@ function keyPressed() {
         pendingItemChoices = null;
         nextItemScoreThreshold += ITEM_SCORE_STEP;
       }
+      for(let b of this.choiceButtons)
+      {
+        b.remove();
+      }
+      this.choiceButtons = null;
     }
     return;
   }
@@ -271,12 +283,16 @@ function keyPressed() {
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.startButton.remove();
+      this.rougeLikeButton.remove();
     }
     if (key === '2'){
       currentState = "ROUGE";
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.rougeLikeButton.remove();
+      this.startButton.remove();2
     }
 
   }
@@ -287,6 +303,7 @@ function keyPressed() {
       music.stop();
       music = menuMusic;
       music.play();
+      if(this.restartButton) this.restartButton.remove();
       //currentState = "MAINMENU";
     }
   }
@@ -349,9 +366,41 @@ function showMainMenu() {
   fill(currentColor);
   text("ColorSplode", canvasWidth/2, canvasHeight/2 - 50);
   pop();
-  textSize(20);
-  text("Press 1 for Classic Mode", canvasWidth/2, canvasHeight/2);
-  text("Press 2 for Rouge Mode", canvasWidth/2, canvasHeight/2 + 30);
+  textSize(15);
+  // Creates button if either: it doesn't exist OR it doesn't have a sprite
+  // Kind of a mouth full, but in this way we make it so buttons functionality is completely separate
+  // Note: you do NOT have to make a whole prototype function into the button. You can also just put "[function]"
+  // without the () and have it work the exact same!
+  if(!this.startButton || !this.startButton.sprite)
+  {
+    this.startButton = new Button(windowWidth/2, canvasHeight/2 + 140, 500, 50, "lightgreen", "darkgreen", "Play Classic Mode - 1",
+      () =>{
+        currentState = "CLASSIC";
+        if(music) music.stop();
+        music = levelMusic;
+        music.play();
+        this.rougeLikeButton.remove();
+        this.startButton.remove();  
+      }
+    );
+  }
+  if(!this.rougeLikeButton || !this.rougeLikeButton.sprite)
+  {
+    this.rougeLikeButton = new Button(windowWidth/2, canvasHeight/2 + 220, 500, 50, "red", "darkred", "Play Rougelike Mode - 2",
+      () =>{
+        currentState = "ROUGE";
+        if(music) music.stop();
+        music = levelMusic;
+        music.play();
+        this.rougeLikeButton.remove();
+        this.startButton.remove();
+      }
+    );
+  }
+  this.startButton.update();
+  this.rougeLikeButton.update();
+  //text("Press 1 for Classic Mode", canvasWidth/2, canvasHeight/2);
+  //text("Press 2 for Rouge Mode", canvasWidth/2, canvasHeight/2 + 30);
 
 }
 
@@ -361,6 +410,9 @@ function showMainMenu() {
 
 function runClassicMode() {
 
+  if(!isPaused)
+    createPauseButton();
+  
   if(!level.initLevel){
     level.mode = "CLASSIC";
     level.setup();
@@ -375,10 +427,7 @@ function runClassicMode() {
   }
   
   if(level.gameOver){
-    level.splodeActors();
-    text("Game Over!",  width/2, height/2 - 60)
-    text(`Final score: ${level.score}`, width/2, height/2 - 30);
-    text("Press R to restart", width/2, height/2)
+    drawGameOver();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -387,6 +436,9 @@ function runClassicMode() {
 }
 
 function runRougeMode(){
+
+  if(!isPaused)
+    createPauseButton();
 
   if(!level.initLevel){
     level.mode = "ROUGE";
@@ -431,15 +483,49 @@ function runRougeMode(){
   }
 
   if(level.gameOver){
-    level.splodeActors();
-    text("Game Over!",  width/2, height/2 - 60)
-    text(`Final score: ${level.score}`, width/2, height/2 - 30);
-    text("Press R to restart", width/2, height/2)
+    drawGameOver();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
   text(`Combo: ${level.currentCombo}`, 100,250, 25);
   
+}
+
+function createPauseButton()
+{
+  if(!this.pauseButton || !this.pauseButton.sprite)
+  {
+    this.pauseButton = new Button(windowWidth/2 + canvasWidth/2 + 30, 110, 50, 50, "darkgray", "gray", "||", 
+      () =>{
+        if (!pendingItemChoices) {
+          isPaused = !isPaused;
+          this.pauseButton.remove();
+        }
+      }
+    )
+  }
+  this.pauseButton.update();
+}
+
+function drawGameOver()
+{
+  level.splodeActors();
+  text("Game Over!",  width/2, height/2 - 60)
+  text(`Final score: ${level.score}`, width/2, height/2 - 30);
+  this.pauseButton.remove();
+  if(!this.restartButton || !this.restartButton.sprite)
+  {
+    this.restartButton = new Button(windowWidth/2, windowHeight/2, 150, 40, "lightgreen", "darkgreen", "Restart - r", 
+      () =>{
+        reset();
+        music.stop();
+        music = menuMusic;
+        music.play();
+        this.restartButton.remove();
+      }
+    )
+  }
+  this.restartButton.update();
 }
 
 function openItemChoiceScreen() {
@@ -466,7 +552,7 @@ function drawItemChoiceUI() {
   textAlign(CENTER, CENTER);
   fill(255);
   textSize(24);
-  text("Choose an item! (1-3)", canvasWidth / 2, canvasHeight / 2 - 150);
+  text("Choose an item!", canvasWidth / 2, canvasHeight / 2 - 150);
 
   const baseX = canvasWidth / 2;
   const baseY = canvasHeight / 2;
@@ -474,6 +560,7 @@ function drawItemChoiceUI() {
 
   imageMode(CENTER);
   textSize(16);
+  if(!this.choiceButtons) this.choiceButtons = [];
 
   for (let i = 0; i < pendingItemChoices.length; ++i) {
     const item = pendingItemChoices[i];
@@ -491,7 +578,25 @@ function drawItemChoiceUI() {
 
     // label
     fill(255);
-    text(`${i + 1}: ${item.id}`, x, y + 50);
+    // Button
+    if(this.choiceButtons.length < 3)
+      this.choiceButtons[i] = new Button(windowWidth/2 - canvasWidth/2 + x, y + 120, 150, 40, "lightgreen", "darkgreen", `${i + 1}: ${item.id}`, 
+      () =>{
+        let index = i;
+        const chosen = pendingItemChoices[index];
+        setCurrentItem(chosen);
+        pendingItemChoices = null;
+        nextItemScoreThreshold += ITEM_SCORE_STEP;
+        for(let b of this.choiceButtons)
+          b.remove();
+        this.choiceButtons = null;
+      }
+    )
+  }
+  if(this.choiceButtons)
+  {
+    for(let b of this.choiceButtons)
+      b.update();
   }
 
   pop();
@@ -516,8 +621,37 @@ function drawPauseOverlay() {
   text("Paused", width / 2, height / 2 - 40);
 
   textSize(16);
-  text("ESC - Resume\nM - Main Menu", width / 2, height / 2 + 10);
+
   pop();
+
+  if(!this.resumeButton || !this.resumeButton.sprite)
+  {
+    this.resumeButton = new Button(windowWidth/2, canvasHeight/2 + 80, 170, 40, "lightgreen", "darkgreen", "Resume - ESC",
+      () =>
+      {
+        isPaused = !isPaused;
+        this.resumeButton.remove();
+        this.quitButton.remove();
+      }
+    )
+  }
+  if(!this.quitButton || !this.quitButton.sprite)
+  {
+    this.quitButton = new Button(windowWidth/2, canvasHeight/2 + 140, 170, 40, "red", "darkred", "Quit - M",
+      () =>
+      {
+        reset();
+        if (music) music.stop();
+        music = menuMusic;
+        music.play();
+        isPaused = false;
+        this.resumeButton.remove();
+        this.quitButton.remove();
+      }
+    )
+  }
+  this.resumeButton.update();
+  this.quitButton.update();
 }
 
 function drawExplosion() {
