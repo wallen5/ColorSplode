@@ -235,7 +235,7 @@ function draw() {
 // |_____________________|
 function keyPressed() {
 
-  if (keyCode === ESCAPE && currentState !== "MAINMENU") {
+  if (keyCode === ESCAPE && currentState !== "MAINMENU" && currentState !== "LEVELTRANS") {
     // Don't allow pausing in the middle of an item choice
     if (!pendingItemChoices) {
       isPaused = !isPaused;
@@ -269,12 +269,14 @@ function keyPressed() {
     return;
   }
 
-  if (currentState === "ROUGE");
-
   if(currentState === "LEVELTRANS") {
     if(key === '1') {
+      level.initLevel = false;
+      level.difficulty++;
       currentState = "ROUGE";
-
+      if(music) music.stop();
+      music = levelMusic;
+      music.play();
     }
   }
 
@@ -436,6 +438,10 @@ function runRougeMode(){
     level.update();
   }
 
+  if(level.score == level.scoreThreshold){
+    currentState = "LEVELTRANS";
+  }
+
   if(level.gameOver){
     level.splodeActors();
     text("Game Over!",  width/2, height/2 - 60)
@@ -446,6 +452,13 @@ function runRougeMode(){
   text(`Score: ${level.score}`, 100,210, 25);
   text(`Combo: ${level.currentCombo}`, 100,250, 25);
   
+}
+
+function showLevelTransition() {
+  push();
+  fill(237, 204, 42);
+  rect(0, 0, canvasWidth, canvasHeight);
+  pop();
 }
 
 function openItemChoiceScreen() {
