@@ -80,6 +80,7 @@ function windowResized() {
 // | Preload |
 // |_________|
 function preload(){
+  angleMode(RADIANS);
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
   gameOverBG = loadImage("images/gameoverbackground.png");
