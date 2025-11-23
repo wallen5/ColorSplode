@@ -49,7 +49,9 @@ class Actor {
     pop();
   }
 
-
+  update(level) {
+    this.roam();
+  }
 
 }
 
@@ -93,7 +95,6 @@ class Bucket extends Actor {
   }
 
   draw() {
-    this.flipActor();
 
     const wobbleStart = Number.isFinite(this.wobbleTime) ? this.wobbleTime : 0; // ms
     const ageMs = this.lifeMs;  // use game-time instead of millis() directly
@@ -114,6 +115,8 @@ class Bucket extends Actor {
       return;
     }
 
+    this.flipActor();
+
     if (ageMs >= wobbleStart && !this.sorted && this.alive) {
       const t = (ageMs - wobbleStart) / 1000.0;
       const theta = sin(t * wobbleSpeed) * wobbleAmp;
@@ -133,7 +136,7 @@ class Bucket extends Actor {
       translate(this.x + this.width / 2, this.y + this.height / 2);
       scale(this.lookDir, 1);
       if (this.freeze) tint(173, 216, 230);
-      image(this.sprite, this.cx, this.cy, this.width, this.height);
+      image(this.sprite, 0, 0, this.width, this.height);
       pop();
     }
   }
