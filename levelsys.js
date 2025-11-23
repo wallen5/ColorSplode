@@ -139,7 +139,9 @@ class Level {
 
   splodeActors(){
     for (let actor of this.allActors) {
+      if (actor instanceof Bucket) {
       if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.fixDeathAnim(); actor.alive = false;}
+      }
     }
   }
 
