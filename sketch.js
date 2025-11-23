@@ -266,6 +266,11 @@ function keyPressed() {
         pendingItemChoices = null;
         nextItemScoreThreshold += ITEM_SCORE_STEP;
       }
+      for(let b of this.choiceButtons)
+      {
+        b.remove();
+      }
+      this.choiceButtons = null;
     }
     return;
   }
@@ -276,12 +281,16 @@ function keyPressed() {
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.startButton.remove();
+      this.rougeLikeButton.remove();
     }
     if (key === '2'){
       currentState = "ROUGE";
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.rougeLikeButton.remove();
+      this.startButton.remove();2
     }
 
   }
@@ -292,6 +301,7 @@ function keyPressed() {
       music.stop();
       music = menuMusic;
       music.play();
+      if(this.restartButton) this.restartButton.remove();
       //currentState = "MAINMENU";
     }
   }
@@ -354,14 +364,14 @@ function showMainMenu() {
   fill(currentColor);
   text("ColorSplode", canvasWidth/2, canvasHeight/2 - 50);
   pop();
-  textSize(20);
+  textSize(15);
   // Creates button if either: it doesn't exist OR it doesn't have a sprite
   // Kind of a mouth full, but in this way we make it so buttons functionality is completely separate
   // Note: you do NOT have to make a whole prototype function into the button. You can also just put "[function]"
   // without the () and have it work the exact same!
   if(!this.startButton || !this.startButton.sprite)
   {
-    this.startButton = new Button(windowWidth/2, canvasHeight/2 + 100, 400, 50, "lightgreen", "darkgreen", "Play Classic Mode",
+    this.startButton = new Button(windowWidth/2, canvasHeight/2 + 140, 500, 50, "lightgreen", "darkgreen", "Play Classic Mode - 1",
       () =>{
         currentState = "CLASSIC";
         if(music) music.stop();
@@ -374,7 +384,7 @@ function showMainMenu() {
   }
   if(!this.rougeLikeButton || !this.rougeLikeButton.sprite)
   {
-    this.rougeLikeButton = new Button(windowWidth/2, canvasHeight/2 + 200, 400, 50, "red", "darkred", "Play Rougelike Mode",
+    this.rougeLikeButton = new Button(windowWidth/2, canvasHeight/2 + 220, 500, 50, "red", "darkred", "Play Rougelike Mode - 2",
       () =>{
         currentState = "ROUGE";
         if(music) music.stop();
@@ -398,6 +408,9 @@ function showMainMenu() {
 
 function runClassicMode() {
 
+  if(!isPaused)
+    createPauseButton();
+  
   if(!level.initLevel){
     level.mode = "CLASSIC";
     level.setup();
@@ -412,10 +425,7 @@ function runClassicMode() {
   }
   
   if(level.gameOver){
-    level.splodeActors();
-    text("Game Over!",  width/2, height/2 - 60)
-    text(`Final score: ${level.score}`, width/2, height/2 - 30);
-    text("Press R to restart", width/2, height/2)
+    drawGameOver();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -424,6 +434,9 @@ function runClassicMode() {
 }
 
 function runRougeMode(){
+
+  if(!isPaused)
+    createPauseButton();
 
   if(!level.initLevel){
     level.mode = "ROUGE";
@@ -468,15 +481,49 @@ function runRougeMode(){
   }
 
   if(level.gameOver){
-    level.splodeActors();
-    text("Game Over!",  width/2, height/2 - 60)
-    text(`Final score: ${level.score}`, width/2, height/2 - 30);
-    text("Press R to restart", width/2, height/2)
+    drawGameOver();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
   text(`Combo: ${level.currentCombo}`, 100,250, 25);
   
+}
+
+function createPauseButton()
+{
+  if(!this.pauseButton || !this.pauseButton.sprite)
+  {
+    this.pauseButton = new Button(windowWidth/2 + canvasWidth/2 + 30, 110, 50, 50, "darkgray", "gray", "||", 
+      () =>{
+        if (!pendingItemChoices) {
+          isPaused = !isPaused;
+          this.pauseButton.remove();
+        }
+      }
+    )
+  }
+  this.pauseButton.update();
+}
+
+function drawGameOver()
+{
+  level.splodeActors();
+  text("Game Over!",  width/2, height/2 - 60)
+  text(`Final score: ${level.score}`, width/2, height/2 - 30);
+  this.pauseButton.remove();
+  if(!this.restartButton || !this.restartButton.sprite)
+  {
+    this.restartButton = new Button(windowWidth/2, windowHeight/2, 150, 40, "lightgreen", "darkgreen", "Restart - r", 
+      () =>{
+        reset();
+        music.stop();
+        music = menuMusic;
+        music.play();
+        this.restartButton.remove();
+      }
+    )
+  }
+  this.restartButton.update();
 }
 
 function openItemChoiceScreen() {
