@@ -53,6 +53,7 @@ class Level {
   }
 
   update(){
+    console.log("player lives: " + this.player.lives);
     //if (!this.initLevel) return;
 
     for (let sp of this.vents) {
@@ -63,8 +64,8 @@ class Level {
     const collected = [];
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
-      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; }
-
+      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; } // maybe put this somewhere else? gets called every frame
+      
       // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
       if (typeof Coin !== 'undefined' && actor instanceof Coin) {
         // many coin implementations use a 'grabbed' flag when clicked
@@ -138,7 +139,7 @@ class Level {
 
   splodeActors(){
     for (let actor of this.allActors) {
-      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.alive = false; }
+      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.fixDeathAnim(); actor.alive = false;}
     }
   }
 
