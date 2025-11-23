@@ -16,7 +16,9 @@ let currentState;
 let isPaused = false;
 let music; 
 let paintLayer;
-let level = new Level(1, 5, 1, 1);
+let levelNum = 1;
+let randBoss = rand();
+let level = new Level(1, 1, 1, 1);
 
 chrSprite =[];
 grabSprite =[];
@@ -144,7 +146,7 @@ function preload(){
 function reset() {
   currentState = "MAINMENU";
   level = null;
-  level = new Level(1, 5, 1, 1);
+  level = new Level(1, 1, 1, 1);
   level.initLevel = false;
   level.mode = "NONE";
   paintLayer = createGraphics(canvasWidth, canvasHeight);
@@ -271,8 +273,8 @@ function keyPressed() {
 
   if(currentState === "LEVELTRANS") {
     if(key === '1') {
-      level.initLevel = false;
-      level.difficulty++;
+      levelNum++;
+      level = new Level(levelNum, 1, 1, 1)
       currentState = "ROUGE";
       if(music) music.stop();
       music = levelMusic;

@@ -1,7 +1,8 @@
 class Level {
-  constructor(difficulty, score, lives, maxLives) {
+  constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;
-    this.scoreThreshold = score;
+    this.bossKey = bossKey;
+    this.scoreThreshold = 1;
     this.obstacle = [];
     this.boss = null;
     this.colorZones = [];
@@ -33,10 +34,8 @@ class Level {
   }
 
   setDifficulty(difficulty) {
-    const rand = random(2);
-
-    if(difficulty >= 2){this.setObstacle(rand);}
-    if(difficulty == 3){this.setBoss(rand);}
+    if(difficulty >= 2){this.setObstacle();}
+    if(difficulty == 3){this.setBoss();}
 
     for(let sp of this.vents){
       switch(difficulty){
@@ -55,13 +54,13 @@ class Level {
     }
   }
 
-  setObstacle(rand) {
+  setObstacle() {
     const w = 50, h = 50;
 
-    if (rand <= 1) {
+    if (this.bossKey <= 1) {
       this.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.2, h * 1.2, catSprite));
       console.log("cat");
-    } else if (rand <= 2) {
+    } else if (this.bossKey <= 2) {
       this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
       console.log("rougeBucket");
     } else {
@@ -75,13 +74,13 @@ class Level {
     }
   }
 
-  setBoss(rand){
+  setBoss(){
     const w = 50, h = 50;
 
-    if (rand <= 1) {
+    if (this.bossKey <= 1) {
       this.boss = new Boss("Carmine Queen", 300, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
       console.log("Carmine Queen");
-    } else if (rand <= 2) {
+    } else if (this.bossKey <= 2) {
       this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
       console.log("Garnet Grimjack");
     } else {
