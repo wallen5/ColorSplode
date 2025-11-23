@@ -1,5 +1,6 @@
 class Level {
-  constructor(score, lives, maxLives) {
+  constructor(difficulty, score, lives, maxLives) {
+    this.difficulty = difficulty;
     this.scoreThreshold = score;
     this.obstacle = [];
     this.boss = null;
@@ -8,7 +9,7 @@ class Level {
     this.vents = [];
     this.maxVents = 4;
     this.ventSpawnTimer = 0;
-    this.ventSpawnInterval = 10000;
+    this.ventSpawnInterval = 20000;
     this.initLevel = false;
     this.score = 0;
     this.currentColor;
@@ -21,7 +22,7 @@ class Level {
   setup() {
     if (this.initLevel) return;
     if(this.mode == "ROUGE"){
-      this.setObstacle();
+      this.setDifficulty(this.difficulty);
     }
     this.createRandomZones();
     if (this.vents.length < this.maxVents){
@@ -31,29 +32,60 @@ class Level {
     this.ventSpawnTimer = millis();
   }
 
-  setObstacle() {
+  setDifficulty(difficulty) {
     const rand = random(2);
+
+    if(difficulty >= 2){this.setObstacle(rand);}
+    if(difficulty == 3){this.setBoss(rand);}
+
+    for(let sp of this.vents){
+      switch(difficulty){
+      case 1:
+        sp.spawnIncrease = 0.0046296;
+        break;
+
+      case 2:
+        sp.spawnIncrease = 0.008342;
+        break;
+
+      case 3:
+        sp.spawnIncrease = 0.01;
+        break;
+      }
+    }
+  }
+
+  setObstacle(rand) {
     const w = 50, h = 50;
 
     if (rand <= 1) {
       this.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.2, h * 1.2, catSprite));
       console.log("cat");
-      this.boss = new Boss("Carmine Queen", 300, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
-      console.log("Carmine Queen");
     } else if (rand <= 2) {
       this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
       console.log("rougeBucket");
-      this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
-      console.log("Garnet Grimjack");
     } else {
       this.obstacle = [];
-      this.boss = null;
     }
 
     for(let obstacle of this.obstacle){
       if (obstacle instanceof rougeBucket) {
         this.allActors.push(obstacle);
       }
+    }
+  }
+
+  setBoss(rand){
+    const w = 50, h = 50;
+
+    if (rand <= 1) {
+      this.boss = new Boss("Carmine Queen", 300, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
+      console.log("Carmine Queen");
+    } else if (rand <= 2) {
+      this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
+      console.log("Garnet Grimjack");
+    } else {
+      this.boss = null;
     }
   }
 
@@ -257,7 +289,8 @@ class SpawnPoint {
     this.height = height;
     this.color = color;
 
-    this.spawnRate = 1; // seconds per spawn
+    this.spawnRate = 7; // seconds per spawn
+    this.spawnIncrease = 0.0046296;
     this.lastSpawnTime = 0; // when the last spawn happened (ms)
     this.shouldSpawn = true;
 
@@ -265,8 +298,12 @@ class SpawnPoint {
   }
 
   update(level) {
+    if(this.spawnRate > 2){
+      this.spawnRate -= this.spawnIncrease;
+    }
+
     // Check time elapsed since last spawn
-    if (millis() - this.lastSpawnTime >= this.spawnRate * 2000 && this.shouldSpawn) {
+    if (millis() - this.lastSpawnTime >= this.spawnRate * 1000 && this.shouldSpawn) {
       this.spawnActor(level);
       this.lastSpawnTime = millis();
     }

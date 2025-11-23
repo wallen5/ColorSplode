@@ -16,7 +16,7 @@ let currentState;
 let isPaused = false;
 let music; 
 let paintLayer;
-let level = new Level(5, 1, 1);
+let level = new Level(1, 5, 1, 1);
 
 chrSprite =[];
 grabSprite =[];
@@ -144,7 +144,7 @@ function preload(){
 function reset() {
   currentState = "MAINMENU";
   level = null;
-  level = new Level(5, 1, 1);
+  level = new Level(1, 5, 1, 1);
   level.initLevel = false;
   level.mode = "NONE";
   paintLayer = createGraphics(canvasWidth, canvasHeight);
