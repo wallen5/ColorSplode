@@ -1,3 +1,8 @@
+let fade = 0;
+let fadeSpeed = 5;
+let slide = 0;
+let slideSpeed = 15.0;
+
 class Level {
   constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;
@@ -18,6 +23,10 @@ class Level {
     this.gameOver = false; 
     this.player = new Player(lives, maxLives);
     this.mode = "NONE";
+    this.fade = 0;
+    this.fadeSpeed = 5;
+    this.slide = 0;
+    this.slideSpeed = 15.0;
   }
 
   setup() {
