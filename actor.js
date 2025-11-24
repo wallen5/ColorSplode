@@ -313,8 +313,7 @@ class Bucket extends Actor {
 
   }
 
-  dropInZone(level)
-  {
+  dropInZone(level){
     console.log("Put into zone!");  
     for (let zone of level.colorZones) {
         const overlap = rectsOverlap(
@@ -334,7 +333,6 @@ class Bucket extends Actor {
         break;
       }
     }
-    
   }  
 
   splode() {
@@ -417,6 +415,10 @@ class rougeBucket extends Actor {
     this.freezeElapsedMs = 0;
     this.maxTimeFreeze = 5;
   }
+
+  splode(){};
+
+  dropInZone(){};
 
   freezeActor() {
     if (!this.freeze) {
@@ -727,4 +729,95 @@ class Graffiti {
         }
         pop();
     }
+}
+
+class Boss extends Actor{
+  constructor(name, maxHealth, x, y, width, height, sprite, idleSprite, specialSprite, deathSprite) {
+    super(x, y, width, height, sprite);
+    this.idleSprite = idleSprite;
+    this.specialSprite = specialSprite;
+    this.deathSprite  = deathSprite;
+
+    this.name = name;
+    this.health = maxHealth;
+    this.maxHealth = maxHealth;
+    this.cooldown = 1200;
+    this.duration = 120;
+    this.timer = 0;
+    this.initialSpecial = false;
+  }
+
+  update(){
+    this.timer++;
+
+    if(this.timer == 120){
+      this.sprite = this.idleSprite;
+    }
+
+    if((this.initialSpecial == false && this.health <= this.maxHealth/2) || this.health <= this.maxHealth/2 && this.timer == this.cooldown){
+      this.initialSpecial = true;
+      this.useSpecial();
+      this.timer = 0;
+    }
+  }
+
+  drawHealthBar() {
+    const barWidth = 500;
+    const barHeight = 30;
+    let healthWidth = 0;
+    const x = (canvasWidth - barWidth) / 2;
+    const y = canvasHeight;
+
+    stroke(0);
+    strokeWeight(2);
+    noFill();
+    rect(x, y, barWidth, barHeight);
+
+    stroke(0);
+    strokeWeight(2);
+
+    noStroke();
+    fill(255, 0, 0);
+    if(this.health >= 0){
+      healthWidth = (this.health / this.maxHealth) * barWidth;
+    }
+    rect(x, y, healthWidth, barHeight);
+    fill(0);
+    textSize(20);
+    text(this.name, x + 100, y + 25);
+  }
+
+  draw() {
+    push();
+    imageMode(CENTER);
+    const cx = this.x + this.width + 600;
+    const cy = this.y + this.height * 0.5;
+    if (this.sprite) {
+      image(this.sprite, cx, cy);
+    }
+    this.drawHealthBar();
+    pop();
+  }
+
+  useSpecial(){
+    this.sprite = this.specialSprite;
+    this.sprite.reset();
+    this.sprite.pause();
+    this.sprite.play();
+    switch(this.name){
+    case "Garnet Grimjack":
+      let rouge = new rougeBucket(canvasWidth / 2, canvasHeight / 2, 50, 50, rougeBucketSprite);
+      level.obstacle.push(rouge);
+      level.allActors.push(rouge);
+      break;
+    case "Carmine Queen":
+      let cat = new Cat(canvasWidth / 2, canvasHeight / 2, 90, 90, catSprite);
+      level.obstacle.push(cat);
+      break;
+    };
+    push();
+    fill(255, 0, 0);
+    rect(0, 0, canvasWidth, canvasHeight);
+    pop();
+  }
 }

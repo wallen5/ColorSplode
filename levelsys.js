@@ -1,13 +1,16 @@
 class Level {
-  constructor(score, lives, maxLives) {
-    this.scoreThreshold = score;
-    this.obstacle = null;
+  constructor(difficulty, bossKey, lives, maxLives) {
+    this.difficulty = difficulty;
+    this.bossKey = bossKey;
+    this.scoreThreshold = 25;
+    this.obstacle = [];
+    this.boss = null;
     this.colorZones = [];
     this.allActors = [];
     this.vents = [];
     this.maxVents = 4;
     this.ventSpawnTimer = 0;
-    this.ventSpawnInterval = 10000;
+    this.ventSpawnInterval = 20000;
     this.initLevel = false;
     this.score = 0;
     this.currentColor;
@@ -15,12 +18,16 @@ class Level {
     this.gameOver = false; 
     this.player = new Player(lives, maxLives);
     this.mode = "NONE";
+    this.fade = 0;
+    this.fadeSpeed = 5;
+    this.slide = 0;
+    this.slideSpeed = 15.0;
   }
 
   setup() {
     if (this.initLevel) return;
     if(this.mode == "ROUGE"){
-      this.setObstacle();
+      this.setDifficulty(this.difficulty);
     }
     this.createRandomZones();
     if (this.vents.length < this.maxVents){
@@ -30,25 +37,67 @@ class Level {
     this.ventSpawnTimer = millis();
   }
 
+  setDifficulty(difficulty) {
+    if(difficulty >= 2){
+      this.setObstacle();
+      this.scoreThreshold = 50;
+    }
+    if(difficulty == 3){
+      this.setBoss();
+      this.scoreThreshold = this.boss.health;
+    }
+
+    for(let sp of this.vents){
+      switch(difficulty){
+      case 1:
+        sp.spawnIncrease = 0.0046296;
+        break;
+
+      case 2:
+        sp.spawnIncrease = 0.008342;
+        break;
+
+      case 3:
+        sp.spawnIncrease = 0.01;
+        break;
+      }
+    }
+  }
+
   setObstacle() {
-    const rand = random(3);
     const w = 50, h = 50;
 
-    if (rand <= 1) {
-      this.obstacle = new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.2, h * 1.2, catSprite);
+    if (this.bossKey <= 1) {
+      this.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.8, h * 1.8, catSprite));
       console.log("cat");
-    } else if (rand <= 2) {
-      this.obstacle = new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite);
+    } else if (this.bossKey <= 2) {
+      this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
       console.log("rougeBucket");
     } else if (rand <= 3){
       this.obstacle = new Graffiti(graffitiSprite);
       console.log("graffiti");
     } else {
-      this.obstacle = null;
+      this.obstacle = [];
     }
 
-    if (this.obstacle && this.obstacle.constructor.name === "rougeBucket") {
-      this.allActors.push(this.obstacle);
+    for(let obstacle of this.obstacle){
+      if (obstacle instanceof rougeBucket) {
+        this.allActors.push(obstacle);
+      }
+    }
+  }
+
+  setBoss(){
+    const w = 50, h = 50;
+
+    if (this.bossKey <= 1) {
+      this.boss = new Boss("Carmine Queen", 200, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
+      console.log("Carmine Queen");
+    } else if (this.bossKey <= 2) {
+      this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
+      console.log("Garnet Grimjack");
+    } else {
+      this.boss = null;
     }
   }
 
@@ -85,8 +134,13 @@ class Level {
       this.player.alive = false;
       this.gameOver = true; 
     }
-    if(this.obstacle){
-      this.obstacle.update(this);
+
+    for(let obstacle of this.obstacle){
+      obstacle.update(this);
+    }
+
+    if(this.boss){
+      this.boss.update(this);
     }
 
     // Auto-spawn vents
@@ -112,6 +166,7 @@ class Level {
       this.currentCombo++;
     }
     this.score += this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
+    if(level.difficulty == 3) {this.boss.health -= this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);};
   }
 
   draw() {
@@ -131,8 +186,11 @@ class Level {
     for (let actor of this.allActors) {
       actor.draw();
     }
-    if(this.obstacle){
-      this.obstacle.draw();
+    for(let obstacle of this.obstacle){
+      obstacle.draw();
+    }
+    if(this.boss){
+      this.boss.draw();
     }
   }
 
@@ -245,7 +303,8 @@ class SpawnPoint {
     this.height = height;
     this.color = color;
 
-    this.spawnRate = 1; // seconds per spawn
+    this.spawnRate = 7; // seconds per spawn
+    this.spawnIncrease = 0.0046296;
     this.lastSpawnTime = 0; // when the last spawn happened (ms)
     this.shouldSpawn = true;
 
@@ -253,8 +312,12 @@ class SpawnPoint {
   }
 
   update(level) {
+    if(this.spawnRate > 2){
+      this.spawnRate -= this.spawnIncrease;
+    }
+
     // Check time elapsed since last spawn
-    if (millis() - this.lastSpawnTime >= this.spawnRate * 2000 && this.shouldSpawn) {
+    if (millis() - this.lastSpawnTime >= this.spawnRate * 1000 && this.shouldSpawn) {
       this.spawnActor(level);
       this.lastSpawnTime = millis();
     }
