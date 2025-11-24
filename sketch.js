@@ -371,12 +371,25 @@ function runClassicMode() {
   if(!isPaused){
     level.update();
   }
-  
+
   if(level.gameOver){
+    // draw paint splats on game over
+    if(level.splatsTriggered){  
+      for (let i = 0; i < 8; ++i) {
+        generateRandomSplat();
+      }
+      level.gameOverTime = millis();
+    }
+    level.splatsTriggered = false;
+    if(millis() - level.gameOverTime > 1000){
+      drawActiveSplats();
+    }
+
     level.splodeActors();
     text("Game Over!",  width/2, height/2 - 60)
     text(`Final score: ${level.score}`, width/2, height/2 - 30);
     text("Press R to restart", width/2, height/2)
+    
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -510,3 +523,4 @@ function drawPauseOverlay() {
   text("ESC - Resume\nM - Main Menu", width / 2, height / 2 + 10);
   pop();
 }
+
