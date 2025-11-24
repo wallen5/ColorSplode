@@ -574,6 +574,29 @@ function createPauseButton()
   this.pauseButton.update();
 }
 
+
+function drawGameOver()
+{
+  level.splodeActors();
+  text("Game Over!",  width/2, height/2 - 60)
+  text(`Final score: ${level.score}`, width/2, height/2 - 30);
+  this.pauseButton.remove();
+  if(!this.restartButton || !this.restartButton.sprite)
+  {
+    this.restartButton = new Button(windowWidth/2, windowHeight/2, 150, 40, "lightgreen", "darkgreen", "Restart - r", 
+      () =>{
+        reset();
+        music.stop();
+        music = menuMusic;
+        music.play();
+        this.restartButton.remove();
+      }
+    )
+  }
+  this.restartButton.update();
+}
+
+
 function openItemChoiceScreen() {
   // pick up to 3 random distinct items from ITEM_POOL
   let pool = ITEM_POOL.slice(); // copy
