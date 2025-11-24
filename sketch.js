@@ -18,6 +18,7 @@ let music;
 let paintLayer;
 let level = new Level(5, 1, 1);
 
+let zoneSprites = [];
 chrSprite =[];
 grabSprite =[];
 deathSprite =[];
@@ -121,6 +122,10 @@ function preload(){
   splat6 = loadImage("images/Splats/splat6.png");
   splatD = loadImage("images/Splats/splatDeLozier.png");
 
+  zoneSprites[0] = loadImage("images/redzone.png");
+  zoneSprites[1] = loadImage("images/bluezone.png");
+  zoneSprites[2] = loadImage("images/purplezone.png");
+  zoneSprites[3] = loadImage("images/greenzone.png");
 
   bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
