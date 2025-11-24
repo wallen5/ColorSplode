@@ -275,7 +275,7 @@ function keyPressed() {
   }
 
   if(currentState === "LEVELTRANS") {
-    if(key === '1') {
+    if(key === '1' && level.difficulty < 3) {
       paintLayer = createGraphics(canvasWidth, canvasHeight);
       paintLayer.background(levelBackground);
       levelNum++;
@@ -445,7 +445,7 @@ function runRougeMode(){
     level.update();
   }
 
-  if(level.score == level.scoreThreshold){
+  if(level.score >= level.scoreThreshold){
     currentState = "LEVELTRANS";
   }
 
@@ -463,12 +463,25 @@ function runRougeMode(){
 
 function showLevelTransition() {
   push();
-  fill(237, 204, 42);
+  fill(128, 0, 0);
   rect(0, 0, canvasWidth, canvasHeight);
 
-  if (this.fade < 255){this.fade += this.fadeSpeed;}
-  if (this.slide < width / 2){this.slide += this.slideSpeed}
-  rect(0, 0, 0, canvasWidth, canvasHeight);
+  if (level.fade < 255){level.fade += level.fadeSpeed;}
+  if (level.slide < canvasWidth / 2){level.slide += level.slideSpeed}
+
+  stroke(0);
+  strokeWeight(4);
+  textSize(30);
+  fill(237, 204, 42);
+  if(level.difficulty != 3){
+    text("Level " + level.difficulty + " Complete", canvasWidth / 5, level.slide / 1.5);
+    textSize(20);
+    fill(255);
+    text("Press 1 to Continue", level.slide / 2, canvasHeight / 2);
+  } else {
+    textSize(43);
+    text("Victory!", canvasWidth / 3.5, level.slide);
+  }
   pop();
 }
 

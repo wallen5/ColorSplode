@@ -44,7 +44,7 @@ class Level {
     }
     if(difficulty == 3){
       this.setBoss();
-      this.scoreThreshold = this.boss.maxHealth;
+      this.scoreThreshold = this.boss.health;
     }
 
     for(let sp of this.vents){
@@ -68,7 +68,7 @@ class Level {
     const w = 50, h = 50;
 
     if (this.bossKey <= 1) {
-      this.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.2, h * 1.2, catSprite));
+      this.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.8, h * 1.8, catSprite));
       console.log("cat");
     } else if (this.bossKey <= 2) {
       this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
@@ -88,10 +88,10 @@ class Level {
     const w = 50, h = 50;
 
     if (this.bossKey <= 1) {
-      this.boss = new Boss("Carmine Queen", 100, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
+      this.boss = new Boss("Carmine Queen", 2, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
       console.log("Carmine Queen");
     } else if (this.bossKey <= 2) {
-      this.boss = new Boss("Garnet Grimjack", 100, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
+      this.boss = new Boss("Garnet Grimjack", 2, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
       console.log("Garnet Grimjack");
     } else {
       this.boss = null;

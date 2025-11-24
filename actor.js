@@ -508,6 +508,7 @@ class Boss extends Actor{
     this.cooldown = 1200;
     this.duration = 120;
     this.timer = 0;
+    this.initialSpecial = false;
   }
 
   update(){
@@ -517,7 +518,8 @@ class Boss extends Actor{
       this.sprite = this.idleSprite;
     }
 
-    if(this.health == this.maxHealth/2 || this.health <= this.maxHealth/2 && this.timer == this.cooldown){
+    if((this.initialSpecial == false && this.health <= this.maxHealth/2) || this.health <= this.maxHealth/2 && this.timer == this.cooldown){
+      this.initialSpecial = true;
       this.useSpecial();
       this.timer = 0;
     }
@@ -573,9 +575,13 @@ class Boss extends Actor{
       level.allActors.push(rouge);
       break;
     case "Carmine Queen":
-      let cat = new Cat(canvasWidth / 2, canvasHeight / 2, 60, 60, catSprite);
+      let cat = new Cat(canvasWidth / 2, canvasHeight / 2, 90, 90, catSprite);
       level.obstacle.push(cat);
       break;
     };
+    push();
+    fill(255, 0, 0);
+    rect(0, 0, canvasWidth, canvasHeight);
+    pop();
   }
 }
