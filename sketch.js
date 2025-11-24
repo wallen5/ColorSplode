@@ -16,9 +16,14 @@ let currentState;
 let isPaused = false;
 let music; 
 let paintLayer;
+
+let level = new Level(5, 1, 1);
+let TESTS_RAN = false;
+
 let levelNum = 1;
 let randBoss = 1;
 let level = new Level(levelNum, randBoss, 1, 1);
+
 
 let zoneSprites = [];
 chrSprite =[];
@@ -187,7 +192,10 @@ const gameStates = {
 function setup() {
   // canvas is full-page
   createCanvas(windowWidth, windowHeight);
-
+  if (!TESTS_RAN) { //simple test flag
+    runTests();
+    TESTS_RAN = true;
+  }
   // 800x800 paint layer for your game world
   paintLayer = createGraphics(canvasWidth, canvasHeight);
   paintLayer.background(levelBackground);
@@ -735,3 +743,6 @@ function drawExplosion() {
     bombTimer--;
   }
 }
+
+
+
