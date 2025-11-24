@@ -558,6 +558,22 @@ function showLevelTransition() {
   pop();
 }
 
+function createPauseButton()
+{
+  if(!this.pauseButton || !this.pauseButton.sprite)
+  {
+    this.pauseButton = new Button(windowWidth/2 + canvasWidth/2 + 30, 110, 50, 50, "darkgray", "gray", "||", 
+      () =>{
+        if (!pendingItemChoices) {
+          isPaused = !isPaused;
+          this.pauseButton.remove();
+        }
+      }
+    )
+  }
+  this.pauseButton.update();
+}
+
 function openItemChoiceScreen() {
   // pick up to 3 random distinct items from ITEM_POOL
   let pool = ITEM_POOL.slice(); // copy
