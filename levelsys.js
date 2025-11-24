@@ -2,7 +2,7 @@ class Level {
   constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;
     this.bossKey = bossKey;
-    this.scoreThreshold = 5;
+    this.scoreThreshold = 1;
     this.obstacle = [];
     this.boss = null;
     this.colorZones = [];
@@ -36,11 +36,11 @@ class Level {
   setDifficulty(difficulty) {
     if(difficulty >= 2){
       this.setObstacle();
-      this.scoreThreshold = 10;
+      this.scoreThreshold = 1;
     }
     if(difficulty == 3){
       this.setBoss();
-      this.scoreThreshold = 15;
+      this.scoreThreshold = this.boss.maxHealth;
     }
 
     for(let sp of this.vents){
@@ -84,10 +84,10 @@ class Level {
     const w = 50, h = 50;
 
     if (this.bossKey <= 1) {
-      this.boss = new Boss("Carmine Queen", 300, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
+      this.boss = new Boss("Carmine Queen", 100, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
       console.log("Carmine Queen");
     } else if (this.bossKey <= 2) {
-      this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
+      this.boss = new Boss("Garnet Grimjack", 100, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
       console.log("Garnet Grimjack");
     } else {
       this.boss = null;
