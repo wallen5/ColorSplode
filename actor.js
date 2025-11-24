@@ -28,8 +28,17 @@ class Actor {
     // canvas edge bounce
     if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
     else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
-    if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
-    else if (this.y > canvasHeight - this.height) { this.y = canvasHeight - this.height; this.moveAngle = -this.moveAngle; }
+
+   // Only for when all zones are located at the bottom of the canvas
+    let effectiveBottom = canvasHeight; // Default to the absolute canvas bottom
+    const zoneHeight = 150, inset = 25;
+    // Create new boundary if conditions are met
+    if (level?.currentZoneMap === 2 && !this.grabbed) {
+        effectiveBottom = canvasHeight - zoneHeight - inset;
+    }
+    //(map with zones at bottom) new boundary to stop buckets from moving past zones. Otherwise, boundaries stay the same
+     if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
+     else if (this.y > effectiveBottom - this.height) { this.y = effectiveBottom - this.height; this.moveAngle = -this.moveAngle; }
   }
 
   draw() {
@@ -39,6 +48,11 @@ class Actor {
     if (this.sprite){image(this.sprite, this.cx, this.cy, this.width, this.height);}
     pop();
   }
+
+  update(level) {
+    this.roam();
+  }
+
 }
 
 class Bucket extends Actor {
@@ -71,6 +85,9 @@ class Bucket extends Actor {
     this.lastBounceAt   = 0;   // ms
     this.bounceCooldown = 80;  // ms
 
+    this.timeSinceFlip = 0; // frames
+    this.lookDir = 1; // 1 left, -1 right
+
     // NEW: logical timers that only advance when not paused
     this.lifeMs = 0;             // how long this bucket has been alive in “game time”
     this.freezeElapsedMs = 0;    // how long it has been frozen
@@ -78,12 +95,13 @@ class Bucket extends Actor {
   }
 
   draw() {
+
     const wobbleStart = Number.isFinite(this.wobbleTime) ? this.wobbleTime : 0; // ms
     const ageMs = this.lifeMs;  // use game-time instead of millis() directly
     let progress = constrain(ageMs / this.maxTimeAlive, 0, 1);
 
-    const baseAmp = PI / 6;  // 30°
-    const wobbleSpeed = 6.0 * lerp(1.0, 4.0, progress);
+    const baseAmp = PI / 8;  // 22.5°
+    const wobbleSpeed = 2.0 * lerp(1.0, 4.0, progress);
     const wobbleAmp   = baseAmp * lerp(1.0, 2.0, progress);
 
     // When paused, draw a static sprite (no wobble), but still tint if frozen
@@ -91,11 +109,13 @@ class Bucket extends Actor {
       this.lastUpdateTime = millis();
       push();
       imageMode(CENTER);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, this.cx, this.cy, this.width, this.height);
       pop();
       return;
     }
+
+    this.flipActor();
 
     if (ageMs >= wobbleStart && !this.sorted && this.alive) {
       const t = (ageMs - wobbleStart) / 1000.0;
@@ -104,16 +124,19 @@ class Bucket extends Actor {
       push();
       imageMode(CENTER);
       translate(this.x + this.width / 2, this.y + this.height / 2);
+      scale(this.lookDir, 1);
       rotate(theta);
-      if (this.freeze) tint('blue');
+      if (this.freeze) tint(173, 216, 230);
       image(this.sprite, 0, 0, this.width, this.height);
       pop();
 
     } else {
       push();
       imageMode(CENTER);
-      if (this.freeze) tint('blue');
-      image(this.sprite, this.cx, this.cy, this.width, this.height);
+      translate(this.x + this.width / 2, this.y + this.height / 2);
+      scale(this.lookDir, 1);
+      if (this.freeze) tint(173, 216, 230);
+      image(this.sprite, 0, 0, this.width, this.height);
       pop();
     }
   }
@@ -176,7 +199,41 @@ class Bucket extends Actor {
     }
   }
 
+  flipActor() {
+    this.timeSinceFlip++;
+    if (this.timeSinceFlip < 12) return; // dont flip too often
+
+    // flips too much without flipPadding, play around with value
+    const flipPadding = 0.1;
+    const moveAmt = (cos(this.moveAngle) * this.speed);
+
+
+    console.log(moveAmt);
+    if (moveAmt > (flipPadding)) {
+      console.log("FLIPPING!");
+      this.lookDir = -1;
+      this.timeSinceFlip = 0;
+    } 
+    if (moveAmt < (-flipPadding)) {
+      console.log("FLIPPING!");
+      this.lookDir = 1;
+      this.timeSinceFlip = 0;
+    }
+  }
+
+  // without this, death anim is too small 
+  fixDeathAnim() {
+    if (!this.alive || this.sorted) return;
+    this.width  *= 2; 
+    this.height *= 2;
+    this.x -= this.width/4;
+    this.y -= this.height/4;
+  }
+
   update(level) {
+
+    const oldX = this.x;
+    const oldY = this.y;
     // compute dt every frame based on real time
     const now = millis();
     const dt = now - this.lastUpdateTime;
@@ -188,8 +245,8 @@ class Bucket extends Actor {
     }
 
     if (this.grabbed) {
-      const gx = mouseX - gameOffsetX;
-      const gy = mouseY - gameOffsetY;
+      const gx = mouseX - gameOffsetX - this.width/2;
+      const gy = mouseY - gameOffsetY - this.height/2;
       this.x = gx;
       this.y = gy;
     }
@@ -197,9 +254,9 @@ class Bucket extends Actor {
     this.sprite = this.sorted
       ? chrSprite[this.color]
       : (this.alive ? chrSprite[this.color] : deathSprite[this.color]);
+      
 
     // time & freeze
-    this.prevX = this.x; this.prevY = this.y;
 
     if (this.freeze) {
       this.freezeElapsedMs += dt;
@@ -213,8 +270,14 @@ class Bucket extends Actor {
 
     // advance life only when not paused
     this.lifeMs += dt;
-    if (this.lifeMs >= this.maxTimeAlive) this.alive = false;
-
+    if ((this.lifeMs >= this.maxTimeAlive) && (this.alive)) {
+      this.fixDeathAnim();
+      this.alive = false;
+      for(item of inventory){
+        if (item.id === "SCRAPER") itemEffectScrape(level, this);
+      }
+    } 
+    
     // motion/collisions
     if (!this.sorted && this.alive) {
       this.roam();
@@ -244,6 +307,10 @@ class Bucket extends Actor {
       pop();
       if (age > 1500) this.particles.splice(i, 1);
     }
+
+    // Change prevX
+    this.prevX = oldX; this.prevY = oldY;
+
   }
 
   dropInZone(level){
@@ -258,6 +325,7 @@ class Bucket extends Actor {
       if (overlap && !this.sorted) {
         if (this.color === zone.color) {
           this.sorted = true;
+          this.splode(); //remove if you want
           if(!this.freed)
             level.addScore(this);
           this.freed = true;
@@ -308,6 +376,8 @@ class Cat extends Actor {
     if (this.target?.alive && !this.target.sorted) {
       this.target.splode();
       this.target.maxTimeAlive -= 3000;
+      
+
     }
     this.lastSwipe = now; this.target = null;
   }
@@ -392,6 +462,22 @@ class rougeBucket extends Actor {
     this.target.alive = true;
     this.target.scored = true;
 
+    // -- Used to nudge bucket towards center of screen after freed by rogue bucket
+    const centerX = canvasWidth * 0.5;
+    const centerY = canvasHeight * 0.5;
+    // Use the bucket's center coordinates
+    const bucketCX = this.target.cx; 
+    const bucketCY = this.target.cy; 
+    // Calculate the difference vector (dx, dy) from the bucket to the center of screen
+    const dx = centerX - bucketCX;
+    const dy = centerY - bucketCY;
+    // This gives angle pointing from (bucketCX, bucketCY) to (centerX, centerY).
+    this.target.moveAngle = Math.atan2(dy, dx);
+    //when bucket is freed, it is moved towards center of screen to prevent bucket from going off canvas
+    const nudgeDistance = this.target.width * 2.5;
+    this.target.x += Math.cos(this.target.moveAngle) * nudgeDistance;
+    this.target.y += Math.sin(this.target.moveAngle) * nudgeDistance;
+
     // remove from current target list
     this.targets = this.targets.filter(b => b !== this.target);
     this.target = this.getClosestTarget();
@@ -410,6 +496,7 @@ class rougeBucket extends Actor {
       this.targets = [];
       this.target = null;
       this.roamUntil = millis() + 3000;
+      if (!mouseIsPressed) this.grabbed = false;
       return;
     }
     
@@ -457,42 +544,191 @@ class Coin extends Actor {
     this.speed = 1.5;
     this.moveAngle = random(TWO_PI);
   }
+}
+
+class Roller extends Actor {
+  constructor(x, y, width, height, sprite) {
+    super(x, y, width, height, sprite);
+    this.target = null;
+    this.speed = 2.5;
+    this.freeRange = 40;
+  }
+
+  findTarget(level) {
+    for (let actor of level.allActors) {
+      if (!actor.grabbed) { this.target = actor; if (random(10) <= 2) return; }
+    }
+    this.target = null;
+  }
+
+  moveTowardTarget() {
+    if (!this.target) return;
+    const dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
+    const d  = Math.hypot(dx, dy); if (d < 1) return;
+    this.x += (dx / d) * this.speed; this.y += (dy / d) * this.speed;
+    if (d < this.freeRange) this.freeTarget();
+  }
+
+  freeTarget() {
+    if (this.target) {
+      this.target.lifeMs = 0;
+      this.target.sorted = false;
+      this.target.freed = true;
+      this.target.alive = true;
+    }
+    this.target = null;
+  }
 
   update(level) {
-    if (this.grabbed) {
-      // follow mouse (game-space coordinates expected)
-      const gx = mouseX - (typeof gameOffsetX !== 'undefined' ? gameOffsetX : 0);
-      const gy = mouseY - (typeof gameOffsetY !== 'undefined' ? gameOffsetY : 0);
-      this.x = gx - this.width * 0.5;
-      this.y = gy - this.height * 0.5;
-      return;
-    }
-
-    // wandering movement
-    this.roam();
-
-    // simple bounds correction handled by Actor.roam
+    if (!this.target) this.findTarget(level);
+    if (this.target && !this.grabbed) this.moveTowardTarget();
+    if (this.grabbed) { this.x = mouseX; this.y = mouseY; }
   }
 
-  draw() {
-    push();
-    imageMode(CENTER);
-    const cx = this.x + this.width * 0.5;
-    const cy = this.y + this.height * 0.5;
-    if (this.sprite) {
-      image(this.sprite, cx, cy, this.width, this.height);
-    } else {
-      // fallback gold coin drawing
-      noStroke();
-      fill(255, 215, 0);
-      ellipse(cx, cy, this.width, this.height);
-      stroke(120, 80, 0);
-      noFill();
-      ellipse(cx, cy, this.width * 0.7, this.height * 0.7);
-    }
-    pop();
-  }
 
+}
+
+class Graffiti {
+    constructor(sprite) {
+        this.sprite = sprite;
+        this.size = 55;
+        this.speed = 5;
+        this.sprayRadius = 140;
+
+        this.active = false;
+        this.exiting = false;
+        this.sprayed = false;
+
+        this.x = -200;
+        this.y = -200;
+
+        this.cooldown = 2000; //wait time before picking a new target
+        this.lastActionTime = 0;
+    }
+
+    waitOffscreen() {
+        this.active = this.exiting = this.sprayed = false;
+        this.x = this.y = -200;
+        this.lastActionTime = millis();
+    }
+
+    pickEdge(pxOff = 80, pyOff = 80) {
+        const side = floor(random(4));
+        switch (side) {
+            case 0:
+                return { x: -pxOff, y: random(height) };
+            case 1:
+                return { x: width + pxOff, y: random(height) };
+            case 2:
+                return { x: random(width), y: -pyOff };
+            default:
+                return { x: random(width), y: height + pyOff };
+        }
+    }
+
+    pickEntryPoint() {
+        const p = this.pickEdge(80, 80);
+        this.x = p.x;
+        this.y = p.y;
+    }
+
+    pickExitPoint() {
+        const p = this.pickEdge(200, 200);
+        this.exitX = p.x;
+        this.exitY = p.y;
+    }
+
+    moveToward(tx, ty, s = this.speed) {
+        const dx = tx - this.x,
+            dy = ty - this.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < s * s) return true;
+        const inv = 1 / Math.sqrt(d2);
+        this.x += dx * inv * s;
+        this.y += dy * inv * s;
+        return false;
+    }
+
+    findTarget(level) {
+        const candidates = [];
+
+        for (let a of level.allActors) {
+            if (a instanceof Bucket && a.alive && !a.sorted) {
+                candidates.push(a);
+            }
+        }
+
+        if (candidates.length === 0) return null;
+
+        return candidates[floor(random(candidates.length))];
+    }
+
+
+    spray(level) {
+        if (this.sprayed) return;
+        this.sprayed = true;
+        this.exiting = true;
+        this.pickExitPoint();
+
+        const r2 = this.sprayRadius * this.sprayRadius;
+
+        for (let actor of level.allActors) {
+            if (!(actor instanceof Bucket) || !actor.alive || actor.sorted) continue;
+
+            const dx = (actor.x + actor.width / 2) - this.x;
+            const dy = (actor.y + actor.height / 2) - this.y;
+            const d2 = dx * dx + dy * dy;
+
+            if (d2 < r2) {
+                actor.color = floor(random(4));
+                if (actor.splode) actor.splode();
+            }
+        }
+    }
+
+    update(level) {
+
+        if (!this.active) {
+            if (millis() - this.lastActionTime < this.cooldown) return;
+
+            const t = this.findTarget(level);
+            if (t) {
+                this.active = true;
+                this.target = t;
+                this.pickEntryPoint();
+            }
+            return;
+        }
+
+        if (this.exiting) {
+            if (this.moveToward(this.exitX, this.exitY, this.speed * 1.3)) {
+                const offX = this.x < -150 || this.x > width + 150;
+                const offY = this.y < -150 || this.y > height + 150;
+                if (offX || offY) this.waitOffscreen();
+            }
+            return;
+        }
+
+        if (!this.target || !this.target.alive || this.target.sorted) {
+            this.target = this.findTarget(level);
+            if (!this.target) return;
+        }
+
+        if (this.moveToward(this.target.cx, this.target.cy)) {
+            this.spray(level);
+        }
+    }
+
+    draw() {
+        push();
+        imageMode(CENTER);
+        if (this.sprite) image(this.sprite, this.x, this.y, this.size, this.size);
+        else {
+            fill(255, 0, 0);
+            circle(this.x, this.y, this.size);
+        }
+        pop();
+    }
 }
 
 class Boss extends Actor{

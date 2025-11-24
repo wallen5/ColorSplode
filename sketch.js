@@ -20,6 +20,7 @@ let levelNum = 1;
 let randBoss = 1;
 let level = new Level(levelNum, randBoss, 1, 1);
 
+let zoneSprites = [];
 chrSprite =[];
 grabSprite =[];
 deathSprite =[];
@@ -37,6 +38,8 @@ let nextItemScoreThreshold = ITEM_SCORE_STEP;
 let inventory = [];              // all items you’ve picked so far (if you want)
 let currentItem = null;          // the item you can currently use
 let pendingItemChoices = null;   // when non-null, the item choice UI is open
+
+let ourPlayer = null;
 
 // ,_________
 // | Helper |
@@ -82,6 +85,7 @@ function windowResized() {
 // | Preload |
 // |_________|
 function preload(){
+  angleMode(RADIANS);
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
   gameOverBG = loadImage("images/gameoverbackground.png");
@@ -120,10 +124,15 @@ function preload(){
   splat6 = loadImage("images/Splats/splat6.png");
   splatD = loadImage("images/Splats/splatDeLozier.png");
 
+  zoneSprites[0] = loadImage("images/redzone.png");
+  zoneSprites[1] = loadImage("images/bluezone.png");
+  zoneSprites[2] = loadImage("images/purplezone.png");
+  zoneSprites[3] = loadImage("images/greenzone.png");
 
   bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
   catSprite = loadImage("images/catimage.gif");
+  graffitiSprite = loadImage("images/Graffiti.png");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
   levelBackground = loadImage("images/levelBackground.png");
@@ -191,8 +200,17 @@ function setup() {
   ITEM_POOL = [
     new Item("MAGNET", magnet),
     new Item("FREEZE", freeze),
-    new Item("TOTEM", totem)
+    new Item("TOTEM", totem),
+    new Item("SCRAPER", scraper),
+    new Item("BOMB", bomb),
+    new Item("PALLET", selectivePallet),
+    new Item("BRUSH", thickerBrush)
   ];
+
+  if (!ourPlayer) {
+    // Player starts with 2 hearts by default
+    ourPlayer = new Player(2,2);
+  }
 
   updateGameOffsets();
   randBoss = random(2);
@@ -245,6 +263,8 @@ function keyPressed() {
     if (!pendingItemChoices) {
       isPaused = !isPaused;
     }
+    if(this.resumeButton) this.resumeButton.remove();
+    if(this.quitButton) this.quitButton.remove();
     return;
   }
 
@@ -257,6 +277,8 @@ function keyPressed() {
       music.play();
       //currentState = "MAINMENU";
       isPaused = false;
+      if(this.resumeButton) this.resumeButton.remove();
+      if(this.quitButton) this.quitButton.remove();
     }
     return;
   }
@@ -270,6 +292,11 @@ function keyPressed() {
         pendingItemChoices = null;
         nextItemScoreThreshold += ITEM_SCORE_STEP;
       }
+      for(let b of this.choiceButtons)
+      {
+        b.remove();
+      }
+      this.choiceButtons = null;
     }
     return;
   }
@@ -293,12 +320,16 @@ function keyPressed() {
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.startButton.remove();
+      this.rougeLikeButton.remove();
     }
     if (key === '2'){
       currentState = "ROUGE";
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.rougeLikeButton.remove();
+      this.startButton.remove();2
     }
 
   }
@@ -309,6 +340,7 @@ function keyPressed() {
       music.stop();
       music = menuMusic;
       music.play();
+      if(this.restartButton) this.restartButton.remove();
       //currentState = "MAINMENU";
     }
   }
@@ -321,14 +353,16 @@ function mousePressed() {
   if (isPaused) return;
 
   const { x: gx, y: gy } = getGameMouse();
+  
 
 
   for (let actor of level.allActors) {
+    const padding = actor.width/4; // Feels better when slightly more forgiving
     if (
-      gx >= actor.x &&
-      gx <= actor.x + actor.width &&
-      gy >= actor.y &&
-      gy <= actor.y + actor.height &&
+      gx >= (actor.x-padding) &&
+      gx <= (actor.x + actor.width + padding) &&
+      gy >= (actor.y-padding) &&
+      gy <= (actor.y + actor.height + padding) &&
       !actor.sorted &&
       actor.alive
     ) {
@@ -371,9 +405,41 @@ function showMainMenu() {
   fill(currentColor);
   text("ColorSplode", canvasWidth/2, canvasHeight/2 - 50);
   pop();
-  textSize(20);
-  text("Press 1 for Classic Mode", canvasWidth/2, canvasHeight/2);
-  text("Press 2 for Rouge Mode", canvasWidth/2, canvasHeight/2 + 30);
+  textSize(15);
+  // Creates button if either: it doesn't exist OR it doesn't have a sprite
+  // Kind of a mouth full, but in this way we make it so buttons functionality is completely separate
+  // Note: you do NOT have to make a whole prototype function into the button. You can also just put "[function]"
+  // without the () and have it work the exact same!
+  if(!this.startButton || !this.startButton.sprite)
+  {
+    this.startButton = new Button(windowWidth/2, canvasHeight/2 + 140, 500, 50, "lightgreen", "darkgreen", "Play Classic Mode - 1",
+      () =>{
+        currentState = "CLASSIC";
+        if(music) music.stop();
+        music = levelMusic;
+        music.play();
+        this.rougeLikeButton.remove();
+        this.startButton.remove();  
+      }
+    );
+  }
+  if(!this.rougeLikeButton || !this.rougeLikeButton.sprite)
+  {
+    this.rougeLikeButton = new Button(windowWidth/2, canvasHeight/2 + 220, 500, 50, "red", "darkred", "Play Rougelike Mode - 2",
+      () =>{
+        currentState = "ROUGE";
+        if(music) music.stop();
+        music = levelMusic;
+        music.play();
+        this.rougeLikeButton.remove();
+        this.startButton.remove();
+      }
+    );
+  }
+  this.startButton.update();
+  this.rougeLikeButton.update();
+  //text("Press 1 for Classic Mode", canvasWidth/2, canvasHeight/2);
+  //text("Press 2 for Rouge Mode", canvasWidth/2, canvasHeight/2 + 30);
 
 }
 
@@ -383,6 +449,9 @@ function showMainMenu() {
 
 function runClassicMode() {
 
+  if(!isPaused)
+    createPauseButton();
+  
   if(!level.initLevel){
     level.mode = "CLASSIC";
     level.setup();
@@ -397,10 +466,7 @@ function runClassicMode() {
   }
   
   if(level.gameOver){
-    level.splodeActors();
-    text("Game Over!",  width/2, height/2 - 60)
-    text(`Final score: ${level.score}`, width/2, height/2 - 30);
-    text("Press R to restart", width/2, height/2)
+    drawGameOver();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -409,6 +475,9 @@ function runClassicMode() {
 }
 
 function runRougeMode(){
+
+  if(!isPaused)
+    createPauseButton();
 
   if(!level.initLevel){
     level.mode = "ROUGE";
@@ -429,6 +498,8 @@ function runRougeMode(){
     return;
   }
 
+  drawExplosion(); // shows bomb explode gif when bomb dropped. Triggered by itemEffectBomb(level)
+
   for(item of inventory){
     if (item.id === "MAGNET") {
       itemEffectMagnet(level);
@@ -436,6 +507,11 @@ function runRougeMode(){
       itemEffectFreeze(level);
     } else if (item.id === "TOTEM") {
       
+    } else if (item.id === "BOMB" && (key === 'b' || key === 'B')) {
+      itemEffectBomb(level); // used to activate drawExplosion()
+      let index = inventory.indexOf(item);
+      inventory.splice(index,1); // remove bomb after it is used
+      break;
     }
   }
 
@@ -450,10 +526,7 @@ function runRougeMode(){
   }
 
   if(level.gameOver){
-    level.splodeActors();
-    text("Game Over!",  width/2, height/2 - 60)
-    text(`Final score: ${level.score}`, width/2, height/2 - 30);
-    text("Press R to restart", width/2, height/2)
+    drawGameOver();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -509,7 +582,7 @@ function drawItemChoiceUI() {
   textAlign(CENTER, CENTER);
   fill(255);
   textSize(24);
-  text("Choose an item! (1-3)", canvasWidth / 2, canvasHeight / 2 - 150);
+  text("Choose an item!", canvasWidth / 2, canvasHeight / 2 - 150);
 
   const baseX = canvasWidth / 2;
   const baseY = canvasHeight / 2;
@@ -517,6 +590,7 @@ function drawItemChoiceUI() {
 
   imageMode(CENTER);
   textSize(16);
+  if(!this.choiceButtons) this.choiceButtons = [];
 
   for (let i = 0; i < pendingItemChoices.length; ++i) {
     const item = pendingItemChoices[i];
@@ -534,7 +608,25 @@ function drawItemChoiceUI() {
 
     // label
     fill(255);
-    text(`${i + 1}: ${item.id}`, x, y + 50);
+    // Button
+    if(this.choiceButtons.length < 3)
+      this.choiceButtons[i] = new Button(windowWidth/2 - canvasWidth/2 + x, y + 120, 150, 40, "lightgreen", "darkgreen", `${i + 1}: ${item.id}`, 
+      () =>{
+        let index = i;
+        const chosen = pendingItemChoices[index];
+        setCurrentItem(chosen);
+        pendingItemChoices = null;
+        nextItemScoreThreshold += ITEM_SCORE_STEP;
+        for(let b of this.choiceButtons)
+          b.remove();
+        this.choiceButtons = null;
+      }
+    )
+  }
+  if(this.choiceButtons)
+  {
+    for(let b of this.choiceButtons)
+      b.update();
   }
 
   pop();
@@ -559,6 +651,48 @@ function drawPauseOverlay() {
   text("Paused", width / 2, height / 2 - 40);
 
   textSize(16);
-  text("ESC - Resume\nM - Main Menu", width / 2, height / 2 + 10);
+
   pop();
+
+  if(!this.resumeButton || !this.resumeButton.sprite)
+  {
+    this.resumeButton = new Button(windowWidth/2, canvasHeight/2 + 80, 170, 40, "lightgreen", "darkgreen", "Resume - ESC",
+      () =>
+      {
+        isPaused = !isPaused;
+        this.resumeButton.remove();
+        this.quitButton.remove();
+      }
+    )
+  }
+  if(!this.quitButton || !this.quitButton.sprite)
+  {
+    this.quitButton = new Button(windowWidth/2, canvasHeight/2 + 140, 170, 40, "red", "darkred", "Quit - M",
+      () =>
+      {
+        reset();
+        if (music) music.stop();
+        music = menuMusic;
+        music.play();
+        isPaused = false;
+        this.resumeButton.remove();
+        this.quitButton.remove();
+      }
+    )
+  }
+  this.resumeButton.update();
+  this.quitButton.update();
+}
+
+function drawExplosion() {
+  // Only run if timer is active
+  if (bombTimer > 0) {
+    push();
+    imageMode(CENTER);
+    image(explodeGif, canvasWidth / 2, canvasHeight / 2, 800, 800);
+    pop();
+
+    // Count down
+    bombTimer--;
+  }
 }

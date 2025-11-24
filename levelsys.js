@@ -73,6 +73,9 @@ class Level {
     } else if (this.bossKey <= 2) {
       this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
       console.log("rougeBucket");
+    } else if (rand <= 3){
+      this.obstacle = new Graffiti(graffitiSprite);
+      console.log("graffiti");
     } else {
       this.obstacle = [];
     }
@@ -99,6 +102,7 @@ class Level {
   }
 
   update(){
+    console.log("player lives: " + this.player.lives);
     //if (!this.initLevel) return;
 
     for (let sp of this.vents) {
@@ -109,8 +113,8 @@ class Level {
     const collected = [];
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
-      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; }
-
+      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; } // maybe put this somewhere else? gets called every frame
+      
       // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
       if (typeof Coin !== 'undefined' && actor instanceof Coin) {
         // many coin implementations use a 'grabbed' flag when clicked
@@ -168,9 +172,8 @@ class Level {
   draw() {
     for (let zone of this.colorZones) {
       push();
-      fill(SOFTPALETTE[zone.color]);
-      strokeWeight(zone.borderWidth);
-      rect(zone.x, zone.y, zone.width, zone.height);
+      imageMode(CORNER);
+      image(zoneSprites[zone.color], zone.x, zone.y, zone.width, zone.height);
       pop();
     }
     for (let sp of this.vents) {
@@ -193,7 +196,9 @@ class Level {
 
   splodeActors(){
     for (let actor of this.allActors) {
-      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.alive = false; }
+      if (actor instanceof Bucket) {
+      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.fixDeathAnim(); actor.alive = false;}
+      }
     }
   }
 
