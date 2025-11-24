@@ -53,7 +53,7 @@ class Level {
   }
 
   update(){
-    console.log("player lives: " + this.player.lives);
+    //console.log("player lives: " + this.player.lives);
     //if (!this.initLevel) return;
 
     for (let sp of this.vents) {

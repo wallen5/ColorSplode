@@ -208,14 +208,14 @@ class Bucket extends Actor {
     const moveAmt = (cos(this.moveAngle) * this.speed);
 
 
-    console.log(moveAmt);
+    //console.log(moveAmt);
     if (moveAmt > (flipPadding)) {
-      console.log("FLIPPING!");
+      //console.log("FLIPPING!");
       this.lookDir = -1;
       this.timeSinceFlip = 0;
     } 
     if (moveAmt < (-flipPadding)) {
-      console.log("FLIPPING!");
+      //console.log("FLIPPING!");
       this.lookDir = 1;
       this.timeSinceFlip = 0;
     }
@@ -320,7 +320,7 @@ class Bucket extends Actor {
           this.x, this.y, this.width, this.height,
           zone.x, zone.y, zone.width, zone.height
         );
-        console.log(overlap)
+        //console.log(overlap)
 
       if (overlap && !this.sorted) {
         if (this.color === zone.color) {
