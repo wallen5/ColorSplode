@@ -1,8 +1,3 @@
-let fade = 0;
-let fadeSpeed = 5;
-let slide = 0;
-let slideSpeed = 15.0;
-
 class Level {
   constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;

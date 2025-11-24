@@ -466,6 +466,11 @@ function showLevelTransition() {
   fill(237, 204, 42);
   rect(0, 0, canvasWidth, canvasHeight);
   pop();
+
+  if (fade < 255){fade += fadeSpeed;}
+  if (slide < width / 2){slide += slideSpeed}
+  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
+  gameLayer.background(0, 0, 0);
 }
 
 function openItemChoiceScreen() {
