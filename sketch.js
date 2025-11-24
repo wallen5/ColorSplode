@@ -16,9 +16,16 @@ let currentState;
 let isPaused = false;
 let music; 
 let paintLayer;
+
 let level = new Level(5, 1, 1);
 let TESTS_RAN = false;
 
+let levelNum = 1;
+let randBoss = 1;
+let level = new Level(levelNum, randBoss, 1, 1);
+
+
+let zoneSprites = [];
 chrSprite =[];
 grabSprite =[];
 deathSprite =[];
@@ -122,6 +129,10 @@ function preload(){
   splat6 = loadImage("images/Splats/splat6.png");
   splatD = loadImage("images/Splats/splatDeLozier.png");
 
+  zoneSprites[0] = loadImage("images/redzone.png");
+  zoneSprites[1] = loadImage("images/bluezone.png");
+  zoneSprites[2] = loadImage("images/purplezone.png");
+  zoneSprites[3] = loadImage("images/greenzone.png");
 
   bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
@@ -130,6 +141,11 @@ function preload(){
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
   levelBackground = loadImage("images/levelBackground.png");
+
+  garnetIdle = loadImage("images/GrimjackIdle.gif");
+  garnetSpec = loadImage("images/Grimjack Gunfire.gif");
+  carmineIdle = loadImage("images/CarmineQueenIdle.gif");
+  carmineSpec = loadImage("images/CarmineQueenSpecial.gif");
 
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
@@ -144,7 +160,9 @@ function preload(){
 function reset() {
   currentState = "MAINMENU";
   level = null;
-  level = new Level(5, 1, 1);
+  levelNum = 1;
+  randBoss = random(2);
+  level = new Level(levelNum, randBoss, 1, 1);
   level.initLevel = false;
   level.mode = "NONE";
   paintLayer = createGraphics(canvasWidth, canvasHeight);
@@ -203,11 +221,13 @@ function setup() {
   }
 
   updateGameOffsets();
+  randBoss = random(2);
 }
 // ,_______________
 // | Main loop    |
 // |______________|
 function draw() {
+  clear();
   // full-page background
   background(220);
 
@@ -246,7 +266,7 @@ function draw() {
 // |_____________________|
 function keyPressed() {
 
-  if (keyCode === ESCAPE && currentState !== "MAINMENU") {
+  if (keyCode === ESCAPE && currentState !== "MAINMENU" && currentState !== "LEVELTRANS") {
     // Don't allow pausing in the middle of an item choice
     if (!pendingItemChoices) {
       isPaused = !isPaused;
@@ -287,6 +307,19 @@ function keyPressed() {
       this.choiceButtons = null;
     }
     return;
+  }
+
+  if(currentState === "LEVELTRANS") {
+    if(key === '1' && level.difficulty < 3) {
+      paintLayer = createGraphics(canvasWidth, canvasHeight);
+      paintLayer.background(levelBackground);
+      levelNum++;
+      level = new Level(levelNum, randBoss, 1, 1)
+      currentState = "ROUGE";
+      if(music) music.stop();
+      music = levelMusic;
+      music.play();
+    }
   }
 
   if (currentState === "MAINMENU") {
@@ -496,6 +529,10 @@ function runRougeMode(){
     level.update();
   }
 
+  if(level.score >= level.scoreThreshold){
+    currentState = "LEVELTRANS";
+  }
+
   if(level.gameOver){
     drawGameOver();
   }
@@ -503,6 +540,30 @@ function runRougeMode(){
   text(`Score: ${level.score}`, 100,210, 25);
   text(`Combo: ${level.currentCombo}`, 100,250, 25);
   
+}
+
+function showLevelTransition() {
+  push();
+  fill(128, 0, 0);
+  rect(0, 0, canvasWidth, canvasHeight);
+
+  if (level.fade < 255){level.fade += level.fadeSpeed;}
+  if (level.slide < canvasWidth / 2){level.slide += level.slideSpeed}
+
+  stroke(0);
+  strokeWeight(4);
+  textSize(30);
+  fill(237, 204, 42);
+  if(level.difficulty != 3){
+    text("Level " + level.difficulty + " Complete", canvasWidth / 5, level.slide / 1.5);
+    textSize(20);
+    fill(255);
+    text("Press 1 to Continue", level.slide / 2, canvasHeight / 2);
+  } else {
+    textSize(43);
+    text("Victory!", canvasWidth / 3.5, level.slide);
+  }
+  pop();
 }
 
 function createPauseButton()
@@ -520,6 +581,7 @@ function createPauseButton()
   }
   this.pauseButton.update();
 }
+
 
 function drawGameOver()
 {
@@ -541,6 +603,7 @@ function drawGameOver()
   }
   this.restartButton.update();
 }
+
 
 function openItemChoiceScreen() {
   // pick up to 3 random distinct items from ITEM_POOL
