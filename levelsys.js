@@ -2,7 +2,7 @@ class Level {
   constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;
     this.bossKey = bossKey;
-    this.scoreThreshold = 1;
+    this.scoreThreshold = 5;
     this.obstacle = [];
     this.boss = null;
     this.colorZones = [];
@@ -34,8 +34,14 @@ class Level {
   }
 
   setDifficulty(difficulty) {
-    if(difficulty >= 2){this.setObstacle();}
-    if(difficulty == 3){this.setBoss();}
+    if(difficulty >= 2){
+      this.setObstacle();
+      this.scoreThreshold = 10;
+    }
+    if(difficulty == 3){
+      this.setBoss();
+      this.scoreThreshold = 15;
+    }
 
     for(let sp of this.vents){
       switch(difficulty){
