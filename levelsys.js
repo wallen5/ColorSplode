@@ -291,10 +291,10 @@ class AudioManager {
 }
 
 
-// Level testing
+// level initilization testing
 
 test("Level initializes properly", () => {
-  const lvl = new Level(100, 3, 5);  // just create instance
+  const lvl = new Level(100, 3, 5);  // just create single instance
   assert(lvl.scoreThreshold === 100);
   assert(lvl.player.lives === 3);
   assert(Array.isArray(lvl.colorZones));
