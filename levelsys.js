@@ -117,9 +117,8 @@ class Level {
   draw() {
     for (let zone of this.colorZones) {
       push();
-      fill(SOFTPALETTE[zone.color]);
-      strokeWeight(zone.borderWidth);
-      rect(zone.x, zone.y, zone.width, zone.height);
+      imageMode(CORNER);
+      image(zoneSprites[zone.color], zone.x, zone.y, zone.width, zone.height);
       pop();
     }
     for (let sp of this.vents) {

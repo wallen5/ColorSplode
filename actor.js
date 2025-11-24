@@ -254,6 +254,7 @@ class Bucket extends Actor {
     this.sprite = this.sorted
       ? chrSprite[this.color]
       : (this.alive ? chrSprite[this.color] : deathSprite[this.color]);
+      
 
     // time & freeze
 
@@ -325,6 +326,7 @@ class Bucket extends Actor {
       if (overlap && !this.sorted) {
         if (this.color === zone.color) {
           this.sorted = true;
+          this.splode(); //remove if you want
           if(!this.freed)
             level.addScore(this);
           this.freed = true;
