@@ -23,6 +23,9 @@ let levelNum = 1;
 let randBoss = 1;
 let level = new Level(levelNum, randBoss, 1, 1);
 
+// These are used to update button position with window resizing
+let buttonBaseX;
+let buttonBaseY;
 
 let zoneSprites = [];
 chrSprite =[];
@@ -244,6 +247,9 @@ function draw() {
   rect(0, 0, canvasWidth, canvasHeight);
   pop();
 
+  buttonBaseX = windowWidth/2 - canvasWidth/2;
+  buttonBaseY = windowHeight/2 - canvasHeight/2;
+
   // everything inside here is in "game space" (0..800)
   if (gameStates[currentState]) {
     gameStates[currentState]();
@@ -318,6 +324,7 @@ function keyPressed() {
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.nextLevelButton.remove();
     }
   }
 
@@ -419,7 +426,7 @@ function showMainMenu() {
   // without the () and have it work the exact same!
   if(!this.startButton || !this.startButton.sprite)
   {
-    this.startButton = new Button(windowWidth/2, canvasHeight/2 + 140, 500, 50, "lightgreen", "darkgreen", "Play Classic Mode - 1",
+    this.startButton = new Button(canvasWidth/2, canvasHeight/2 + 140, 500, 50, "lightgreen", "darkgreen", "Play Classic Mode - 1",
       () =>{
         currentState = "CLASSIC";
         if(music) music.stop();
@@ -432,7 +439,7 @@ function showMainMenu() {
   }
   if(!this.rougeLikeButton || !this.rougeLikeButton.sprite)
   {
-    this.rougeLikeButton = new Button(windowWidth/2, canvasHeight/2 + 220, 500, 50, "red", "darkred", "Play Rougelike Mode - 2",
+    this.rougeLikeButton = new Button(canvasWidth/2, canvasHeight/2 + 220, 500, 50, "red", "darkred", "Play Rougelike Mode - 2",
       () =>{
         currentState = "ROUGE";
         if(music) music.stop();
@@ -557,7 +564,24 @@ function showLevelTransition() {
     text("Level " + level.difficulty + " Complete", canvasWidth / 5, level.slide / 1.5);
     textSize(20);
     fill(255);
-    text("Press 1 to Continue", level.slide / 2, canvasHeight / 2);
+    if(!this.nextLevelButton || !this.nextLevelButton.sprite)
+    {
+      this.nextLevelButton = new Button(canvasWidth / 5, canvasHeight/2, 300, 50, "lightgreen", "darkgreen", "Continue - 1", 
+        () =>{
+          paintLayer = createGraphics(canvasWidth, canvasHeight);
+          paintLayer.background(levelBackground);
+          levelNum++;
+          level = new Level(levelNum, randBoss, 1, 1)
+          currentState = "ROUGE";
+          if(music) music.stop();
+          music = levelMusic;
+          music.play();
+          this.nextLevelButton.remove();
+        }
+      )  
+    }
+    this.nextLevelButton.x = level.slide
+    this.nextLevelButton.update();
   } else {
     textSize(43);
     text("Victory!", canvasWidth / 3.5, level.slide);
@@ -569,7 +593,7 @@ function createPauseButton()
 {
   if(!this.pauseButton || !this.pauseButton.sprite)
   {
-    this.pauseButton = new Button(windowWidth/2 + canvasWidth/2 + 30, 110, 50, 50, "darkgray", "gray", "||", 
+    this.pauseButton = new Button(canvasWidth + 30, 25, 50, 50, "darkgray", "gray", "||", 
       () =>{
         if (!pendingItemChoices) {
           isPaused = !isPaused;
@@ -590,7 +614,7 @@ function drawGameOver()
   this.pauseButton.remove();
   if(!this.restartButton || !this.restartButton.sprite)
   {
-    this.restartButton = new Button(windowWidth/2, windowHeight/2, 150, 40, "lightgreen", "darkgreen", "Restart - r", 
+    this.restartButton = new Button(canvasWidth/2, canvasHeight/2, 150, 40, "lightgreen", "darkgreen", "Restart - r", 
       () =>{
         reset();
         music.stop();
@@ -656,7 +680,7 @@ function drawItemChoiceUI() {
     fill(255);
     // Button
     if(this.choiceButtons.length < 3)
-      this.choiceButtons[i] = new Button(windowWidth/2 - canvasWidth/2 + x, y + 120, 150, 40, "lightgreen", "darkgreen", `${i + 1}: ${item.id}`, 
+      this.choiceButtons[i] = new Button(x, y + 120, 150, 40, "lightgreen", "darkgreen", `${i + 1}: ${item.id}`, 
       () =>{
         let index = i;
         const chosen = pendingItemChoices[index];
@@ -702,7 +726,7 @@ function drawPauseOverlay() {
 
   if(!this.resumeButton || !this.resumeButton.sprite)
   {
-    this.resumeButton = new Button(windowWidth/2, canvasHeight/2 + 80, 170, 40, "lightgreen", "darkgreen", "Resume - ESC",
+    this.resumeButton = new Button(canvasWidth/2, canvasHeight/2 + 80, 170, 40, "lightgreen", "darkgreen", "Resume - ESC",
       () =>
       {
         isPaused = !isPaused;
@@ -713,7 +737,7 @@ function drawPauseOverlay() {
   }
   if(!this.quitButton || !this.quitButton.sprite)
   {
-    this.quitButton = new Button(windowWidth/2, canvasHeight/2 + 140, 170, 40, "red", "darkred", "Quit - M",
+    this.quitButton = new Button(canvasWidth/2, canvasHeight/2 + 140, 170, 40, "red", "darkred", "Quit game - M",
       () =>
       {
         reset();
