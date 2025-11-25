@@ -17,7 +17,6 @@ let isPaused = false;
 let music; 
 let paintLayer;
 
-let level = new Level(5, 1, 1);
 let TESTS_RAN = false;
 
 let levelNum = 1;
