@@ -1,21 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.10/lib/p5.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/p5.sound@0.2.0/dist/p5.sound.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
     <meta charset="utf-8" />
     
 
+    <!-- p5.js -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.4/lib/p5.js"></script>
+
+    <!-- p5.sound -->
+    <script src="https://cdn.jsdelivr.net/npm/p5.sound@0.2.0/dist/p5.sound.min.js"></script>
+
+    <!-- p5.play -->
+     <script src="https://p5play.org/v3/planck.min.js"></script>
+    <script src="https://p5play.org/v3/p5play.js"></script>
+
+
+    <link rel="stylesheet" href="style.css">
   </head>
+
   <body>
+
     <main>
     </main>
+
+    <!-- Your scripts (must come AFTER p5.play) -->
+    <script src="button.js"></script>
     <script src="gameOverEffects.js"></script>
     <script src="actor.js"></script>
+    <script src="items.js"></script>
+    <script src="testframe.js"></script>
     <script src="levelsys.js"></script>
     <script src="sketch.js"></script>
-    <script src="items.js"></script>
-    
   </body>
 </html>

@@ -1,13 +1,16 @@
 class Level {
-  constructor(score, lives, maxLives) {
-    this.scoreThreshold = score;
-    this.obstacle = null;
+  constructor(difficulty, bossKey, lives, maxLives) {
+    this.difficulty = difficulty;
+    this.bossKey = bossKey;
+    this.scoreThreshold = 25;
+    this.obstacle = [];
+    this.boss = null;
     this.colorZones = [];
     this.allActors = [];
     this.vents = [];
     this.maxVents = 4;
     this.ventSpawnTimer = 0;
-    this.ventSpawnInterval = 10000;
+    this.ventSpawnInterval = 20000;
     this.initLevel = false;
     this.score = 0;
     this.currentColor;
@@ -18,12 +21,16 @@ class Level {
     this.activeSplats = [];
     this.gameOverTime = 0;
     this.mode = "NONE";
+    this.fade = 0;
+    this.fadeSpeed = 5;
+    this.slide = 0;
+    this.slideSpeed = 15.0;
   }
 
   setup() {
     if (this.initLevel) return;
     if(this.mode == "ROUGE"){
-      this.setObstacle();
+      this.setDifficulty(this.difficulty);
     }
     this.createRandomZones();
     if (this.vents.length < this.maxVents){
@@ -33,26 +40,72 @@ class Level {
     this.ventSpawnTimer = millis();
   }
 
-  setObstacle() {
-    const rand = random(2);
-    const w = 50, h = 50;
-
-    if (rand <= 1) {
-      this.obstacle = new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.2, h * 1.2, catSprite);
-      console.log("cat");
-    } else if (rand <= 2) {
-      this.obstacle = new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite);
-      console.log("rougeBucket");
-    } else {
-      this.obstacle = null;
+  setDifficulty(difficulty) {
+    if(difficulty >= 2){
+      this.setObstacle();
+      this.scoreThreshold = 50;
+    }
+    if(difficulty == 3){
+      this.setBoss();
+      this.scoreThreshold = this.boss.health;
     }
 
-    if (this.obstacle && this.obstacle.constructor.name === "rougeBucket") {
-      this.allActors.push(this.obstacle);
+    for(let sp of this.vents){
+      switch(difficulty){
+      case 1:
+        sp.spawnIncrease = 0.0046296;
+        break;
+
+      case 2:
+        sp.spawnIncrease = 0.008342;
+        break;
+
+      case 3:
+        sp.spawnIncrease = 0.01;
+        break;
+      }
+    }
+  }
+
+  setObstacle() {
+    const w = 50, h = 50;
+
+    if (this.bossKey <= 1) {
+      this.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.8, h * 1.8, catSprite));
+      console.log("cat");
+    } else if (this.bossKey <= 2) {
+      this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
+      console.log("rougeBucket");
+    } else if (rand <= 3){
+      this.obstacle = new Graffiti(graffitiSprite);
+      console.log("graffiti");
+    } else {
+      this.obstacle = [];
+    }
+
+    for(let obstacle of this.obstacle){
+      if (obstacle instanceof rougeBucket) {
+        this.allActors.push(obstacle);
+      }
+    }
+  }
+
+  setBoss(){
+    const w = 50, h = 50;
+
+    if (this.bossKey <= 1) {
+      this.boss = new Boss("Carmine Queen", 200, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
+      console.log("Carmine Queen");
+    } else if (this.bossKey <= 2) {
+      this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
+      console.log("Garnet Grimjack");
+    } else {
+      this.boss = null;
     }
   }
 
   update(){
+    //console.log("player lives: " + this.player.lives);
     //if (!this.initLevel) return;
 
     for (let sp of this.vents) {
@@ -63,8 +116,8 @@ class Level {
     const collected = [];
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
-      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; }
-
+      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; } // maybe put this somewhere else? gets called every frame
+      
       // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
       if (typeof Coin !== 'undefined' && actor instanceof Coin) {
         // many coin implementations use a 'grabbed' flag when clicked
@@ -84,8 +137,13 @@ class Level {
       this.player.alive = false;
       this.gameOver = true; 
     }
-    if(this.obstacle){
-      this.obstacle.update(this);
+
+    for(let obstacle of this.obstacle){
+      obstacle.update(this);
+    }
+
+    if(this.boss){
+      this.boss.update(this);
     }
 
     // Auto-spawn vents
@@ -111,14 +169,14 @@ class Level {
       this.currentCombo++;
     }
     this.score += this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
+    if(level.difficulty == 3) {this.boss.health -= this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);};
   }
 
   draw() {
     for (let zone of this.colorZones) {
       push();
-      fill(SOFTPALETTE[zone.color]);
-      strokeWeight(zone.borderWidth);
-      rect(zone.x, zone.y, zone.width, zone.height);
+      imageMode(CORNER);
+      image(zoneSprites[zone.color], zone.x, zone.y, zone.width, zone.height);
       pop();
     }
     for (let sp of this.vents) {
@@ -131,14 +189,19 @@ class Level {
     for (let actor of this.allActors) {
       actor.draw();
     }
-    if(this.obstacle){
-      this.obstacle.draw();
+    for(let obstacle of this.obstacle){
+      obstacle.draw();
+    }
+    if(this.boss){
+      this.boss.draw();
     }
   }
 
   splodeActors(){
     for (let actor of this.allActors) {
-      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.alive = false; }
+      if (actor instanceof Bucket) {
+      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.fixDeathAnim(); actor.alive = false;}
+      }
     }
   }
 
@@ -243,7 +306,8 @@ class SpawnPoint {
     this.height = height;
     this.color = color;
 
-    this.spawnRate = 1; // seconds per spawn
+    this.spawnRate = 7; // seconds per spawn
+    this.spawnIncrease = 0.0046296;
     this.lastSpawnTime = 0; // when the last spawn happened (ms)
     this.shouldSpawn = true;
 
@@ -251,8 +315,12 @@ class SpawnPoint {
   }
 
   update(level) {
+    if(this.spawnRate > 2){
+      this.spawnRate -= this.spawnIncrease;
+    }
+
     // Check time elapsed since last spawn
-    if (millis() - this.lastSpawnTime >= this.spawnRate * 2000 && this.shouldSpawn) {
+    if (millis() - this.lastSpawnTime >= this.spawnRate * 1000 && this.shouldSpawn) {
       this.spawnActor(level);
       this.lastSpawnTime = millis();
     }
@@ -286,3 +354,60 @@ class AudioManager {
     this.current.stop();
   }
 }
+
+
+// level initilization testing
+
+test("Level initializes properly", () => {
+  const lvl = new Level(100, 3, 5);  // just create single instance
+  assert(lvl.scoreThreshold === 100);
+  assert(lvl.player.lives === 3);
+  assert(Array.isArray(lvl.colorZones));
+  assert(Array.isArray(lvl.vents));
+});
+
+test("Player default properties", () => {
+  const p = new Player(3, 5);
+  assert(p.alive === true);
+  assert(p.lives === 3);
+  assert(p.maxLives === 5);
+  assert(p.coins === 0);
+  assert(p.baseScore === 1);
+});
+
+test("Zone properties set correctly", () => {
+  const z = new Zone(10, 20, 30, 40, 2);
+  assert(z.x === 10);
+  assert(z.y === 20);
+  assert(z.width === 30);
+  assert(z.height === 40);
+  assert(z.color === 2);
+  assert(z.borderWidth === 4);
+});
+
+test("Level.createRandomZones creates four zones", () => {
+  if (typeof canvasWidth === 'undefined') { var canvasWidth = 800; }
+  if (typeof canvasHeight === 'undefined') { var canvasHeight = 600; }
+  const lvl = new Level(0, 3, 3);
+  lvl.createRandomZones();
+  assert(Array.isArray(lvl.colorZones));
+  assert(lvl.colorZones.length === 4);
+});
+
+//this one may or may not have been GPT'd so it may or may not work
+test("Level.addScore increases score and combo", () => {
+  if (typeof round === 'undefined') { function round(n) { return Math.round(n); } }
+  const lvl = new Level(100, 3, 5);
+  const actor = { color: 1 };
+  lvl.currentColor = null;
+  lvl.currentCombo = 0;
+  lvl.player.baseScore = 2;
+  lvl.player.comboMult = 1;
+  lvl.score = 0;
+  lvl.addScore(actor);
+  assert(lvl.score === 2);
+  lvl.addScore(actor);
+  assert(lvl.currentCombo === 2);
+  assert(lvl.score > 2);
+});
+

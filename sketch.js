@@ -16,8 +16,15 @@ let currentState;
 let isPaused = false;
 let music; 
 let paintLayer;
-let level = new Level(5, 1, 1);
 
+let TESTS_RAN = false;
+
+let levelNum = 1;
+let randBoss = 1;
+let level = new Level(levelNum, randBoss, 1, 1);
+
+
+let zoneSprites = [];
 chrSprite =[];
 grabSprite =[];
 deathSprite =[];
@@ -35,6 +42,8 @@ let nextItemScoreThreshold = ITEM_SCORE_STEP;
 let inventory = [];              // all items you’ve picked so far (if you want)
 let currentItem = null;          // the item you can currently use
 let pendingItemChoices = null;   // when non-null, the item choice UI is open
+
+let ourPlayer = null;
 
 // ,_________
 // | Helper |
@@ -80,6 +89,7 @@ function windowResized() {
 // | Preload |
 // |_________|
 function preload(){
+  angleMode(RADIANS);
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
   gameOverBG = loadImage("images/gameoverbackground.png");
@@ -118,13 +128,23 @@ function preload(){
   splat6 = loadImage("images/Splats/splat6.png");
   splatD = loadImage("images/Splats/splatDeLozier.png");
 
+  zoneSprites[0] = loadImage("images/redzone.png");
+  zoneSprites[1] = loadImage("images/bluezone.png");
+  zoneSprites[2] = loadImage("images/purplezone.png");
+  zoneSprites[3] = loadImage("images/greenzone.png");
 
   bomb = loadImage("images/Bomb.png");
   rougeBucketSprite = loadImage("images/susbucket.gif");
   catSprite = loadImage("images/catimage.gif");
+  graffitiSprite = loadImage("images/Graffiti.png");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
   levelBackground = loadImage("images/levelBackground.png");
+
+  garnetIdle = loadImage("images/GrimjackIdle.gif");
+  garnetSpec = loadImage("images/Grimjack Gunfire.gif");
+  carmineIdle = loadImage("images/CarmineQueenIdle.gif");
+  carmineSpec = loadImage("images/CarmineQueenSpecial.gif");
 
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
@@ -139,7 +159,9 @@ function preload(){
 function reset() {
   currentState = "MAINMENU";
   level = null;
-  level = new Level(5, 1, 1);
+  levelNum = 1;
+  randBoss = random(2);
+  level = new Level(levelNum, randBoss, 1, 1);
   level.initLevel = false;
   level.mode = "NONE";
   paintLayer = createGraphics(canvasWidth, canvasHeight);
@@ -169,7 +191,10 @@ const gameStates = {
 function setup() {
   // canvas is full-page
   createCanvas(windowWidth, windowHeight);
-
+  if (!TESTS_RAN) { //simple test flag
+    runTests();
+    TESTS_RAN = true;
+  }
   // 800x800 paint layer for your game world
   paintLayer = createGraphics(canvasWidth, canvasHeight);
   paintLayer.background(levelBackground);
@@ -182,15 +207,26 @@ function setup() {
   ITEM_POOL = [
     new Item("MAGNET", magnet),
     new Item("FREEZE", freeze),
-    new Item("TOTEM", totem)
+    new Item("TOTEM", totem),
+    new Item("SCRAPER", scraper),
+    new Item("BOMB", bomb),
+    new Item("PALLET", selectivePallet),
+    new Item("BRUSH", thickerBrush)
   ];
 
+  if (!ourPlayer) {
+    // Player starts with 2 hearts by default
+    ourPlayer = new Player(2,2);
+  }
+
   updateGameOffsets();
+  randBoss = random(2);
 }
 // ,_______________
 // | Main loop    |
 // |______________|
 function draw() {
+  clear();
   // full-page background
   background(220);
 
@@ -229,11 +265,13 @@ function draw() {
 // |_____________________|
 function keyPressed() {
 
-  if (keyCode === ESCAPE && currentState !== "MAINMENU") {
+  if (keyCode === ESCAPE && currentState !== "MAINMENU" && currentState !== "LEVELTRANS") {
     // Don't allow pausing in the middle of an item choice
     if (!pendingItemChoices) {
       isPaused = !isPaused;
     }
+    if(this.resumeButton) this.resumeButton.remove();
+    if(this.quitButton) this.quitButton.remove();
     return;
   }
 
@@ -246,6 +284,8 @@ function keyPressed() {
       music.play();
       //currentState = "MAINMENU";
       isPaused = false;
+      if(this.resumeButton) this.resumeButton.remove();
+      if(this.quitButton) this.quitButton.remove();
     }
     return;
   }
@@ -259,8 +299,26 @@ function keyPressed() {
         pendingItemChoices = null;
         nextItemScoreThreshold += ITEM_SCORE_STEP;
       }
+      for(let b of this.choiceButtons)
+      {
+        b.remove();
+      }
+      this.choiceButtons = null;
     }
     return;
+  }
+
+  if(currentState === "LEVELTRANS") {
+    if(key === '1' && level.difficulty < 3) {
+      paintLayer = createGraphics(canvasWidth, canvasHeight);
+      paintLayer.background(levelBackground);
+      levelNum++;
+      level = new Level(levelNum, randBoss, 1, 1)
+      currentState = "ROUGE";
+      if(music) music.stop();
+      music = levelMusic;
+      music.play();
+    }
   }
 
   if (currentState === "MAINMENU") {
@@ -269,12 +327,16 @@ function keyPressed() {
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.startButton.remove();
+      this.rougeLikeButton.remove();
     }
     if (key === '2'){
       currentState = "ROUGE";
       if(music) music.stop();
       music = levelMusic;
       music.play();
+      this.rougeLikeButton.remove();
+      this.startButton.remove();2
     }
 
   }
@@ -285,6 +347,7 @@ function keyPressed() {
       music.stop();
       music = menuMusic;
       music.play();
+      if(this.restartButton) this.restartButton.remove();
       //currentState = "MAINMENU";
     }
   }
@@ -297,14 +360,16 @@ function mousePressed() {
   if (isPaused) return;
 
   const { x: gx, y: gy } = getGameMouse();
+  
 
 
   for (let actor of level.allActors) {
+    const padding = actor.width/4; // Feels better when slightly more forgiving
     if (
-      gx >= actor.x &&
-      gx <= actor.x + actor.width &&
-      gy >= actor.y &&
-      gy <= actor.y + actor.height &&
+      gx >= (actor.x-padding) &&
+      gx <= (actor.x + actor.width + padding) &&
+      gy >= (actor.y-padding) &&
+      gy <= (actor.y + actor.height + padding) &&
       !actor.sorted &&
       actor.alive
     ) {
@@ -347,9 +412,41 @@ function showMainMenu() {
   fill(currentColor);
   text("ColorSplode", canvasWidth/2, canvasHeight/2 - 50);
   pop();
-  textSize(20);
-  text("Press 1 for Classic Mode", canvasWidth/2, canvasHeight/2);
-  text("Press 2 for Rouge Mode", canvasWidth/2, canvasHeight/2 + 30);
+  textSize(15);
+  // Creates button if either: it doesn't exist OR it doesn't have a sprite
+  // Kind of a mouth full, but in this way we make it so buttons functionality is completely separate
+  // Note: you do NOT have to make a whole prototype function into the button. You can also just put "[function]"
+  // without the () and have it work the exact same!
+  if(!this.startButton || !this.startButton.sprite)
+  {
+    this.startButton = new Button(windowWidth/2, canvasHeight/2 + 140, 500, 50, "lightgreen", "darkgreen", "Play Classic Mode - 1",
+      () =>{
+        currentState = "CLASSIC";
+        if(music) music.stop();
+        music = levelMusic;
+        music.play();
+        this.rougeLikeButton.remove();
+        this.startButton.remove();  
+      }
+    );
+  }
+  if(!this.rougeLikeButton || !this.rougeLikeButton.sprite)
+  {
+    this.rougeLikeButton = new Button(windowWidth/2, canvasHeight/2 + 220, 500, 50, "red", "darkred", "Play Rougelike Mode - 2",
+      () =>{
+        currentState = "ROUGE";
+        if(music) music.stop();
+        music = levelMusic;
+        music.play();
+        this.rougeLikeButton.remove();
+        this.startButton.remove();
+      }
+    );
+  }
+  this.startButton.update();
+  this.rougeLikeButton.update();
+  //text("Press 1 for Classic Mode", canvasWidth/2, canvasHeight/2);
+  //text("Press 2 for Rouge Mode", canvasWidth/2, canvasHeight/2 + 30);
 
 }
 
@@ -359,6 +456,9 @@ function showMainMenu() {
 
 function runClassicMode() {
 
+  if(!isPaused)
+    createPauseButton();
+  
   if(!level.initLevel){
     level.mode = "CLASSIC";
     level.setup();
@@ -373,6 +473,7 @@ function runClassicMode() {
   }
 
   if(level.gameOver){
+
     //random splats on screen
     generateAndDrawSplats();
 
@@ -381,6 +482,9 @@ function runClassicMode() {
     //draw game over!
     gameOverText();
     
+
+    drawGameOver();
+
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -389,6 +493,9 @@ function runClassicMode() {
 }
 
 function runRougeMode(){
+
+  if(!isPaused)
+    createPauseButton();
 
   if(!level.initLevel){
     level.mode = "ROUGE";
@@ -409,6 +516,8 @@ function runRougeMode(){
     return;
   }
 
+  drawExplosion(); // shows bomb explode gif when bomb dropped. Triggered by itemEffectBomb(level)
+
   for(item of inventory){
     if (item.id === "MAGNET") {
       itemEffectMagnet(level);
@@ -416,6 +525,11 @@ function runRougeMode(){
       itemEffectFreeze(level);
     } else if (item.id === "TOTEM") {
       
+    } else if (item.id === "BOMB" && (key === 'b' || key === 'B')) {
+      itemEffectBomb(level); // used to activate drawExplosion()
+      let index = inventory.indexOf(item);
+      inventory.splice(index,1); // remove bomb after it is used
+      break;
     }
   }
 
@@ -425,7 +539,12 @@ function runRougeMode(){
     level.update();
   }
 
+  if(level.score >= level.scoreThreshold){
+    currentState = "LEVELTRANS";
+  }
+
   if(level.gameOver){
+
     //random splats on screen
     generateAndDrawSplats();
 
@@ -433,12 +552,76 @@ function runRougeMode(){
 
     //draw game over!
     gameOverText();
+
+    drawGameOver();
+
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
   text(`Combo: ${level.currentCombo}`, 100,250, 25);
   
 }
+
+function showLevelTransition() {
+  push();
+  fill(128, 0, 0);
+  rect(0, 0, canvasWidth, canvasHeight);
+
+  if (level.fade < 255){level.fade += level.fadeSpeed;}
+  if (level.slide < canvasWidth / 2){level.slide += level.slideSpeed}
+
+  stroke(0);
+  strokeWeight(4);
+  textSize(30);
+  fill(237, 204, 42);
+  if(level.difficulty != 3){
+    text("Level " + level.difficulty + " Complete", canvasWidth / 5, level.slide / 1.5);
+    textSize(20);
+    fill(255);
+    text("Press 1 to Continue", level.slide / 2, canvasHeight / 2);
+  } else {
+    textSize(43);
+    text("Victory!", canvasWidth / 3.5, level.slide);
+  }
+  pop();
+}
+
+function createPauseButton()
+{
+  if(!this.pauseButton || !this.pauseButton.sprite)
+  {
+    this.pauseButton = new Button(windowWidth/2 + canvasWidth/2 + 30, 110, 50, 50, "darkgray", "gray", "||", 
+      () =>{
+        if (!pendingItemChoices) {
+          isPaused = !isPaused;
+          this.pauseButton.remove();
+        }
+      }
+    )
+  }
+  this.pauseButton.update();
+}
+
+
+function drawGameOver()
+{
+  level.splodeActors();
+  this.pauseButton.remove();
+  if(!this.restartButton || !this.restartButton.sprite)
+  {
+    this.restartButton = new Button(windowWidth/2, windowHeight/2 + 40, 150, 40, "lightgreen", "darkgreen", "Restart - r", 
+      () =>{
+        reset();
+        music.stop();
+        music = menuMusic;
+        music.play();
+        this.restartButton.remove();
+      }
+    )
+  }
+  this.restartButton.update();
+}
+
 
 function openItemChoiceScreen() {
   // pick up to 3 random distinct items from ITEM_POOL
@@ -464,7 +647,7 @@ function drawItemChoiceUI() {
   textAlign(CENTER, CENTER);
   fill(255);
   textSize(24);
-  text("Choose an item! (1-3)", canvasWidth / 2, canvasHeight / 2 - 150);
+  text("Choose an item!", canvasWidth / 2, canvasHeight / 2 - 150);
 
   const baseX = canvasWidth / 2;
   const baseY = canvasHeight / 2;
@@ -472,6 +655,7 @@ function drawItemChoiceUI() {
 
   imageMode(CENTER);
   textSize(16);
+  if(!this.choiceButtons) this.choiceButtons = [];
 
   for (let i = 0; i < pendingItemChoices.length; ++i) {
     const item = pendingItemChoices[i];
@@ -489,7 +673,25 @@ function drawItemChoiceUI() {
 
     // label
     fill(255);
-    text(`${i + 1}: ${item.id}`, x, y + 50);
+    // Button
+    if(this.choiceButtons.length < 3)
+      this.choiceButtons[i] = new Button(windowWidth/2 - canvasWidth/2 + x, y + 120, 150, 40, "lightgreen", "darkgreen", `${i + 1}: ${item.id}`, 
+      () =>{
+        let index = i;
+        const chosen = pendingItemChoices[index];
+        setCurrentItem(chosen);
+        pendingItemChoices = null;
+        nextItemScoreThreshold += ITEM_SCORE_STEP;
+        for(let b of this.choiceButtons)
+          b.remove();
+        this.choiceButtons = null;
+      }
+    )
+  }
+  if(this.choiceButtons)
+  {
+    for(let b of this.choiceButtons)
+      b.update();
   }
 
   pop();
@@ -514,7 +716,49 @@ function drawPauseOverlay() {
   text("Paused", width / 2, height / 2 - 40);
 
   textSize(16);
-  text("ESC - Resume\nM - Main Menu", width / 2, height / 2 + 10);
+
   pop();
+
+  if(!this.resumeButton || !this.resumeButton.sprite)
+  {
+    this.resumeButton = new Button(windowWidth/2, canvasHeight/2 + 80, 170, 40, "lightgreen", "darkgreen", "Resume - ESC",
+      () =>
+      {
+        isPaused = !isPaused;
+        this.resumeButton.remove();
+        this.quitButton.remove();
+      }
+    )
+  }
+  if(!this.quitButton || !this.quitButton.sprite)
+  {
+    this.quitButton = new Button(windowWidth/2, canvasHeight/2 + 140, 170, 40, "red", "darkred", "Quit - M",
+      () =>
+      {
+        reset();
+        if (music) music.stop();
+        music = menuMusic;
+        music.play();
+        isPaused = false;
+        this.resumeButton.remove();
+        this.quitButton.remove();
+      }
+    )
+  }
+  this.resumeButton.update();
+  this.quitButton.update();
 }
 
+
+function drawExplosion() {
+  // Only run if timer is active
+  if (bombTimer > 0) {
+    push();
+    imageMode(CENTER);
+    image(explodeGif, canvasWidth / 2, canvasHeight / 2, 800, 800);
+    pop();
+
+    // Count down
+    bombTimer--;
+  }
+}
