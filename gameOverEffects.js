@@ -7,11 +7,10 @@ function generateRandomSplat(){
   let x = random(1200);
   let y = random(1000);
   let sizeMult = random(40, 80);
-  //if (20 >= 15) sizeMult = 20;
   let w = 20 * sizeMult;
   let h = 20 * sizeMult;
 
-  // Create a plain Javascript Object (like a C++ struct)
+  // object to be pushed into activeSplats
   let newSplat = {
     img: randSplat,
     x: x,
@@ -21,51 +20,48 @@ function generateRandomSplat(){
     cIdx: randColorIdx
   };
 
-  // Save it to the array
+  // will be used to displays the splats in drawActiveSplats()
   level.activeSplats.push(newSplat);
 }
 
 function drawActiveSplats() {
-  let initialDelay = 1000; // Wait 1 second before starting
+  let initialDelay = 1000; // Wait 1 second before drawing splats
   let interval = 100;     // New splat every 0.5 seconds
   
-  // Calculate how much time has passed since the "Game Over" moment
   let timeSinceGameOver = millis() - level.gameOverTime;
 
-  // If we haven't reached the initial delay, draw nothing and exit
+  // cannot draw until 1 second has passed
   if (timeSinceGameOver < initialDelay) return;
 
-  // Calculate the time inside the "Sequence"
+  // time that has passed after game has ended, minus the delay
   let timeInSequence = timeSinceGameOver - initialDelay;
 
-  // Math: Time / Interval = How many should be on screen
-  // e.g., 1500ms / 500ms = 3 splats
+  //number of visible splats
   let visibleCount = floor(timeInSequence / interval) + 1;
 
-  // Don't try to draw more than we actually have!
   let limit = min(visibleCount, level.activeSplats.length);
 
   noSmooth();
   imageMode(CENTER);
 
-  // LOOP only up to 'limit', not the full length
   for (let i = 0; i < limit; i++) {
     let s = level.activeSplats[i]; 
     
     switch(s.cIdx) {
-        case 0: tint(255, 0, 0); break;   // red
-        case 1: tint(0, 0, 255); break;   // blue
-        case 2: tint(0, 255, 0); break;   // green
-        case 3: tint(150, 0, 255); break; // purple
+        case 0: tint(255, 0, 0); break;   
+        case 1: tint(0, 0, 255); break;   
+        case 2: tint(0, 255, 0); break;   
+        case 3: tint(150, 0, 255); break; 
       }
 
     
     image(s.img, s.x, s.y, s.w, s.h);
   }
   
+  //clean up
   noTint(); 
   smooth();
-  imageMode(CORNER);// ... cleanup ...
+  imageMode(CORNER);
 }
 
 function generateAndDrawSplats(){
@@ -74,7 +70,7 @@ function generateAndDrawSplats(){
       for (let i = 0; i < 8; ++i) {
         generateRandomSplat(); //gernate splats, does not draw
       }
-      level.gameOverTime = millis();
+      level.gameOverTime = millis(); //used in drawActiveSplats()
     }
     level.splatsTriggered = false;
     drawActiveSplats();
