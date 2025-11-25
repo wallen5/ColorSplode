@@ -89,8 +89,7 @@ function gameOverText(){
   textSize(20);
   text("Game Over!",  canvasWidth/2 - 70, canvasHeight/2 - 70);
 
-  text(`Final score: ${level.score}`, canvasWidth/2 - 120, height/2 - 30);
-  text("Press R to restart", canvasWidth/2 - 155, height/2)
+  text(`Final score: ${level.score}`, canvasWidth/2 - 120, height/2 - 90);
 
   //reset to normal values
   textSize(12);

@@ -481,10 +481,7 @@ function runClassicMode() {
 
     //draw game over!
     gameOverText();
-    
-
-    drawGameOver();
-
+    drawGameOverButton();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -552,9 +549,7 @@ function runRougeMode(){
 
     //draw game over!
     gameOverText();
-
-    drawGameOver();
-
+    drawGameOverButton();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -603,13 +598,13 @@ function createPauseButton()
 }
 
 
-function drawGameOver()
+function drawGameOverButton()
 {
   level.splodeActors();
   this.pauseButton.remove();
   if(!this.restartButton || !this.restartButton.sprite)
   {
-    this.restartButton = new Button(windowWidth/2, windowHeight/2 + 40, 150, 40, "lightgreen", "darkgreen", "Restart - r", 
+    this.restartButton = new Button(windowWidth/2 + 20, windowHeight/2 + 40, 300, 40, "lightgreen", "darkgreen", "Restart - r", 
       () =>{
         reset();
         music.stop();
