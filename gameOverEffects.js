@@ -67,3 +67,37 @@ function drawActiveSplats() {
   smooth();
   imageMode(CORNER);// ... cleanup ...
 }
+
+function generateAndDrawSplats(){
+  // draw paint splats on game over
+    if(level.splatsTriggered){  
+      for (let i = 0; i < 8; ++i) {
+        generateRandomSplat(); //gernate splats, does not draw
+      }
+      level.gameOverTime = millis();
+    }
+    level.splatsTriggered = false;
+    drawActiveSplats();
+}
+
+function gameOverText(){
+  let s = second();
+  if (s !== lastSecond) {
+    lastSecond = s;
+    currentColor = random(SOFTPALETTE);
+  }
+
+  stroke(0);
+  strokeWeight(4);
+  fill(currentColor);
+  textSize(20);
+  text("Game Over!",  canvasWidth/2 - 70, canvasHeight/2 - 70);
+
+  text(`Final score: ${level.score}`, canvasWidth/2 - 120, height/2 - 30);
+  text("Press R to restart", canvasWidth/2 - 155, height/2)
+
+  //reset to normal values
+  textSize(12);
+  fill("black");
+  strokeWeight(0);
+}

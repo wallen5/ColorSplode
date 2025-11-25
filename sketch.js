@@ -373,22 +373,13 @@ function runClassicMode() {
   }
 
   if(level.gameOver){
-    // draw paint splats on game over
-    if(level.splatsTriggered){  
-      for (let i = 0; i < 8; ++i) {
-        generateRandomSplat();
-      }
-      level.gameOverTime = millis();
-    }
-    level.splatsTriggered = false;
-    if(millis() - level.gameOverTime > 1000){
-      drawActiveSplats();
-    }
+    //random splats on screen
+    generateAndDrawSplats();
 
     level.splodeActors();
-    text("Game Over!",  width/2, height/2 - 60)
-    text(`Final score: ${level.score}`, width/2, height/2 - 30);
-    text("Press R to restart", width/2, height/2)
+
+    //draw game over!
+    gameOverText();
     
   }
 
@@ -435,10 +426,13 @@ function runRougeMode(){
   }
 
   if(level.gameOver){
+    //random splats on screen
+    generateAndDrawSplats();
+
     level.splodeActors();
-    text("Game Over!",  width/2, height/2 - 60)
-    text(`Final score: ${level.score}`, width/2, height/2 - 30);
-    text("Press R to restart", width/2, height/2)
+
+    //draw game over!
+    gameOverText();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
