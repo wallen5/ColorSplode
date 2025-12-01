@@ -8,13 +8,20 @@ class Button {
         this.hoverColor = hoverColor;
         this.text = text;
         this.onClick = onClick;
+        this.fontSize = 20;
+        this.minFontSize = 8;
 
         // create sprite ONCE
+        push()
+        textSize(this.fontSize);
         this.sprite = new Sprite(this.x, this.y);
         this.sprite.width = this.width;
         this.sprite.height = this.height;
         this.sprite.color = normalColor;
         this.sprite.text = text;
+        pop();
+
+        this.fitText();
     }
     
     // Call this once, this will re-initialize the button! (for buttons that are only drawn once then leave the screen)
@@ -28,6 +35,25 @@ class Button {
         this.sprite.text = this.text;
     }
 
+    fitText() {
+        let size = this.fontSize;
+
+        // shrink text until it fits
+        while (size > this.minFontSize) {
+            push();
+            textSize(size);
+            let w = textWidth(this.text);
+            const h = textAscent() + textDescent(); // rendered height
+            pop();
+
+            if (w <= this.width - 20 && h <= this.height) break;
+            size--;
+        }
+
+        this.fontSize = size;
+        this.sprite.textSize = size;
+    }
+
     update() {
         if(!this.sprite) return; // Checks if there isn't a sprite and then returns it
         if (this.sprite.mouse.hovering())
@@ -35,6 +61,12 @@ class Button {
         else
             this.sprite.color = this.normalColor;
 
+        let currentSize = this.sprite.fontSize;
+        console.log(currentSize);
+        console.log(textWidth(this.sprite.text));
+        this.fitText();
+        this.sprite.x = buttonBaseX + this.x;
+        this.sprite.y = buttonBaseY + this.y;
         if(this.sprite.mouse.pressed())
         {
             this.onClick();
