@@ -478,9 +478,17 @@ function runClassicMode() {
   if(!isPaused){
     level.update();
   }
-  
+
   if(level.gameOver){
-    drawGameOver();
+
+    //random splats on screen
+    generateAndDrawSplats();
+
+    level.splodeActors();
+
+    //draw game over!
+    gameOverText();
+    drawGameOverButton();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -540,7 +548,15 @@ function runRougeMode(){
   }
 
   if(level.gameOver){
-    drawGameOver();
+
+    //random splats on screen
+    generateAndDrawSplats();
+
+    level.splodeActors();
+
+    //draw game over!
+    gameOverText();
+    drawGameOverButton();
   }
 
   text(`Score: ${level.score}`, 100,210, 25);
@@ -606,11 +622,9 @@ function createPauseButton()
 }
 
 
-function drawGameOver()
+function drawGameOverButton()
 {
   level.splodeActors();
-  text("Game Over!",  width/2, height/2 - 60)
-  text(`Final score: ${level.score}`, width/2, height/2 - 30);
   this.pauseButton.remove();
   if(!this.restartButton || !this.restartButton.sprite)
   {
@@ -754,6 +768,7 @@ function drawPauseOverlay() {
   this.quitButton.update();
 }
 
+
 function drawExplosion() {
   // Only run if timer is active
   if (bombTimer > 0) {
@@ -766,6 +781,3 @@ function drawExplosion() {
     bombTimer--;
   }
 }
-
-
-
