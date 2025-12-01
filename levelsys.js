@@ -17,6 +17,9 @@ class Level {
     this.currentCombo = 0;
     this.gameOver = false; 
     this.player = new Player(lives, maxLives);
+    this.splatsTriggered = true;
+    this.activeSplats = [];
+    this.gameOverTime = 0;
     this.mode = "NONE";
     this.fade = 0;
     this.fadeSpeed = 5;
