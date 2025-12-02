@@ -11,7 +11,7 @@ jobs:
     env:
       HOST: cassini.cs.kent.edu
       USER: colorsplode            # change if needed
-      REMOTE_DIR: ~/web
+      REMOTE_DIR: /home/colorsplode/web
     steps:
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
