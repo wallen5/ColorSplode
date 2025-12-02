@@ -1,335 +1,413 @@
-//transition vars
-let fade = 0;
-let fadeSpeed = 5;
-let slide = 0;
-let slideSpeed = 15.0;
+class Level {
+  constructor(difficulty, bossKey, lives, maxLives) {
+    this.difficulty = difficulty;
+    this.bossKey = bossKey;
+    this.scoreThreshold = 25;
+    this.obstacle = [];
+    this.boss = null;
+    this.colorZones = [];
+    this.allActors = [];
+    this.vents = [];
+    this.maxVents = 4;
+    this.ventSpawnTimer = 0;
+    this.ventSpawnInterval = 20000;
+    this.initLevel = false;
+    this.score = 0;
+    this.currentColor;
+    this.currentCombo = 0;
+    this.gameOver = false; 
+    this.player = new Player(lives, maxLives);
+    this.splatsTriggered = true;
+    this.activeSplats = [];
+    this.gameOverTime = 0;
+    this.mode = "NONE";
+    this.fade = 0;
+    this.fadeSpeed = 5;
+    this.slide = 0;
+    this.slideSpeed = 15.0;
+  }
 
-class Level{
-    constructor(levelBoss, difficulty, obstacles, colorZones, loaded = false){
-        this.levelBoss = levelBoss;
-        this.difficulty = difficulty;
-        this.scoreThreshold = 0;
-        this.obstacleTypes = [...obstacles];
-        this.obstacles = [];
-        this.colorZones = colorZones;
-        this.loaded = loaded;
+  setup() {
+    if (this.initLevel) return;
+    if(this.mode == "ROUGE"){
+      this.setDifficulty(this.difficulty);
+    }
+    this.createRandomZones();
+    if (this.vents.length < this.maxVents){
+      this.createRandomVent();
+    }
+    this.initLevel = true;
+    this.ventSpawnTimer = millis();
+  }
+
+  setDifficulty(difficulty) {
+    if(difficulty >= 2){
+      this.setObstacle();
+      this.scoreThreshold = 50;
+    }
+    if(difficulty == 3){
+      this.setBoss();
+      this.scoreThreshold = this.boss.health;
     }
 
-    setup(){
-        this.setDifficulty();
-        this.setColorZones();
-        this.setObstacles();
-        this.loaded = true;
-    }
+    for(let sp of this.vents){
+      switch(difficulty){
+      case 1:
+        sp.spawnIncrease = 0.0046296;
+        break;
 
-    setDifficulty(){
-        switch(this.difficulty){
-        case 1:
-            spawnRateIncrease = 0.01;
-            this.scoreThreshold = 15;
-            maxVents = 2;
-            break;
-        case 2:
-            spawnRateIncrease = 0.05;
-            this.scoreThreshold = 20;
-            maxVents = 4;
-            break;
-        case 3:
-            spawnRateIncrease = 0.08;
-            this.scoreThreshold = 25;
-            maxVents = 4;
-            break;
-        }
-    }
+      case 2:
+        sp.spawnIncrease = 0.008342;
+        break;
 
-    setColorZones(){
-        randomColorZone(this);
-    }
-
-    setObstacles() {
-        const obstacleNames = [...this.obstacleTypes];
-        this.obstacles = [];
-        
-      
-        for (let obstacleName of obstacleNames) {
-          switch (obstacleName) {
-            //add cases for each obstacle
-            case "rougeBucket":
-              console.log("Spawning:", obstacleName);
-              let speed;
-              let unsnapInterval;
-              switch (this.difficulty) {
-                case 1: speed = 1; unsnapInterval = 25; break;
-                case 2: speed = 1.7; unsnapInterval = 50; break;
-                case 3: speed = 2.2; unsnapInterval = 75; break;
-                default: speed = 1.7; unsnapInterval = 50;
-              }
-              setTimeout(() => {
-                spawnRougeActor(speed, unsnapInterval);
-                if (rougeCharacter) {
-                  this.obstacles.push(rougeCharacter);
-                  console.log("RougeBucket added to obstacles");
-                  console.log("speed = " + rougeCharacter.speed, "unsap = " +  rougeCharacter.unsnapInterval);
-
-                }
-              }, 2000);
-              break;
-              case "graffiti":
-                console.log("Spawning:", obstacleName);
-                let burstAmt;
-                switch (this.difficulty) {
-                case 1: burstAmt = 2; break;
-                case 2: burstAmt = 3; break;
-                case 3: burstAmt = 4; break;
-                default: burstAmt = 1; break;
-                }
-                    this.graffitiBurst = burstAmt;
-                    setTimeout(() => {
-                      spawnGraffitiActor(1); // we use burstAmt logic in colorsplode.js, just spawn 1 to start off.
-                    }, 2000);
-                    break;
-            case "Cat":
-              console.log("Spawning:", obstacleName);
-              let catSpeed;
-              let swipeStrength;
-              switch (this.difficulty){
-                case 1: catSpeed = 1.5; swipeStrength = 1.0; break;
-                case 2: catSpeed = 2; swipeStrength = 2.0; break;
-                case 3: catSpeed = 2.75; swipeStrength = 3.0; break;
-                default: catSpeed = 2; swipeStrength = 2.0;
-              }
-              setTimeout(() => {
-                spawnCat(catSpeed, swipeStrength);
-                if (cat) {
-                  this.obstacles.push(cat);
-                  console.log("Cat added to obstacles");
-                  //console.log("speed = " + rougeCharacter.speed, "unsap = " +  rougeCharacter.unsnapInterval);
-
-                }
-              }, 2000);
-              break;
-          }
+      case 3:
+        sp.spawnIncrease = 0.01;
+        break;
       }
-    }   
-}  
+    }
+  }
 
-function clearObstacles() {
-    rougeCharacter = null;
-    cat = null;
-    graffitiActors = [];
+  setObstacle() {
+    const w = 50, h = 50;
+
+    if (this.bossKey <= 1) {
+      this.obstacle.push(new Cat(canvasWidth / 2, canvasHeight / 2, w * 1.8, h * 1.8, catSprite));
+      console.log("cat");
+    } else if (this.bossKey <= 2) {
+      this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
+      console.log("rougeBucket");
+    } else if (rand <= 3){
+      this.obstacle = new Graffiti(graffitiSprite);
+      console.log("graffiti");
+    } else {
+      this.obstacle = [];
+    }
+
+    for(let obstacle of this.obstacle){
+      if (obstacle instanceof rougeBucket) {
+        this.allActors.push(obstacle);
+      }
+    }
+  }
+
+  setBoss(){
+    const w = 50, h = 50;
+
+    if (this.bossKey <= 1) {
+      this.boss = new Boss("Carmine Queen", 200, canvasWidth / 2, canvasHeight / 2, w, h, carmineIdle, carmineIdle, carmineSpec);
+      console.log("Carmine Queen");
+    } else if (this.bossKey <= 2) {
+      this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
+      console.log("Garnet Grimjack");
+    } else {
+      this.boss = null;
+    }
+  }
+
+  update(){
+    //console.log("player lives: " + this.player.lives);
+    //if (!this.initLevel) return;
+
+    for (let sp of this.vents) {
+      if(!this.gameOver) sp.update(this);
+    }
+    //this.score = 0;
+    // collect any coins clicked this frame
+    const collected = [];
+    for (let actor of this.allActors) {
+      if(!this.gameOver) actor.update(this);
+      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; } // maybe put this somewhere else? gets called every frame
+      
+      // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
+      if (typeof Coin !== 'undefined' && actor instanceof Coin) {
+        // many coin implementations use a 'grabbed' flag when clicked
+        if (actor.grabbed && !actor.scored) {
+          this.player.coins = (this.player.coins || 0) + (actor.walletValue || 1);
+          actor.scored = true; // mark handled
+          collected.push(actor);
+        }
+      }
+    }
+
+    // remove collected coins from the actor list
+    if (collected.length) {
+      this.allActors = this.allActors.filter(a => !collected.includes(a));
+    }
+    if(this.player.lives <= 0){
+      this.player.alive = false;
+      this.gameOver = true; 
+    }
+
+    for(let obstacle of this.obstacle){
+      obstacle.update(this);
+    }
+
+    if(this.boss){
+      this.boss.update(this);
+    }
+
+    // Auto-spawn vents
+    if (!this.gameOver && this.vents.length < this.maxVents) {
+      if (millis() - this.ventSpawnTimer >= this.ventSpawnInterval) {
+        this.createRandomVent();
+        this.ventSpawnTimer = millis();
+      }
+    }
+  }
+
+  addScore(actor)
+  {
+    console.log("Add score");
+    if(this.currentColor != actor.color)
+    {
+      console.log("New combo");
+      console.log(this.currentColor)
+      this.currentColor = actor.color;
+      this.currentCombo = 1;
+    }else
+    {
+      this.currentCombo++;
+    }
+    this.score += this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
+    if(level.difficulty == 3) {this.boss.health -= this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);};
+  }
+
+  draw() {
+    for (let zone of this.colorZones) {
+      push();
+      imageMode(CORNER);
+      image(zoneSprites[zone.color], zone.x, zone.y, zone.width, zone.height);
+      pop();
+    }
+    for (let sp of this.vents) {
+      push();
+      imageMode(CORNER);
+      image(sp.texture, sp.x, sp.y, sp.width, sp.height);
+      pop();
+    }
+    //this.score = 0;
+    for (let actor of this.allActors) {
+      actor.draw();
+    }
+    for(let obstacle of this.obstacle){
+      obstacle.draw();
+    }
+    if(this.boss){
+      this.boss.draw();
+    }
+  }
+
+  splodeActors(){
+    for (let actor of this.allActors) {
+      if (actor instanceof Bucket) {
+      if(!actor.sorted){actor.sprite =  deathSprite[actor.color]; actor.fixDeathAnim(); actor.alive = false;}
+      }
+    }
+  }
+
+  createRandomZones() {
+    const zoneWidth = 150, zoneHeight = 150, inset = 25;
+    let zoneColor = shuffle([0, 1, 2, 3]);
+    let zoneMap; 
+    if (this.mode === "ROUGE"){
+      zoneMap = floor(random(0, 3));
+    } else {zoneMap = 0;}
+    this.currentZoneMap = zoneMap;
+
+    switch(zoneMap){
+      case 0: //corners
+        this.colorZones = [
+          new Zone(canvasWidth - zoneWidth - inset, canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[0]),
+          new Zone(inset,                        canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[1]),
+          new Zone(canvasWidth - zoneWidth - inset, inset,                         zoneWidth, zoneHeight, zoneColor[2]),
+          new Zone(inset,                        inset,                         zoneWidth, zoneHeight, zoneColor[3]),
+        ];
+        break;
+      case 1: //middle ends
+        this.colorZones = [
+          new Zone(canvasWidth - zoneWidth - inset, (canvasHeight / 2) + (inset * 3.5), zoneWidth, zoneHeight, zoneColor[0]), //bottom right
+          new Zone(inset,                        (canvasHeight / 2) + (inset * 3.5), zoneWidth, zoneHeight, zoneColor[1]), //bottom left
+          new Zone(canvasWidth - zoneWidth - inset, (canvasHeight / 2) - (inset * 3.5),                         zoneWidth, zoneHeight, zoneColor[2]), //top right
+          new Zone(inset,                        (canvasHeight / 2) - (inset * 3.5),                         zoneWidth, zoneHeight, zoneColor[3]), //top left
+        ];
+        break;
+      case 2: //bottom
+        this.colorZones = [
+          new Zone(canvasWidth - zoneWidth - inset, canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[0]),
+          new Zone(inset,                        canvasHeight - zoneHeight - inset, zoneWidth, zoneHeight, zoneColor[1]),
+          new Zone(canvasWidth - zoneWidth - (inset * 9), canvasHeight - zoneHeight - inset,                         zoneWidth, zoneHeight, zoneColor[2]),
+          new Zone(inset * 9,                        canvasHeight - zoneHeight - inset,                         zoneWidth, zoneHeight, zoneColor[3]),
+        ];
+    }
+  }
+
+  createRandomVent() {
+    if (this.vents.length >= this.maxVents) return;
+
+    const walls = [
+      { x: () => random(50, canvasWidth-100), y: () => 0, w: 70, h: 40, wallIndex: 0, tex: ventTop },
+      { x: () => random(50, canvasWidth-100), y: () => canvasHeight-40, w: 70, h: 40, wallIndex: 1, tex: ventBottom },
+      { x: () => 0, y: () => random(50, canvasHeight-100), w: 40, h: 70, wallIndex: 2, tex: ventLeft },
+      { x: () => canvasWidth-40, y: () => random(50, canvasHeight-100), w: 40, h: 70, wallIndex: 3, tex: ventRight }
+    ];
+
+    const margin = 60, maxPerWall = this.currentZoneMap === 2 ? 2 : 1;
+
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const wall = random(walls.filter(w => this.vents.filter(v =>
+        (w.wallIndex===0 && v.y===0) || (w.wallIndex===1 && v.y+v.height===canvasHeight) ||
+        (w.wallIndex===2 && v.x===0) || (w.wallIndex===3 && v.x+v.width===canvasWidth)
+      ).length < maxPerWall));
+
+      if (!wall) continue;
+
+      const vent = { x: wall.x(), y: wall.y(), width: wall.w, height: wall.h, tex: wall.tex };
+      const conflict = this.colorZones.concat(this.vents).some(z =>
+        vent.x < z.x + z.width + margin &&
+        vent.x + vent.width > z.x - margin &&
+        vent.y < z.y + z.height + margin &&
+        vent.y + vent.height > z.y - margin
+      );
+
+      if (!conflict) { this.vents.push(new SpawnPoint(vent.x, vent.y, vent.width, vent.height, Color.GRAY, vent.tex)); return; }
+    }
+
+    this.vents.push(new SpawnPoint(vent.x, vent.y, vent.width, vent.height, Color.GRAY, vent.tex));
+  }
 }
 
-function randomColorZone(level) {
-    if (!level) return;
-    
-    let zoneMap = level.zoneMap;
-    //console.log("level: " + level.zoneMap);
-    let colors = ["red", "purple", "blue", "green"];
-    let colorSet = shuffle(colors);
-    //console.log(colorSet);
+class Player {
+  constructor(lives, maxLives){
+    this.alive = true;
+    this.lives = lives;
+    this.maxLives = maxLives;
+    this.coins = 0;
+    this.baseScore = 1;
+    this.comboMult = 1.0;
+  }
+}
 
-    switch (zoneMap) {
-    case 0: // Corners
-        level.colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, colorSet[0]),
-        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, colorSet[1]),
-        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, colorSet[2]),
-        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, colorSet[3])
-        ];
-        break;
-    case 1: // sidelines
-        level.colorZones = [
-        new Zone((645 * gs) + gameX, gameLayer.height - (485 * gs) + gameY, 125 * gs, 125 * gs, colorSet[0]), //top
-        new Zone((645 * gs) + gameX, gameLayer.height - (350 * gs) + gameY, 125 * gs, 125 * gs, colorSet[1]), //second
-        new Zone((30 * gs) + gameX, gameLayer.height - (485 * gs) + gameY, 125 * gs, 125 * gs, colorSet[2]), //third
-        new Zone((30 * gs) + gameX, gameLayer.height - (350 * gs) + gameY, 125 * gs, 125 * gs, colorSet[3]) //bottom
-        ];
-        break;
-    case 2: // bottom alignment
-        level.colorZones = [
-        new Zone((50 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, colorSet[0]),
-        new Zone((235 * gs) + gameX, gameLayer.height - (250 * gs) + gameY, 150 * gs, 150 * gs, colorSet[1]),
-        new Zone((415 * gs) + gameX, gameLayer.height - (250 * gs) + gameY, 150 * gs, 150 * gs, colorSet[2]),
-        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, colorSet[3])
-        ];
-        break;
-        
-    default:
-        level.colorZones = [
-        new Zone(50 + gameX, 100 + gameY, 150 * gs, 150 * gs, "blue"),
-        new Zone(50 + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "green"),
-        new Zone(gameLayer.width - (200 * gs) + gameX, gameLayer.height - (200 * gs) + gameY, 150 * gs, 150 * gs, "red"),
-        new Zone(gameLayer.width - (200 * gs) + gameX, 100 + gameY, 150 * gs, 150 * gs, "purple")
-        ];
+class Zone {
+    constructor(x, y, width, height, color){
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.color = color;
+        this.borderWidth = 4;
     }
 }
 
-let levelSet = [];
+class SpawnPoint {
+  constructor(x, y, width, height, color, tex) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.color = color;
 
-function setBoss(){
-    let randPreset = random([0,1,2]);
+    this.spawnRate = 7; // seconds per spawn
+    this.spawnIncrease = 0.0046296;
+    this.lastSpawnTime = 0; // when the last spawn happened (ms)
+    this.shouldSpawn = true;
 
-    switch (randPreset) {
-    case 0:
-        levelSet = [
-        new Level(0, 1, ["rougeBucket"], []),
-        new Level(0, 2, ["rougeBucket"], []),
-        new Level(1, 3, ["rougeBucket"], [])
-        ];
-        break;
-    case 1:
-        levelSet = [
-        new Level(0, 1, ["Cat"], []), 
-        new Level(0, 2, ["Cat"], []),
-        new Level(1, 3, ["Cat"], [])
-        ];
-        break;
-    case 2:
-        levelSet = [
-        new Level(0, 1, ["graffiti"], []), 
-        new Level(0, 2, ["graffiti"], []),
-        new Level(1, 3, ["graffiti"], [])
-        ];
-        break;
+    this.texture = tex;
+  }
+
+  update(level) {
+    if(this.spawnRate > 2){
+      this.spawnRate -= this.spawnIncrease;
     }
+
+    // Check time elapsed since last spawn
+    if (millis() - this.lastSpawnTime >= this.spawnRate * 1000 && this.shouldSpawn) {
+      this.spawnActor(level);
+      this.lastSpawnTime = millis();
+    }
+  }
+
+  spawnActor(level) {
+    // spawn new Actor inside the spawnpoint rectangle
+    const x = this.x + this.width / 2 - 15;  // center it
+    const y = this.y + this.height / 2 - 15;
+    // Chance to spawn a Coin instead of a Bucket
+    const COIN_SPAWN_CHANCE = 0.15; // 15% chance
+    if (typeof Coin !== 'undefined' && random() < COIN_SPAWN_CHANCE) {
+      const coinSize = 24;
+      const coin = new Coin(x, y, coinSize, null);
+      level.allActors.push(coin);
+    } else {
+      const actor = new Bucket(x, y, 45, 45, floor(random(4)));
+      level.allActors.push(actor);
+    }
+  }
 }
 
-function levelTransition(){
-  clear();
-  drawBorder();
-  if (fade < 255){fade += fadeSpeed;}
-  if (slide < width / 2){slide += slideSpeed}
-  image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
-  gameLayer.background(0, 0, 0);
-
-  if (levelSet[currentLevel].difficulty != 3){
-    push();
-    fill(237, 204, 42);
-    textAlign(CENTER, CENTER);
-    textSize(30 * gs);
-
-    text("Level " + levelSet[currentLevel].difficulty + " Complete", gameLayer.width / 2 + gameX, slide - (500 * gs));
-    textSize(12 * gs);
-    pop();
+class AudioManager {
+  constructor(s){
+    this.current = s;
   }
-
-  pauseButton.remove();
-  scoreDisplay.remove();
-  comboDisplay.remove();
-  currentColor = color(0);
-  currentCombo = 0;
-
-  if(!transitionCreated){
-    quitButton = new Sprite(400 * gs + gameX, 550 * gs + gameY);
-    quitButton.text = "Quit";
-    quitButton.width = 200 * gs;
-    quitButton.height = 50 * gs;
-    quitButton.color = "red";
-
-    nextLevelButton = new Sprite(400 * gs + gameX, 500 * gs + gameY);
-    nextLevelButton.text = "Next Level";
-    nextLevelButton.width = 400 * gs;
-    nextLevelButton.height = 50 * gs;
-    nextLevelButton.color = "red";
-
-    transitionCreated = true;
-    fade = 0;
-    slide = 0;
+  play(){
+    this.current.play();
   }
-
-  if (transitionCreated && nextLevelButton && quitButton) {
-    nextLevelButton.x = slide;
-    quitButton.x = slide;
-  }
-
-  mouseOverButton(nextLevelButton, "lightred", "red");
-  mouseOverButton(quitButton, "lightred", "red");
-
-  currentMode = null;
-
-  if(levelSet[currentLevel].difficulty == 3){
-    nextLevelButton.remove();
-    image(gameLayer, gameX, gameY, gameLayer.width, gameLayer.height);
-    gameLayer.background(0, 0, 0, fade);
-    push();
-    fill(237, 204, 42);
-    textAlign(CENTER, CENTER);
-    textSize(50 * gs)
-    text("Victory", gameLayer.width / 2 + gameX, slide - (500 * gs));
-    if (transitionCreated && nextLevelButton && quitButton) {
-      quitButton.x = slide;
-    }
-    textSize(12 * gs);
-    pop();
-  }
-
-  if(quitButton.mouse.pressing()){
-    state = 0;
-    currentLevel = 0;
-    // remove and reset
-    quitButton.remove();
-    quitButton = null;
-    nextLevelButton.remove();
-    pauseButton.remove();
-    pauseButton = null;
-    levelMusic.stop();
-    scoreDisplay.remove()
-    scoreDisplay = null;
-    score = 0;
-    time = 0;
-    ourCharacters = [];
-    chooseButtons = []; //needed for buttons to appear on buy menu
-    levelUpTriggered = {};
-    player.inventory = [];
-    player.health = player.startHealth;
-    closeAllVents();
-    spawnLogic.timer = 50;
-    spawnLogic.timeToSpawn =  100;
-    spawnLogic.rate = 1;
-    spawnLogic.activeActors = 0;
-    clearObstacles();
-    fade = 0;
-    slide = 0;
-
-    setup();
-    transitionCreated = false;
-  }
-  if(nextLevelButton.mouse.pressing()){
-    //remove obstacles
-    clearObstacles();
-
-    state = 2;
-    currentMode = "roguelike";
-    currentLevel++;
-    // reset game
-    transitionCreated = false;
-    fade = 0;
-    slide = 0;
-    time = 0;
-    score = 0;
-    makeVents();
-    levelSet[currentLevel].setup();
-    gameLayer.image(levelBackground, 0, 0, gameLayer.width, gameLayer.height);
-    player.health = player.startHealth;
-    ourCharacters = [];
-    closeAllVents();
-    activateRandomVent();
-    spawnLogic.timer = 50;
-    spawnLogic.timeToSpawn =  100;
-    spawnLogic.rate = 1;
-    spawnLogic.activeActors = 0;
-    paintLayer.background(levelBackground);
-    pauseButton = new Sprite(750 * gs + gameX, 50 * gs + gameY);
-    pauseButton.text = "||";
-    pauseButton.width = 70 * gs;
-    pauseButton.height = 50 * gs;
-    pauseButton.color = "lightgreen";
-    drawScore();
-  }
-
-  if (currentMode != null){
-    quitButton.remove();
-    nextLevelButton.remove();
-    
+  stop(){
+    this.current.stop();
   }
 }
+
+
+// level initilization testing
+
+test("Level initializes properly", () => {
+  const lvl = new Level(100, 3, 5);  // just create single instance
+  assert(lvl.scoreThreshold === 100);
+  assert(lvl.player.lives === 3);
+  assert(Array.isArray(lvl.colorZones));
+  assert(Array.isArray(lvl.vents));
+});
+
+test("Player default properties", () => {
+  const p = new Player(3, 5);
+  assert(p.alive === true);
+  assert(p.lives === 3);
+  assert(p.maxLives === 5);
+  assert(p.coins === 0);
+  assert(p.baseScore === 1);
+});
+
+test("Zone properties set correctly", () => {
+  const z = new Zone(10, 20, 30, 40, 2);
+  assert(z.x === 10);
+  assert(z.y === 20);
+  assert(z.width === 30);
+  assert(z.height === 40);
+  assert(z.color === 2);
+  assert(z.borderWidth === 4);
+});
+
+test("Level.createRandomZones creates four zones", () => {
+  if (typeof canvasWidth === 'undefined') { var canvasWidth = 800; }
+  if (typeof canvasHeight === 'undefined') { var canvasHeight = 600; }
+  const lvl = new Level(0, 3, 3);
+  lvl.createRandomZones();
+  assert(Array.isArray(lvl.colorZones));
+  assert(lvl.colorZones.length === 4);
+});
+
+//this one may or may not have been GPT'd so it may or may not work
+test("Level.addScore increases score and combo", () => {
+  if (typeof round === 'undefined') { function round(n) { return Math.round(n); } }
+  const lvl = new Level(100, 3, 5);
+  const actor = { color: 1 };
+  lvl.currentColor = null;
+  lvl.currentCombo = 0;
+  lvl.player.baseScore = 2;
+  lvl.player.comboMult = 1;
+  lvl.score = 0;
+  lvl.addScore(actor);
+  assert(lvl.score === 2);
+  lvl.addScore(actor);
+  assert(lvl.currentCombo === 2);
+  assert(lvl.score > 2);
+});
+

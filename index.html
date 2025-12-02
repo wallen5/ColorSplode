@@ -2,31 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
 
-    <title>Color Splode</title>
+    <!-- p5.js -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.4/lib/p5.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <!-- p5.sound -->
+    <script src="https://cdn.jsdelivr.net/npm/p5.sound@0.2.0/dist/p5.sound.min.js"></script>
 
-    <script src="libraries/p5.min.js"></script>
-    <script src="https://p5play.org/v3/planck.min.js"></script>
+    <!-- p5.play -->
+     <script src="https://p5play.org/v3/planck.min.js"></script>
     <script src="https://p5play.org/v3/p5play.js"></script>
-    <!--
-    This enables the p5.js core library (automatically added within the p5.js web editor).
-    You'll need to include the core p5.js before using p5.collide2D.
-    -->
-    <script defer src="https://unpkg.com/p5"></script>
-    <!-- Includes the p5.collide2D addon library -->
-    <script defer src="https://unpkg.com/p5.collide2d"></script>
-    <script src="libraries/p5.sound.min.js"></script>
+
+
+    <link rel="stylesheet" href="style.css">
   </head>
 
   <body>
-    <!-- Load modules first so types like Level and Zone are defined before the main script runs -->
-    <script src="levelsys.js"></script>
-    <script src="zone.js"></script>
-    <script src="itemsobstacles.js"></script>
+
+    <main>
+    </main>
+
+    <!-- Your scripts (must come AFTER p5.play) -->
+    <script src="button.js"></script>
+    <script src="gameOverEffects.js"></script>
     <script src="actor.js"></script>
-    <script src="colorsplode.js"></script>
+    <script src="items.js"></script>
+    <script src="testframe.js"></script>
+    <script src="levelsys.js"></script>
+    <script src="sketch.js"></script>
   </body>
 </html>

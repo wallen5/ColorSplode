@@ -1,1069 +1,823 @@
-// A Class of Our Actors/Characters
+// Utility
+const reflectAngle = (angle, nx, ny) => {
+  const vx = Math.cos(angle), vy = Math.sin(angle);
+  const dot = vx * nx + vy * ny;
+  const rx = vx - 2 * dot * nx, ry = vy - 2 * dot * ny;
+  return Math.atan2(ry, rx);
+};
+
 class Actor {
-  constructor(x, y, sprite, color) {
-    this.x = x + gameX;
-    this.y = y + gameY;
-    this.prevX = x + gameX; // Needed for "bouncing" collision detection
-    this.prevY = y + gameY;
-    this.size = 50;
-    this.grabBox = 75;
+  constructor(x, y, width, height, sprite) {
+    this.x = x; this.y = y;
+    this.width = width; this.height = height;
     this.sprite = sprite;
-    this.originalSprite = sprite;
+    this.speed = 0;
+    this.moveAngle = random(TWO_PI);
+  }
+  // center x and y
+  get cx() { return this.x + this.width  * 0.5; }
+  get cy() { return this.y + this.height * 0.5; }
+  // radius 
+  get r () { return 0.5 * Math.max(this.width, this.height); }
+
+  roam() {
+    this.moveAngle += random(-0.12, 0.12);
+    this.x += cos(this.moveAngle) * this.speed;
+    this.y += sin(this.moveAngle) * this.speed;
+
+    // canvas edge bounce
+    if (this.x < 0) { this.x = 0; this.moveAngle = PI - this.moveAngle; }
+    else if (this.x > canvasWidth - this.width) { this.x = canvasWidth - this.width; this.moveAngle = PI - this.moveAngle; }
+
+   // Only for when all zones are located at the bottom of the canvas
+    let effectiveBottom = canvasHeight; // Default to the absolute canvas bottom
+    const zoneHeight = 150, inset = 25;
+    // Create new boundary if conditions are met
+    if (level?.currentZoneMap === 2 && !this.grabbed) {
+        effectiveBottom = canvasHeight - zoneHeight - inset;
+    }
+    //(map with zones at bottom) new boundary to stop buckets from moving past zones. Otherwise, boundaries stay the same
+     if (this.y < 0) { this.y = 0; this.moveAngle = -this.moveAngle; }
+     else if (this.y > effectiveBottom - this.height) { this.y = effectiveBottom - this.height; this.moveAngle = -this.moveAngle; }
+  }
+
+  draw() {
+    //if (!this.sprite) return;
+    push();
+    imageMode(CENTER);
+    if (this.sprite){image(this.sprite, this.cx, this.cy, this.width, this.height);}
+    pop();
+  }
+
+  update(level) {
+    this.roam();
+  }
+
+}
+
+class Bucket extends Actor {
+  constructor(x, y, width, height, color, sprite) {
+    super(x, y, width, height, sprite);
     this.color = color;
-    this.xspeed = random(-2,2) * gs;
-    this.yspeed = random(-2,2) * gs;
-    
-    this.timer = 14.0;           // measured in seconds
-    this.timerStart = millis();  // when the timer started
-    this.timeAlive = 0.0;        // Tracks how long the actor has been alive while the game is UNPAUSED
 
-    this.shakeThreshold = 5.0;   // how many seconds left to shake
-    this.impactShakeEnd = 0;
-    this.angle = 0;              // current rotation angle
-    this.rotationSpeed = 80.0;  // how fast it rotates per frame
-    this.rotationDirection = 1;  // 1 = clockwise, -1 = counter-clockwise
-    this.rotationMax = 360;      // seems like a lot, but looks good (?)
+    this.prevX = x; this.prevY = y;
+    this.particles = [];
 
-    this.opacity = 255;
+    this.grabbed = false;
+    this.freed = false;
+    this.sorted  = false;
+    this.speed   = 2;
+    this.moveAngle = random(TWO_PI);
 
-    this.flipX = 1;             // facing direction (1 = right, -1 = left)
-    this.lastFlipTime = 0;      // when we last flipped??
-    this.flipCooldown = 500;    // ms 
+    this.destinationX = x;
+    this.destinationY = y;
+
+    this.maxTimeAlive = 14000;
+    this.wobbleTime   = 5000;
+    this.alive        = true;
     this.scored = false;
 
-    // state is currently a string. This is weird and bad. Fix l8r!
-    this.state = "FREE";
+    this.freeze = false;
+    this.maxTimeFreeze = 5;
 
-    // actor particle array
-    this.particles = [];
+    this.angle = 45;
+
+    this.lastBounceAt   = 0;   // ms
+    this.bounceCooldown = 80;  // ms
+
+    this.timeSinceFlip = 0; // frames
+    this.lookDir = 1; // 1 left, -1 right
+
+    // NEW: logical timers that only advance when not paused
+    this.lifeMs = 0;             // how long this bucket has been alive in “game time”
+    this.freezeElapsedMs = 0;    // how long it has been frozen
+    this.lastUpdateTime = millis(); // for dt tracking
   }
 
-  setState(newState) {
-    this.state = newState;
-  }
+  draw() {
 
-  newRandomColor() {
+    const wobbleStart = Number.isFinite(this.wobbleTime) ? this.wobbleTime : 0; // ms
+    const ageMs = this.lifeMs;  // use game-time instead of millis() directly
+    let progress = constrain(ageMs / this.maxTimeAlive, 0, 1);
 
-    let newColors = [color(255,0,0), color(0,0,255), color(128,0,128), color(0,255,0)];
-  
-    let randIndex = int(random(0, newColors.length));
-    let randColor = newColors[randIndex];
-    randColor = lerpColor(randColor, color(255,255,255), 0.75);
-    // Avoid choosing the same color
-    // Im like 80% sure this doesnt work as intended but im too sick of messing with it for now - FIX
-    if (chrSprite[randIndex] === this.sprite) {
-      this.newRandomColor();
-      console.log("COLOR CHANGED!");
-    }
-    console.log("OUR NEW COLOR: " + randColor);
-    console.log("OUR OLD COLOR: " + this.color);
+    const baseAmp = PI / 8;  // 22.5°
+    const wobbleSpeed = 2.0 * lerp(1.0, 4.0, progress);
+    const wobbleAmp   = baseAmp * lerp(1.0, 2.0, progress);
 
-    this.sprite = chrSprite[randIndex];
-    this.color = randColor;
-    if (this.state === "SNAPPED") { 
-      this.state = "FREE";
-      this.timeAlive = 0.0;
-      this.angle = 0.0;
+    // When paused, draw a static sprite (no wobble), but still tint if frozen
+    if (isPaused) {
+      this.lastUpdateTime = millis();
+      push();
+      imageMode(CENTER);
+      if (this.freeze) tint(173, 216, 230);
+      image(this.sprite, this.cx, this.cy, this.width, this.height);
+      pop();
+      return;
     }
-  }
 
-  // Update the position of the character
-  update() {
-    if(!gamePaused && !levelUpActive){ // If the game ISN'T Paused then we update their movement
-      if (this.state === "FREE") {
-        checkTimer(this);
-        roamingMovement(this);
-      } else if (this.state === "GRABBED") {
-        checkTimer(this);
-        grabbedMovement(this);
-      } else if (this.state === "SNAPPED") {
-        // Do nothing; actor is in a zone
-        this.scored = true;
-      }
-    }
-  }
-  
-  draw(){
-    push();
-    translate(this.x + this.size/2, this.y + this.size/2); // move to center
-    let desiredFlip = this.xspeed < 0.0 ? 1 : -1;
-    let now = millis();
-    if (desiredFlip !== this.flipX && now - this.lastFlipTime > this.flipCooldown) {
-      this.flipX = desiredFlip;
-      this.lastFlipTime = now;
-    }
-    // Apply the current facing direction
-    scale(this.flipX, 1);
-    rotate(radians(this.angle)); // use actor.angle
-    imageMode(CENTER);
-    if(this.state == "EXPLODED"){
-      image(this.sprite, 0, 0, (this.size + 40) * gs, (this.size + 40) * gs);
+    this.flipActor();
+
+    if (ageMs >= wobbleStart && !this.sorted && this.alive) {
+      const t = (ageMs - wobbleStart) / 1000.0;
+      const theta = sin(t * wobbleSpeed) * wobbleAmp;
+
+      push();
+      imageMode(CENTER);
+      translate(this.x + this.width / 2, this.y + this.height / 2);
+      scale(this.lookDir, 1);
+      rotate(theta);
+      if (this.freeze) tint(173, 216, 230);
+      image(this.sprite, 0, 0, this.width, this.height);
+      pop();
+
     } else {
-      image(this.sprite, 0, 0, this.size * gs, this.size * gs);
+      push();
+      imageMode(CENTER);
+      translate(this.x + this.width / 2, this.y + this.height / 2);
+      scale(this.lookDir, 1);
+      if (this.freeze) tint(173, 216, 230);
+      image(this.sprite, 0, 0, this.width, this.height);
+      pop();
     }
-    pop();
+  }
 
-    this.paintTrail();
-    // Draw the particles around the actor
-    for (let i = this.particles.length-1; i >= 0; i--) {
-      let p = this.particles[i];
-      p.vy += 0.3;
+  collideWithActors(level) {
+    if (!level.allActors) return;
+    const now = millis(), r = this.r, cx = this.cx, cy = this.cy;
 
-      fill(p.color);
-      noStroke();
-      circle(p.x, p.y, p.size);
-      if(p.x < gameLayer.width + gameX - 10 && 
-        p.y < gameLayer.height + gameY - 10 && 
-        p.x > gameX + 10 && p.y > gameY + 10){
-        p.x += p.vx;
-        p.y += p.vy;
+    for (let other of level.allActors) {
+      if (other === this || this.sorted || !this.alive || other.sorted || !other.alive) continue;
+      if (now - this.lastBounceAt < this.bounceCooldown || now - other.lastBounceAt < other.bounceCooldown) continue;
+
+      const ro = other.r ?? 0.5 * Math.max(other.width, other.height);
+      const dx = (other.cx ?? (other.x + other.width * 0.5)) - cx;
+      const dy = (other.cy ?? (other.y + other.height * 0.5)) - cy;
+      const minD = r + ro, d2 = dx*dx + dy*dy;
+      if (d2 <= 0 || d2 >= minD*minD) continue;
+
+      const d  = Math.sqrt(d2), nx = dx / d, ny = dy / d;
+
+      // separate
+      const overlap = (minD - d) * 0.5;
+      this.x -= nx * overlap; this.y -= ny * overlap;
+      other.x += nx * overlap; other.y += ny * overlap;
+
+      // reflect
+      this.moveAngle  = reflectAngle(this.moveAngle,  nx, ny);
+      other.moveAngle = reflectAngle(other.moveAngle, -nx, -ny);
+
+      this.lastBounceAt = other.lastBounceAt = now;
+    }
+  }
+
+  collideWithZones(level) {
+    if (!level.colorZones) return;
+
+    for (let z of level.colorZones) {
+      if (this.x >= z.x + z.width || this.x + this.width <= z.x ||
+          this.y >= z.y + z.height || this.y + this.height <= z.y) continue;
+
+      const oL = (this.x + this.width) - z.x;
+      const oR = (z.x + z.width) - this.x;
+      const oT = (this.y + this.height) - z.y;
+      const oB = (z.y + z.height) - this.y;
+
+      if (Math.min(oL, oR) < Math.min(oT, oB)) {
+        this.x += (oL < oR ? -oL : oR);
+        this.moveAngle = PI - this.moveAngle;
       } else {
-        this.particles.splice(i,1);
-      }
-
-      // Fade and remove after set time is up
-      if (millis() - p.born > 1500) {
-        this.particles.splice(i,1);
+        this.y += (oT < oB ? -oT : oB);
+        this.moveAngle = -this.moveAngle;
       }
     }
   }
 
-  paintTrail(){
-    // paintLayer stores a lower-resolution representation of the game layer.
-    // gotta convert the actor's game coordinates into paintLayer coordinates before drawing.
-    if (typeof paintLayer === 'undefined' || typeof gameLayer === 'undefined') return;
-    let remaining = max(this.timer - this.timeAlive, 0);
-    if (this.state != "GRABBED" && this.state != "SNAPPED" && this.state != "EXPLODED" && remaining <= (this.shakeThreshold + 2)) {
-      // scale from gameLayer -> paintLayer
-      let scaleFactor = paintLayer.width / gameLayer.width;
-
-      // Actor.x and prevX include the game offset (constructed as x + gameX). Convert
-      // back to game-local coordinates by subtracting gameX/gameY, then scale into paintLayer.
-      const gx = (typeof gameX !== 'undefined') ? gameX : 0;
-      const gy = (typeof gameY !== 'undefined') ? gameY : 0;
-
-      let localX = (this.x - gx);
-      let localY = (this.y - gy);
-      let localPrevX = (this.prevX - gx);
-      let localPrevY = (this.prevY - gy);
-
-      let px = (localX + this.size / 2) * scaleFactor;
-      let py = (localY + this.size / 2) * scaleFactor;
-      let pPrevX = (localPrevX + this.size / 2) * scaleFactor;
-      let pPrevY = (localPrevY + this.size / 2) * scaleFactor;
-
-      // Growth curve for stroke weight
-      let lifeProgress = constrain(this.timeAlive / this.timer, 0, 1);
-      let growthCurve = pow(lifeProgress, 3);
-      let weight = map(growthCurve, 0, 1, 1, 6); // smaller range, since layer is scaled up later
-
-      paintLayer.stroke(this.color);
-      paintLayer.strokeWeight(weight);
-      paintLayer.line(pPrevX, pPrevY, px, py);
+  freezeActor() {
+    if (!this.freeze) {
+      this.freeze = true;
+      this.freezeElapsedMs = 0; // reset logical freeze timer
     }
   }
 
-  //makes sure the mouse is over the character
-  isMouseOver() { 
-    return mouseX > this.x && mouseX < this.x + this.grabBox &&
-            mouseY > this.y && mouseY < this.y + this.grabBox;
+  flipActor() {
+    this.timeSinceFlip++;
+    if (this.timeSinceFlip < 12) return; // dont flip too often
+
+    // flips too much without flipPadding, play around with value
+    const flipPadding = 0.1;
+    const moveAmt = (cos(this.moveAngle) * this.speed);
+
+
+    //console.log(moveAmt);
+    if (moveAmt > (flipPadding)) {
+      //console.log("FLIPPING!");
+      this.lookDir = -1;
+      this.timeSinceFlip = 0;
+    } 
+    if (moveAmt < (-flipPadding)) {
+      //console.log("FLIPPING!");
+      this.lookDir = 1;
+      this.timeSinceFlip = 0;
+    }
+  }
+
+  // without this, death anim is too small 
+  fixDeathAnim() {
+    if (!this.alive || this.sorted) return;
+    this.width  *= 2; 
+    this.height *= 2;
+    this.x -= this.width/4;
+    this.y -= this.height/4;
+  }
+
+  update(level) {
+
+    const oldX = this.x;
+    const oldY = this.y;
+    // compute dt every frame based on real time
+    const now = millis();
+    const dt = now - this.lastUpdateTime;
+    this.lastUpdateTime = now;
+
+    // if paused, do NOT advance timers, movement, paint, particles, etc.
+    if (typeof isPaused !== "undefined" && isPaused) {
+      return;
     }
 
-  
-  fadeAway() {
-    
-  }
-  
-  splode() {
+    if (this.grabbed) {
+      const gx = mouseX - gameOffsetX - this.width/2;
+      const gy = mouseY - gameOffsetY - this.height/2;
+      this.x = gx;
+      this.y = gy;
+    }
 
-    let numParticles = 6;
-    let lifetime = 250; // ms
-
-    for (let i = 0; i < numParticles; i++) {
+    this.sprite = this.sorted
+      ? chrSprite[this.color]
+      : (this.alive ? chrSprite[this.color] : deathSprite[this.color]);
       
-      let vx = random(-10, 10);
-      let vy = random(-10, 10);
 
-      let p = {
-        x: this.x + this.size/2,
-        y: this.y + this.size/2,
-        vx: vx,
-        vy: vy,
-        size: 6,
-        born: millis(),
-        color: this.sprite === chrSprite[0] ? color(255,0,0) :
-              this.sprite === chrSprite[1] ? color(0,0,255) :
-              this.sprite === chrSprite[2] ? color(160,0,255) :
-              this.sprite === chrSprite[3] ? color(0,200,0) : color(255)
-      };
+    // time & freeze
 
-      // push particle into a actor array
-      this.particles.push(p);
-    }
-  }
-
-  isInZone(zone, bucket = null) {
-    const obj = bucket || this;
-    const margin = 3; // a little tolerance so it’s easier to “stay in zone”
-    const objLeft = obj.x - margin;
-    const objRight = obj.x + obj.size + margin;
-    const objTop = obj.y - margin;
-    const objBottom = obj.y + obj.size + margin;
-
-    return !(
-      objRight < zone.x ||
-      objLeft > zone.x + zone.w ||
-      objBottom < zone.y ||
-      objTop > zone.y + zone.h
-    );
-  }
-
-}
-  
-  //SPAWN LOGIC
-  // used for actor spawning with vents
-  
-  function spawnActor(){
-    if (spawnLogic.rate <= 0) return; //checks if a bucket has exploded and stops spawning
-  
-    let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
-    const MAXACTORS = 10;
-  
-    let activeVents = vents.filter(v => v.active); // Will only choose from active vents
-    if (activeVents.length === 0) return;
-    if (state == 1){
-      activeVents = classicVents.filter(v => v.active);
-      if (activeVents.length === 0) return;
-    }
-    
-    // Chooses a random active vent to spawn from
-    let randomVent = random(activeVents);
-    if (spawnLogic.timer == Math.round(rate) && !gamePaused && !levelUpActive && spawnLogic.activeActors <= MAXACTORS) {
-      let newX, newY;
-  
-      // Makes sure coordinate for spawnpoint is at the right place
-      switch(randomVent.wall){
-      case "left":
-        newX = randomVent.x + 130;
-        newY = randomVent.y + 40;
-        break;
-      case "top":
-        newX = randomVent.x + 40;
-        newY = randomVent.y + 150;
-        break;
-      case "right":
-        newX = randomVent.x;
-        newY = randomVent.y + 40;
-        break;
-      case "bottom":
-        newX = randomVent.x + 40;
-        newY = randomVent.y;
-        break;
-      }
-  
-      let randIndex = int(random(0, chrSprite.length));
-      if(randIndex == 0) randColor = color(255, 0, 0)
-      if(randIndex == 1) randColor = color(0, 0, 255)
-      if(randIndex == 2) randColor = color(128, 0, 128)
-      if(randIndex == 3) randColor = color(0, 255, 0);    
-      // Chooses and pushes a random bucket to be spawned
-      randColor = lerpColor(randColor, color(255,255,255), 0.75);
-      ourCharacters.push(new Actor(newX, newY, chrSprite[randIndex], randColor));
-      ++spawnLogic.activeActors;
-    }
-  }
-
-
-
-  
-  function spawnRate(){
-    //needs to be whole number
-    let rate = spawnLogic.timeToSpawn/spawnLogic.rate;
-  
-    if(spawnLogic.timer == Math.round(rate)){
-      spawnLogic.timer = 0;
-  
-      //spawn rate starts to slow down.
-      if (spawnLogic.rate < 1.5){
-        spawnLogic.rate += spawnRateIncrease; 
-      } else if(spawnLogic.rate < 2) {
-        spawnLogic.rate += (spawnRateIncrease / 2);
-      }
-    }
-    ++spawnLogic.timer;
-  }
-  
-  //random character movement
-  function roamingMovement(actor) {
-    
-    if (actor.xspeed === undefined) actor.xspeed = random(-1, 1);
-    if (actor.yspeed === undefined) actor.yspeed = random(-1, 1); //identify speed
-    
-  
-    let velocity = createVector(actor.xspeed, actor.yspeed); //create velocity from speed
-    if (velocity.mag() < 0.1) {
-  
-  
-      velocity = p5.Vector.random2D().mult(1); //if actor still, nudge
-    }
-  
-    let jitter = p5.Vector.random2D().mult(0.2);
-    velocity.add(jitter);
-    velocity.setMag(actor.maxSpeed || 2); //max speed
-    
-    actor.prevX = actor.x; //save coordinate
-    actor.prevY = actor.y;
-  
-    actor.x += velocity.x * gs;//update coordinates
-    actor.y += velocity.y * gs;
-  
-    
-  
-    actor.xspeed = velocity.x;
-    actor.yspeed = velocity.y; //velocity transfer, probably an easier way to do this
-    
-        // Magnet PowerUp
-    if (player && player.hasItem("Magnet")) {
-      const magnetRange = 150; 
-      const magnetStrength = 30.0; 
-  
-      let mouseVector = createVector(mouseX, mouseY);
-      let actorVector = createVector(actor.x + actor.size/2, actor.y + actor.size/2);
-  
-      let toMouse = p5.Vector.sub(mouseVector, actorVector);
-      let distance = toMouse.mag();
-          
-      if ((distance < magnetRange) && (distance > 12)) {
-          // pull actor toward mouse
-          // second condition gives the magnet a nice bounce-back, not jittery
-          toMouse.setMag(magnetStrength);
-          actor.xspeed += toMouse.x;
-          actor.yspeed += toMouse.y;
-      }  
-    }
-  
-  
-    if (actor.x < zoneX) {
-      actor.x = zoneX;
-      actor.xspeed *= -1;
-    }
-    if (actor.x > width - actor.size - zoneX) {
-      actor.x = width - actor.size - zoneX;
-      actor.xspeed *= -1;
-    }
-    if (actor.y < zoneY1) {
-      actor.y = zoneY1;
-      actor.yspeed *= -1;
-    }
-    if (actor.y > gs * (height - actor.size - (height - (zoneY2 + zoneHeight)))) {
-      actor.y = gs * (height - actor.size - (height - (zoneY2 + zoneHeight)));
-      actor.yspeed *= -1;
-    }
-  
-    checkActorCollision(actor);
-    checkActorToActorCollisions();
-  }
-  
-  function checkActorCollision(actor){
-    for (let zone of (levelSet[currentLevel] && levelSet[currentLevel].colorZones ? levelSet[currentLevel].colorZones : [])) {
-      // Collision works as follows: check the top left corner of rect 1, and top left corner of rect 2
-      // Because our buckets are a square, you simply use actor.size for both the width and height
-      let hit = collideRectRect(zone.x, zone.y, zone.w, zone.h, actor.x, actor.y, actor.size, actor.size);
-      if(hit)
-      {
-        // came from the left?
-        if (actor.prevX + actor.size <= zone.x) {
-          actor.x = zone.x - actor.size;   // push out
-          actor.xspeed *= -1;
-        }
-        // came from the right?
-        else if (actor.prevX >= zone.x + zone.w) {
-          actor.x = zone.x + zone.w;       // push out
-          actor.xspeed *= -1;
-        }
-        // came from the top?
-        else if (actor.prevY + actor.size <= zone.y) {
-          actor.y = zone.y - actor.size;
-          actor.yspeed *= -1;
-        }
-        // came from the bottom?
-        else if (actor.prevY >= zone.y + zone.h) {
-          actor.y = zone.y + zone.h;
-          actor.yspeed *= -1;
-        }
-      }
-    }
-  }
-  
- 
-  function checkActorToActorCollisions() {
-    const allActors = [...ourCharacters];
-    if (rougeCharacter) allActors.push(rougeCharacter);
-  
-    for (let i = 0; i < allActors.length; i++) {
-      let actor1 = allActors[i];
-      if (actor1.state !== "FREE" && !(actor1 instanceof rougeActor)) continue;
-  
-      for (let j = i + 1; j < allActors.length; j++) {
-        let actor2 = allActors[j];
-        if (actor2.state !== "FREE" && !(actor2 instanceof rougeActor)) continue;
-  
-        //distance between actor centers
-        let xDist = (actor2.x + actor2.size / 2) - (actor1.x + actor1.size / 2);
-        let yDist = (actor2.y + actor2.size / 2) - (actor1.y + actor1.size / 2);
-        let dist = Math.sqrt(xDist * xDist + yDist * yDist);
-        let minDist = (actor1.size + actor2.size) / 2;
-  
-        if (dist < minDist && dist > 0) {
-          let impactX = xDist / dist;
-          let impactY = yDist / dist;
-          let overlap = (minDist - dist);
-  
-          //rouge bucket collisions
-          if (actor1 instanceof rougeActor && !(actor2 instanceof rougeActor)) {
-            actor2.x += impactX * overlap;
-            actor2.y += impactY * overlap;
-  
-            // Reflect velocity (real bounce)
-            const dot = actor2.xspeed * impactX + actor2.yspeed * impactY;
-            actor2.xspeed -= 2 * dot * impactX;
-            actor2.yspeed -= 2 * dot * impactY;
-  
-            //dampen for stability
-            actor2.xspeed *= 0.5;
-            actor2.yspeed *= 0.5;
-            continue;
-          } 
-          else if (actor2 instanceof rougeActor && !(actor1 instanceof rougeActor)) {
-            actor1.x -= impactX * overlap;
-            actor1.y -= impactY * overlap;
-  
-            const dot = actor1.xspeed * impactX + actor1.yspeed * impactY;
-            actor1.xspeed -= 2 * dot * impactX;
-            actor1.yspeed -= 2 * dot * impactY;
-  
-            actor1.xspeed *= 0.5;
-            actor1.yspeed *= 0.5;
-            continue;
-          }
-  
-          //normal bucket collisions
-          if (!(actor1 instanceof rougeActor) && !(actor2 instanceof rougeActor)) {
-            let halfOverlap = 0.5 * overlap;
-            //separate the actors
-            actor1.x -= impactX * halfOverlap;
-            actor1.y -= impactY * halfOverlap;
-            actor2.x += impactX * halfOverlap;
-            actor2.y += impactY * halfOverlap;
-
-            //return speed to actor
-            let relXSpeed = actor1.xspeed - actor2.xspeed;
-            let relYSpeed = actor1.yspeed - actor2.yspeed;
-            let bounceFactor = 2 * (impactX * relXSpeed + impactY * relYSpeed);
-  
-            actor1.xspeed -= bounceFactor * impactX;
-            actor1.yspeed -= bounceFactor * impactY;
-            actor2.xspeed += bounceFactor * impactX;
-            actor2.yspeed += bounceFactor * impactY;
-          }
-        }
-      }
-    }
-  }
-  
-  
-function grabbedMovement(actor) {
-  actor.x = constrain(mouseX - actor.size/2, zoneX, width - (actor.size * gs) - zoneX);
-  actor.y = constrain(mouseY - actor.size/2, zoneY1, gs * (height - (20 * gs) - actor.size - (height - (zoneY2 + zoneHeight))));
-}
-  
-  // Checks the actors timer
-  function checkTimer(actor) {
-    
-    actor.timeAlive += deltaTime / 1000.0; // Increments the timeAlive timer
-  
-    let remaining = max(actor.timer - actor.timeAlive, 0);
-    let t = remaining / actor.timer; // goes 1 to 0 over time
-  
-  
-    if (remaining <= 0) {
-      // Totem Powerup
-      if(player.hasItem("Totem of Varnish") && player.health < 2){
-        mouseReleased();
-        idx = chrSprite.indexOf(actor.sprite); // The actor that would explode shows their death sprite
-        if (idx >= 0) actor.sprite = deathSprite[idx];  
-        actor.state = "EXPLODED";
-  
-        for (let i = ourCharacters.length - 1; i >= 0; i--) {  // Every other actor gets removed when the totem explodes (Can change later)
-          if (ourCharacters[i] != actor && ourCharacters[i].state != "SNAPPED") {
-            ourCharacters.splice(i, 1);
-            spawnLogic.activeActors--;
-          }
-        }
-        player.removeItem("Totem of Varnish");
-        flashScreen = true;   // Makes a cool flashing screen effect
-        flashTimer = millis();
-      } else if(player.health >= 2){
-        player.health--;
-        mouseReleased();
-        idx = chrSprite.indexOf(actor.sprite);
-        if (idx >= 0) actor.sprite = deathSprite[idx];  
-        actor.state = "EXPLODED";
-  
-          if (player.hasItem("Paint Thinner")) {
-      console.log("has thinner")
-        for (let char of ourCharacters) {
-        if (char != actor) {
-          let distToActor = abs(dist(actor.x, actor.y, char.x, char.y));
-          if (distToActor < 600) {
-              char.angle = 0;
-              char.timer = 25; // Much Longer Timer
-              console.log("Time After:", char.timeAlive);
-            }
-          }
-        }
-      }
-  
-  
-  
+    if (this.freeze) {
+      this.freezeElapsedMs += dt;
+      if (this.freezeElapsedMs >= this.maxTimeFreeze * 1000) {
+        this.freeze = false;
       } else {
-        if (!player.isInvFrames()) {
-        player.health--;
-        onTimerFinished(actor);
-        return;
-        }
-      }
-    }
-    
-    if (remaining <= actor.shakeThreshold || millis() < actor.impactShakeEnd) {
-    let speedMultiplier = 1 / (t + 0.05);  // tweak 0.1 to control max speed
-    speedMultiplier = constrain(speedMultiplier, 0, 7);  // never shake faster than 7x normal
-    actor.angle += actor.rotationSpeed * speedMultiplier * actor.rotationDirection;    
-      
-  
-    let flipThreshold = actor.rotationMax * (1 + (1 - t) * 2);  
-    if (abs(actor.angle) > flipThreshold) {
-      actor.rotationDirection *= -1.0;
-      actor.angle = constrain(actor.angle, -flipThreshold, flipThreshold);
-      }
-    }
-  }
-  
-  function onTimerFinished(actor) {
-    console.log("Timer finished for actor!");
-  
-    mouseReleased();
-    player.startInvFrames();
-  
-    if (actor.state === "SNAPPED" || actor.state === "EXPLODED") return;
-  
-    //stop spawning
-    spawnLogic.rate = 0;
-  
-    //first bucket explodes
-    actor.state = "EXPLODED";
-    actor.splode();
-    idx = chrSprite.indexOf(actor.sprite);
-    if (idx >= 0) actor.sprite = deathSprite[idx];
-  
-    //explode all buckets not sorted
-    setTimeout(() => {
-      for (let a of ourCharacters) {
-        if (a !== actor && a.state !== "EXPLODED" && a.state !== "SNAPPED") {
-          idx = chrSprite.indexOf(a.sprite);
-          a.splode();
-          if (idx >= 0) a.sprite = deathSprite[idx];
-          a.state = "EXPLODED";
-        }
-      }
-    }, 550); 
-  
-    //delays gameover so death animation plays
-  
-    setTimeout(() => state = 3, 2500);
-  }
-  
-  function distBetween(x1, y1, x2, y2) {
-    return sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-  }
-  
-
-
-
-  function spawnRougeActor(speed, unsnapInterval) {
-  
-    let spawnX = gameLayer.width / 2 - 25;
-    let spawnY = gameLayer.height / 2 - 25;
-
-  
-    rougeCharacter = new rougeActor(spawnX, spawnY, rougeBucketSprite);
-    rougeCharacter.speed = speed;
-    rougeCharacter.unsnapInterval = unsnapInterval;
-  }
-
-  class rougeActor extends Actor {
-    constructor(x, y, sprite) {
-      super(x, y, sprite, color(255, 255, 0));
-      this.state = "IDLE";  
-      this.speed = 3;     
-      this.targetZone = null;  // current target zone
-      this.lastZone = null; //last target zone
-      this.currentBuckets = [];  //buckets rougeActor is trying to free
-      this.timer = Infinity; //never explodes
-      this.zoneCommitted = false; 
-      this.leaveTarget = null; 
-      this.unsnapTimer = 0;
-      this.unsnapInterval = 50; //how fast buckets are freed
-      this.idleStart = millis();
-      this.idleDelay = 2000;
-      this.inZoneFrames = 0;
-      this.zoneDelayStart = 0;    // timestamp when delay starts
-      this.zoneDelayDuration = 1000; // 1 second delay
-      //free item
-      this.frozen = false;
-      this.freezeTimer = 0;
-    }
-  
-    update() {
-      if (gamePaused || levelUpActive) return;
-      //console.log("game state = " + this.state);
-  
-      //allow player to grab actor
-      if (this.isMouseOver() && this.state === "IDLE" && mouseIsPressed && !grabbedCharacter) {
-        this.state = "GRABBED";
-        grabbedCharacter = this;
-        pickup.play();
+        // while frozen, don't move or collide
         return;
       }
-  
-      if (this.state === "GRABBED") {
-        grabbedMovement(this);
-    
-        //reset leaving / target logic because player moved the actor manually
-        this.targetZone = null;
-        this.leaveTarget = null;
-        this.zoneCommitted = false;
-        this.currentBuckets = [];
-        this.unsnapTimer = 0;
-        this.inZoneFrames = 0;
-        
-        return;
-      }
-    
-  
-      //if idle pick target zone
-      if (this.state === "IDLE") {
-        if (millis() - this.idleStart >= this.idleDelay) {
-          if (!this.targetZone) {
-            this.pickRandomZone();
-            if (this.targetZone) {
-              // Start the delay timer before moving
-              this.zoneDelayStart = millis();
-            }
-          }
-          //wait before moving again
-          if (this.targetZone && millis() - this.zoneDelayStart >= this.zoneDelayDuration) {
-            this.state = "MOVING_TO_ZONE";
-          }
-        }
-      }
-  
-      //moves towards target zone
-      if (this.state === "MOVING_TO_ZONE") {
-        if (this.targetZone) {
-          const reached = this.moveToZone(this.targetZone);
-          if (reached) {
-            this.state = "UNSNAPPING_BUCKETS";
-            this.identifyBucketsInZone();
-          }
-        } else {
-          this.state = "IDLE";
-          this.idleStart = millis();
-        }
-      }
-  
-      //free buckets in target zone
-      if (this.state === "UNSNAPPING_BUCKETS") {
-        this.unsnapTimer++;
-        if (!this.isInZone(this.targetZone)) {
-          this.currentBuckets = [];
-          this.state = "LEAVING_ZONE";
-          this.leaveTarget = this.chooseLeaveTarget(this.targetZone);
-          return;
-        }
-  
-        //rate buckets are freed
-        if (this.unsnapTimer >= this.unsnapInterval) {
-          this.unsnapTimer = 0;
-          this.identifyBucketsInZone();
-          this.unsnapBuckets();
-  
-          const stillSnapped = ourCharacters.some(
-            b => b.state === "SNAPPED" && this.isInZone(this.targetZone, b)
-          );
-          if (!stillSnapped) { //reset bucket that is freed
-            this.state = "LEAVING_ZONE";
-            this.leaveTarget = this.chooseLeaveTarget(this.targetZone);
-          }
-        }
-      }
-  
-      //leave zone
-      if (this.state === "LEAVING_ZONE") {
-        this.leaveZoneSmooth();
-      }
-  
-      if (this.state === "IDLE") super.update();
     }
-  
-    moveToZone(zone) {
-      if (!zone) return true;
-  
-      const targetX = zone.x + zone.w / 2 - this.size / 2;
-      const targetY = zone.y + zone.h / 2 - this.size / 2;
-      let dx = targetX - this.x;
-      let dy = targetY - this.y;
-      let distance = sqrt(dx*dx + dy*dy);
-  
-      if (distance < this.speed * 2) {
-          //console.log("rouge actor reached zone");
-          this.x = targetX;
-          this.y = targetY;
-          return true;
-      }
-  
-      //prevent getting stuck
-      if (!this._stuckTimer) this._stuckTimer = millis();
 
-      if (millis() - this._stuckTimer > 1000 && distance < 5) {
-          this.x = targetX;
-          this.y = targetY;
-          this._stuckTimer = null;
-          return true;
+    // advance life only when not paused
+    this.lifeMs += dt;
+    if ((this.lifeMs >= this.maxTimeAlive) && (this.alive)) {
+      this.fixDeathAnim();
+      this.alive = false;
+      for(item of inventory){
+        if (item.id === "SCRAPER") itemEffectScrape(level, this);
       }
-  
-      const moveSpeed = this.speed;
-      this.x += (dx / distance) * moveSpeed;
-      this.y += (dy / distance) * moveSpeed;
-  
-       if (distance > 5) this._stuckTimer = millis();
-  
-       return false;
+    } 
+    
+    // motion/collisions
+    if (!this.sorted && this.alive) {
+      this.roam();
+      this.collideWithActors(level);
+      if (!this.grabbed) this.collideWithZones(level);
     }
-  
-  
-    pickRandomZone() {
-      if (this.zoneCommitted) return;
-      const zones = levelSet[currentLevel]?.colorZones || [];
-      if (zones.length === 0) return;
-  
-      //find all zones with sorted buckets
-      const zonesWithBuckets = zones.filter(z =>
-          ourCharacters.some(b => b.state === "SNAPPED" && this.isInZone(z, b))
-      );
-  
-      if (zonesWithBuckets.length === 0) {
-          //don't move if there aren't any sorted buckets
-          this.targetZone = null;
-          this.zoneCommitted = false;
-          this.idleStart = millis();
-          return;
-      }
-  
-      //avoid picking the same zone again if possible
-      let candidateZones = zonesWithBuckets;
-      if (this.lastZone && zonesWithBuckets.length > 1) {
-          candidateZones = zonesWithBuckets.filter(z => z !== this.lastZone);
-          if (candidateZones.length === 0) {
-              // Only the same zone has buckets, so allow it
-              candidateZones = zonesWithBuckets;
-          }
-      }
-  
-      //pick random zone
-      this.targetZone = random(candidateZones);
-      this.zoneCommitted = true;
-      this.lastZone = this.targetZone; //remember last zone
-    }
-  
-  
-  
-    chooseLeaveTarget(zone) {
-      //if no other zone to go to head to center
-      if (!zone) return { x: width / 2 - this.size / 2, y: height / 2 - this.size / 2 };
-  
-      const zoneCenterX = zone.x + zone.w / 2;
-      const zoneCenterY = zone.y + zone.h / 2;
-  
-      let dx = this.x - zoneCenterX;
-      let dy = this.y - zoneCenterY;
-  
-      const dist = sqrt(dx * dx + dy * dy);
-      if (dist === 0) {
-          const angle = random(TWO_PI);
-          dx = cos(angle);
-          dy = sin(angle);
-      } else {
-          dx /= dist;
-          dy /= dist;
-      }
-  
-      //distance between canvas center and actor
-      const canvasCenterX = width / 2 - this.size / 2;
-      const canvasCenterY = height / 2 - this.size / 2;
-  
-      //point between canvas center and actor
-      const leaveFactor = 0.7; // closer to canvas center
-      const targetX = lerp(this.x, canvasCenterX, leaveFactor);
-      const targetY = lerp(this.y, canvasCenterY, leaveFactor);
-  
-      return { x: targetX, y: targetY };
-    }
-  
-    leaveZoneSmooth() {
-      if (!this.leaveTarget) this.leaveTarget = this.chooseLeaveTarget(this.targetZone);
 
-      if (this.state === "UNSNAPPING_BUCKETS" && this.targetZone) {
-        //if no more sorted buckets leave
-        const stillSnapped = ourCharacters.some(
-            b => b.state === "SNAPPED" && this.isInZone(this.targetZone, b)
+    // trail paint (drawn to paintLayer)
+    const wobbleStart = Number.isFinite(this.wobbleTime) ? this.wobbleTime : 0;
+    const ageMs = this.lifeMs;
+    if (!this.grabbed && this.alive && ageMs >= wobbleStart) {
+      let w = pow((ageMs / 1000) / 3, 2);
+      paintLayer.stroke(SOFTPALETTE[this.color]);
+      paintLayer.strokeWeight(w + random(2));
+      paintLayer.line(this.prevX + this.width/2, this.prevY + this.height/2, this.cx, this.cy);
+    }
+
+    // particles
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i], age = millis() - p.born, k = (deltaTime || 16.67) / 16.67;
+      p.vy += 0.3; p.x += p.vx * k; p.y += p.vy * k; p.vx *= 0.98; p.vy *= 0.98;
+
+      const c = color(PALETTE[this.color] || '#fff');
+      push();
+      c.setAlpha(map(age, 0, 1500, 255, 0, true));
+      noStroke(); fill(c); circle(p.x, p.y, p.size);
+      pop();
+      if (age > 1500) this.particles.splice(i, 1);
+    }
+
+    // Change prevX
+    this.prevX = oldX; this.prevY = oldY;
+
+  }
+
+  dropInZone(level){
+    console.log("Put into zone!");  
+    for (let zone of level.colorZones) {
+        const overlap = rectsOverlap(
+          this.x, this.y, this.width, this.height,
+          zone.x, zone.y, zone.width, zone.height
         );
-        if (!stillSnapped) {
-            this.state = "LEAVING_ZONE";
-            this.leaveTarget = this.chooseLeaveTarget(this.targetZone);
+        //console.log(overlap)
+
+      if (overlap && !this.sorted) {
+        if (this.color === zone.color) {
+          this.sorted = true;
+          this.splode(); //remove if you want
+          if(!this.freed)
+            level.addScore(this);
+          this.freed = true;
+        }
+        break;
+      }
+    }
+  }  
+
+  splode() {
+    const n = 6, cx = this.cx, cy = this.cy;
+    for (let i = 0; i < n; i++) {
+      this.particles.push({ x: cx, y: cy, vx: random(-10, 10), vy: random(-10, 10), size: 6, born: millis() });
+    }
+  }
+}
+
+// Cat
+class Cat extends Actor {
+  constructor(x, y, width, height, sprite) {
+    super(x, y, width, height, sprite);
+    this.target = null;
+    this.speed = 2.5;
+    this.swipeRange = 30;
+    this.lastSwipe = 0;
+    this.swipeCooldown = 2000; // ms
+    this.roamUntil = millis() + 2000;
+  }
+
+  findTarget(level) {
+    for (let actor of level.allActors) {
+      if (actor.alive && !actor.sorted) { this.target = actor; if (random(10) <= 2) return; }
+    }
+    this.target = null;
+  }
+
+  moveTowardTarget() {
+    if (!this.target) return;
+    const dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
+    const d  = Math.hypot(dx, dy); if (d < 1) return;
+    this.x += (dx / d) * this.speed; this.y += (dy / d) * this.speed;
+    if (d < this.swipeRange) this.attackTarget();
+  }
+
+  attackTarget() {
+    const now = millis();
+    if (now - this.lastSwipe < this.swipeCooldown) return;
+    if (this.target?.alive && !this.target.sorted) {
+      this.target.splode();
+      this.target.maxTimeAlive -= 3000;
+      
+
+    }
+    this.lastSwipe = now; this.target = null;
+  }
+
+  update(level) {
+    const now = millis();
+
+    if (!this.target || !this.target.alive || this.target.sorted) {
+      this.roam();
+      if (now >= this.roamUntil) {
+        this.findTarget(level);
+        this.roamUntil = now + random(500, 1500);
+      }
+    } else if (!this.target.grabbed) {this.moveTowardTarget();} 
+      else if (this.target.grabbed){this.roam();}
+  }
+}
+
+// Enemy frees sorted actors
+// Enemy frees sorted actors without state machine
+class rougeBucket extends Actor {
+  constructor(x, y, w, h, sprite) {
+    super(x, y, w, h, sprite);
+    this.speed = 1;
+    this.freeRange = 30;
+
+    this.targetColor = null;
+    this.targets = [];
+    this.target = null;
+    this.grabbed = false;
+    this.roamUntil = millis() + 1500;
+
+    this.alive = true;
+    this.freeze = false;
+    this.freezeElapsedMs = 0;
+    this.maxTimeFreeze = 5;
+  }
+
+  splode(){};
+
+  dropInZone(){};
+
+  freezeActor() {
+    if (!this.freeze) {
+      this.freeze = true;
+      this.freezeElapsedMs = 0;
+    }
+  }
+
+  getClosestTarget() {
+    if (!this.targets.length) return null;
+    return this.targets.reduce((best, b) => {
+      const d2 = (b.cx - this.cx)**2 + (b.cy - this.cy)**2;
+      return (!best || d2 < best.d2) ? {b, d2} : best;
+    }, null)?.b || null;
+  }
+
+  acquireTargetColor(level) {
+    const sorted = level.allActors.filter(b => b.sorted);
+    if (!sorted.length) return;
+
+    const chosen = random(sorted);
+    this.targetColor = chosen.color;
+    this.targets = level.allActors.filter(b => b.sorted && b.color === this.targetColor);
+    this.target = this.getClosestTarget();
+  }
+
+  moveTowardTarget() {
+    if (!this.target) return;
+    const dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
+    const d = Math.hypot(dx, dy);
+    if (d < 1) return;
+    this.x += (dx / d) * this.speed;
+    this.y += (dy / d) * this.speed;
+  }
+
+  freeTarget() {
+    if (!this.target) return;
+    this.target.lifeMs = 0;
+    this.target.sorted = false;
+    this.target.freed = true;
+    this.target.alive = true;
+    this.target.scored = true;
+
+    // -- Used to nudge bucket towards center of screen after freed by rogue bucket
+    const centerX = canvasWidth * 0.5;
+    const centerY = canvasHeight * 0.5;
+    // Use the bucket's center coordinates
+    const bucketCX = this.target.cx; 
+    const bucketCY = this.target.cy; 
+    // Calculate the difference vector (dx, dy) from the bucket to the center of screen
+    const dx = centerX - bucketCX;
+    const dy = centerY - bucketCY;
+    // This gives angle pointing from (bucketCX, bucketCY) to (centerX, centerY).
+    this.target.moveAngle = Math.atan2(dy, dx);
+    //when bucket is freed, it is moved towards center of screen to prevent bucket from going off canvas
+    const nudgeDistance = this.target.width * 2.5;
+    this.target.x += Math.cos(this.target.moveAngle) * nudgeDistance;
+    this.target.y += Math.sin(this.target.moveAngle) * nudgeDistance;
+
+    // remove from current target list
+    this.targets = this.targets.filter(b => b !== this.target);
+    this.target = this.getClosestTarget();
+
+    // if none left → clear color and pause
+    if (!this.target) {
+      this.targetColor = null;
+      this.roamUntil = millis() + 3000;
+    }
+  }
+
+  update(level) {
+    if (this.grabbed) {
+      this.x = mouseX - gameOffsetX; this.y = mouseY - gameOffsetY;
+      this.targetColor = null;
+      this.targets = [];
+      this.target = null;
+      this.roamUntil = millis() + 3000;
+      if (!mouseIsPressed) this.grabbed = false;
+      return;
+    }
+    
+    if (this.freeze) {
+      this.freezeElapsedMs += deltaTime || 16.67;
+      if (this.freezeElapsedMs >= this.maxTimeFreeze * 1000) this.freeze = false;
+      else return;
+    }
+
+    // pause before acquiring new target color
+    if (!this.targetColor) {
+      this.roam();
+      if (millis() >= this.roamUntil) this.acquireTargetColor(level);
+      return;
+    }
+
+    // no current target → reset color and pause
+    if (!this.target) {
+      this.targetColor = null;
+      this.roamUntil = millis() + 1000;
+      return;
+    }
+
+    // move and free
+    this.moveTowardTarget();
+    if (Math.hypot(this.target.cx - this.cx, this.target.cy - this.cy) < this.freeRange) {
+      this.freeTarget();
+    }
+  }
+}
+
+class Coin extends Actor {
+  constructor(x, y, size = 28, sprite = null) {
+    // Actor constructor signature: (x, y, width, height, sprite)
+    super(x, y, size, size, sprite);
+    this.width = size; this.height = size;
+    this.sprite = sprite;
+
+    this.walletValue = 1;
+    this.grabbed = false;
+    this.freed = false;
+    this.sorted = false;
+    this.alive = true;
+    this.scored = false;
+    this.speed = 1.5;
+    this.moveAngle = random(TWO_PI);
+  }
+}
+
+class Roller extends Actor {
+  constructor(x, y, width, height, sprite) {
+    super(x, y, width, height, sprite);
+    this.target = null;
+    this.speed = 2.5;
+    this.freeRange = 40;
+  }
+
+  findTarget(level) {
+    for (let actor of level.allActors) {
+      if (!actor.grabbed) { this.target = actor; if (random(10) <= 2) return; }
+    }
+    this.target = null;
+  }
+
+  moveTowardTarget() {
+    if (!this.target) return;
+    const dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
+    const d  = Math.hypot(dx, dy); if (d < 1) return;
+    this.x += (dx / d) * this.speed; this.y += (dy / d) * this.speed;
+    if (d < this.freeRange) this.freeTarget();
+  }
+
+  freeTarget() {
+    if (this.target) {
+      this.target.lifeMs = 0;
+      this.target.sorted = false;
+      this.target.freed = true;
+      this.target.alive = true;
+    }
+    this.target = null;
+  }
+
+  update(level) {
+    if (!this.target) this.findTarget(level);
+    if (this.target && !this.grabbed) this.moveTowardTarget();
+    if (this.grabbed) { this.x = mouseX; this.y = mouseY; }
+  }
+
+
+}
+
+class Graffiti {
+    constructor(sprite) {
+        this.sprite = sprite;
+        this.size = 55;
+        this.speed = 5;
+        this.sprayRadius = 140;
+
+        this.active = false;
+        this.exiting = false;
+        this.sprayed = false;
+
+        this.x = -200;
+        this.y = -200;
+
+        this.cooldown = 2000; //wait time before picking a new target
+        this.lastActionTime = 0;
+    }
+
+    waitOffscreen() {
+        this.active = this.exiting = this.sprayed = false;
+        this.x = this.y = -200;
+        this.lastActionTime = millis();
+    }
+
+    pickEdge(pxOff = 80, pyOff = 80) {
+        const side = floor(random(4));
+        switch (side) {
+            case 0:
+                return { x: -pxOff, y: random(height) };
+            case 1:
+                return { x: width + pxOff, y: random(height) };
+            case 2:
+                return { x: random(width), y: -pyOff };
+            default:
+                return { x: random(width), y: height + pyOff };
+        }
+    }
+
+    pickEntryPoint() {
+        const p = this.pickEdge(80, 80);
+        this.x = p.x;
+        this.y = p.y;
+    }
+
+    pickExitPoint() {
+        const p = this.pickEdge(200, 200);
+        this.exitX = p.x;
+        this.exitY = p.y;
+    }
+
+    moveToward(tx, ty, s = this.speed) {
+        const dx = tx - this.x,
+            dy = ty - this.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < s * s) return true;
+        const inv = 1 / Math.sqrt(d2);
+        this.x += dx * inv * s;
+        this.y += dy * inv * s;
+        return false;
+    }
+
+    findTarget(level) {
+        const candidates = [];
+
+        for (let a of level.allActors) {
+            if (a instanceof Bucket && a.alive && !a.sorted) {
+                candidates.push(a);
+            }
+        }
+
+        if (candidates.length === 0) return null;
+
+        return candidates[floor(random(candidates.length))];
+    }
+
+
+    spray(level) {
+        if (this.sprayed) return;
+        this.sprayed = true;
+        this.exiting = true;
+        this.pickExitPoint();
+
+        const r2 = this.sprayRadius * this.sprayRadius;
+
+        for (let actor of level.allActors) {
+            if (!(actor instanceof Bucket) || !actor.alive || actor.sorted) continue;
+
+            const dx = (actor.x + actor.width / 2) - this.x;
+            const dy = (actor.y + actor.height / 2) - this.y;
+            const d2 = dx * dx + dy * dy;
+
+            if (d2 < r2) {
+                actor.color = floor(random(4));
+                if (actor.splode) actor.splode();
+            }
+        }
+    }
+
+    update(level) {
+
+        if (!this.active) {
+            if (millis() - this.lastActionTime < this.cooldown) return;
+
+            const t = this.findTarget(level);
+            if (t) {
+                this.active = true;
+                this.target = t;
+                this.pickEntryPoint();
+            }
             return;
         }
-      }
-  
-      const dx = this.leaveTarget.x - this.x;
-      const dy = this.leaveTarget.y - this.y;
-      const dist = sqrt(dx * dx + dy * dy);
 
-      if (dist < 3) {
-          this.state = "IDLE";
-          this.leaveTarget = null;
-          this.zoneCommitted = false;
+        if (this.exiting) {
+            if (this.moveToward(this.exitX, this.exitY, this.speed * 1.3)) {
+                const offX = this.x < -150 || this.x > width + 150;
+                const offY = this.y < -150 || this.y > height + 150;
+                if (offX || offY) this.waitOffscreen();
+            }
+            return;
+        }
 
-          //immediately pick a new target zone if possible
-          this.pickRandomZone();
-          if (this.targetZone) {
-              this.state = "MOVING_TO_ZONE";
-          } else { //go idle otherwise
-              this.idleStart = millis();
-          }
-          return;
-      }
+        if (!this.target || !this.target.alive || this.target.sorted) {
+            this.target = this.findTarget(level);
+            if (!this.target) return;
+        }
 
-      //move smoothly toward target
-      const moveSpeed = this.speed;
-      this.x += (dx / dist) * moveSpeed;
-      this.y += (dy / dist) * moveSpeed;
-
+        if (this.moveToward(this.target.cx, this.target.cy)) {
+            this.spray(level);
+        }
     }
 
-    //find buckets in the zones
-    identifyBucketsInZone() {
-      if (!this.targetZone) return;
-      this.currentBuckets = ourCharacters.filter(
-        bucket => bucket.state === "SNAPPED" && this.isInZone(this.targetZone, bucket)
-      );
-    }
-  
-    //free buckets
-    unsnapBuckets() {
-      if (!this.currentBuckets || this.currentBuckets.length === 0) return;
-
-      const bucket = this.currentBuckets[0];
-      if (!bucket) return;
-
-      if (bucket.state === "SNAPPED" && this.isInZone(this.targetZone, bucket)) {
-        bucket.state = "FREE";
-        bucket.timeAlive = 0;
-        if (bucket.originalSprite) bucket.sprite = bucket.originalSprite;
-
-        //freed buckets move towards the center of the canvas
-        const canvasCenterX = gameLayer.width / 2;
-        const canvasCenterY = gameLayer.height / 2;
-        const dirX = canvasCenterX - (bucket.x + bucket.size / 2);
-        const dirY = canvasCenterY - (bucket.y + bucket.size / 2);
-        const dist = Math.max(1, Math.sqrt(dirX * dirX + dirY * dirY));
-
-        //keep from getting stuck
-        const pushStrength = 5 * gs;
-        bucket.x += (dirX / dist) * pushStrength + random(-5, 5);
-        bucket.y += (dirY / dist) * pushStrength + random(-5, 5);
-
-        bucket.xspeed = (dirX / dist) * 2 * gs + random(-1, 1);
-        bucket.yspeed = (dirY / dist) * 2 * gs + random(-1, 1);
-      }
-
-      this.currentBuckets.shift(); //remove and return bucket
-    }
-  
-    //check that the bucket is in a zone
-    isInZone(zone, bucket = null) {
-      if (!zone) return false; 
-      const obj = bucket || this;
-      const margin = 3;
-      const objLeft = obj.x - margin;
-      const objRight = obj.x + obj.size + margin;
-      const objTop = obj.y - margin;
-      const objBottom = obj.y + obj.size + margin;
-  
-      return !(
-        objRight < zone.x ||
-        objLeft > zone.x + zone.w ||
-        objBottom < zone.y ||
-        objTop > zone.y + zone.h
-      );
-    }
-  
     draw() {
-      if (!this.sprite) return; // prevents crash
-      
-      push();
-      translate(this.x + this.size / 2, this.y + this.size / 2);
-      imageMode(CENTER);
-      image(this.sprite, 0, 0, 60 * gs, 60 * gs);
-      pop();
+        push();
+        imageMode(CENTER);
+        if (this.sprite) image(this.sprite, this.x, this.y, this.size, this.size);
+        else {
+            fill(255, 0, 0);
+            circle(this.x, this.y, this.size);
+        }
+        pop();
+    }
+}
+
+class Boss extends Actor{
+  constructor(name, maxHealth, x, y, width, height, sprite, idleSprite, specialSprite, deathSprite) {
+    super(x, y, width, height, sprite);
+    this.idleSprite = idleSprite;
+    this.specialSprite = specialSprite;
+    this.deathSprite  = deathSprite;
+
+    this.name = name;
+    this.health = maxHealth;
+    this.maxHealth = maxHealth;
+    this.cooldown = 1200;
+    this.duration = 120;
+    this.timer = 0;
+    this.initialSpecial = false;
+  }
+
+  update(){
+    this.timer++;
+
+    if(this.timer == 120){
+      this.sprite = this.idleSprite;
+    }
+
+    if((this.initialSpecial == false && this.health <= this.maxHealth/2) || this.health <= this.maxHealth/2 && this.timer == this.cooldown){
+      this.initialSpecial = true;
+      this.useSpecial();
+      this.timer = 0;
     }
   }
 
+  drawHealthBar() {
+    const barWidth = 500;
+    const barHeight = 30;
+    let healthWidth = 0;
+    const x = (canvasWidth - barWidth) / 2;
+    const y = canvasHeight;
 
-   function spawnCat(speed, swipeStrength) {
-  
-    let spawnX = gameLayer.width / 2 - 25;
-    let spawnY = gameLayer.height / 2 - 25;
-  
-    cat = new Cat(spawnX, spawnY, catSprite);
-    cat.speed = speed;
-    cat.swipeStrength = swipeStrength;
+    stroke(0);
+    strokeWeight(2);
+    noFill();
+    rect(x, y, barWidth, barHeight);
+
+    stroke(0);
+    strokeWeight(2);
+
+    noStroke();
+    fill(255, 0, 0);
+    if(this.health >= 0){
+      healthWidth = (this.health / this.maxHealth) * barWidth;
+    }
+    rect(x, y, healthWidth, barHeight);
+    fill(0);
+    textSize(20);
+    text(this.name, x + 100, y + 25);
   }
 
-
-  class Cat extends Actor {
-    constructor(x, y, sprite) {
-      super(x, y, sprite, color(200, 150, 255));
-      this.state = "IDLE";
-      this.size = 60;
-      this.swipeCooldown = 1000; //wait after each swipe
-      this.lastAction = millis();
-      this.targetBucket = null;
-      this.speed = 2.75;
-      this.swipeRange = 30; 
-      this.swipeStrength = 2;
-      this.timer = Infinity; 
+  draw() {
+    push();
+    imageMode(CENTER);
+    const cx = this.x + this.width + 600;
+    const cy = this.y + this.height * 0.5;
+    if (this.sprite) {
+      image(this.sprite, cx, cy);
     }
-  
-    update() {
-      if (gamePaused || levelUpActive) return;
-  
-      //if no target roam randomly
-      if (!this.targetBucket) {
-        roamingMovement(this);
-  
-        //pick a new target
-        if (millis() - this.lastAction >= this.swipeCooldown) {
-          this.pickNewTarget();
-        }
-      } else {
-        //if targetBucket gets sorted untarget it
-        if (this.targetBucket.state !== "FREE") {
-          this.targetBucket = null;
-          this.lastAction = millis();
-          return;
-        }
-  
-        this.moveTowardTarget();
-  
-        //check if close enough to swipe
-        const distToTarget = dist(
-          this.x + this.size / 2,
-          this.y + this.size / 2,
-          this.targetBucket.x + this.targetBucket.size / 2,
-          this.targetBucket.y + this.targetBucket.size / 2
-        );
-  
-        if (distToTarget < this.swipeRange) {
-          this.swipeAtBucket();
-          this.targetBucket = null;
-          this.lastAction = millis();
-        }
-      }
-    }
-  
-    pickNewTarget() {
-      const unsortedBuckets = ourCharacters.filter(b => b.state === "FREE");
-  
-      if (unsortedBuckets.length === 0) return;
-  
-      this.targetBucket = random(unsortedBuckets); //pick random bucket to target
-      console.log("cat picked new target bucket!");
-    }
-  
-    moveTowardTarget() {
-      if (!this.targetBucket) return;
-  
-      const dx = this.targetBucket.x + this.targetBucket.size / 2 - (this.x + this.size / 2);
-      const dy = this.targetBucket.y + this.targetBucket.size / 2 - (this.y + this.size / 2);
-  
-      const distToTarget = Math.sqrt(dx * dx + dy * dy);
-  
-      if (distToTarget > 1) {
-        this.x += (dx / distToTarget) * this.speed;
-        this.y += (dy / distToTarget) * this.speed;
-      }
-    }
-  
-    swipeAtBucket() {
-      const target = this.targetBucket;
-      if (!target) return;
-  
-      const remaining = max(target.timer - target.timeAlive);
-
-      //increase time alive so buckets explode faster
-      switch (levelSet[currentLevel].difficulty) {
-        case 1: 
-          if (remaining >= 2) {
-            target.timeAlive += cat.swipeStrength;
-            console.log("strength: " + cat.swipeStrength);
-            console.log("cat swiped bucket - timer reduced by 1 sec: " + target.timeAlive);
-          } else {
-            target.timeAlive = 14;
-            console.log("cat made bucket explode: " + target.timeAlive);
-          }
-          break;
-        case 2: 
-          if (remaining >= 3) {
-            target.timeAlive += cat.swipeStrength;
-            console.log("strength: " + cat.swipeStrength);
-            console.log("cat swiped bucket - timer reduced by 2 sec: " + target.timeAlive);
-          } else {
-            target.timeAlive = 14;
-            console.log("cat made bucket explode: " + target.timeAlive);
-          }
-          break;
-        case 3: 
-          if (remaining >= 4) {
-            target.timeAlive += cat.swipeStrength;
-            console.log("strength: " + cat.swipeStrength);
-            console.log("cat swiped bucket - timer reduced by 3 sec: " + target.timeAlive);
-          } else {
-            target.timeAlive = 14;
-            console.log("cat made bucket explode: " + target.timeAlive);
-          }
-          break;
-      }
-  
-      target.splode();
-      target.impactShakeEnd = millis() + 500; //buckets shake after being swiped
-    }
-  
-    draw() {
-      push();
-      translate(this.x + this.size / 2, this.y + this.size / 2);
-      imageMode(CENTER);
-      image(this.sprite, 0, 0, 100 * gs, 100 * gs);
-      pop();
-    }
+    this.drawHealthBar();
+    pop();
   }
+
+  useSpecial(){
+    this.sprite = this.specialSprite;
+    this.sprite.reset();
+    this.sprite.pause();
+    this.sprite.play();
+    switch(this.name){
+    case "Garnet Grimjack":
+      let rouge = new rougeBucket(canvasWidth / 2, canvasHeight / 2, 50, 50, rougeBucketSprite);
+      level.obstacle.push(rouge);
+      level.allActors.push(rouge);
+      break;
+    case "Carmine Queen":
+      let cat = new Cat(canvasWidth / 2, canvasHeight / 2, 90, 90, catSprite);
+      level.obstacle.push(cat);
+      break;
+    };
+    push();
+    fill(255, 0, 0);
+    rect(0, 0, canvasWidth, canvasHeight);
+    pop();
+  }
+}
