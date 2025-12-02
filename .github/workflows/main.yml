@@ -22,7 +22,7 @@ jobs:
 
       - name: Pull latest on Cassini
         run: |
-          echo $ ssh -o BatchMode=yes "$USER@$HOST" 'cd "$REMOTE_DIR" && git pull --ff-only'
-          ssh -o BatchMode=yes "$USER@$HOST" 'cd "$REMOTE_DIR" && git pull --ff-only'
+          echo $ ssh -o BatchMode=yes $USER@$HOST 'cd $REMOTE_DIR && git pull --ff-only'
+          ssh -o BatchMode=yes $USER@$HOST 'cd $REMOTE_DIR && git pull --ff-only'
 
         
