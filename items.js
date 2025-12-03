@@ -7,7 +7,40 @@ class Item {
     }
 }
 
+class PermItem extends Item {
+    constructor(id, sprite, cost, description = "") {
+        super(id, sprite);
+        this.cost = cost;        // coin cost to purchase
+        this.bought = 0;         // number of times purchased
+        this.description = description;
+    }
+
+    applyUpgrade(player) { 
+      switch (this.id) { 
+        case "WET PALETTE":
+
+        break;
+        
+        case "HEART":
+         player.lives += 1;
+         player.maxLives += 1;
+
+        break;
+
+        case "ABRASIVE BRUSH":
+
+        break;
+
+      }
+    }
+    
+}
+
+  
+
+
 let ITEM_POOL = [];
+let PERM_ITEMS = [];
 
 function itemEffectMagnet(level) {
   const magnetWidth = 25;

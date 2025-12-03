@@ -95,6 +95,7 @@ function preload(){
   angleMode(RADIANS);
   myFont = loadFont('font/PressStart2P-Regular.ttf');
   bg = loadImage("images/menubackground.png");
+  itemBG = loadImage("images/itembackground.png")
   gameOverBG = loadImage("images/gameoverbackground.png");
   explodeGif = loadImage("images/explosion.gif");
   chrSprite[0] = loadImage("images/redpaintupdate.gif");
@@ -129,7 +130,6 @@ function preload(){
   splat4 = loadImage("images/Splats/splat4.png");
   splat5 = loadImage("images/Splats/splat5.png");
   splat6 = loadImage("images/Splats/splat6.png");
-  splatD = loadImage("images/Splats/splatDeLozier.png");
 
   zoneSprites[0] = loadImage("images/redzone.png");
   zoneSprites[1] = loadImage("images/bluezone.png");
@@ -185,7 +185,8 @@ const gameStates = {
   MAINMENU: () => showMainMenu(),
   CLASSIC: () => runClassicMode(),
   ROUGE: () => runRougeMode(),
-  LEVELTRANS: () => showLevelTransition()
+  LEVELTRANS: () => showLevelTransition(),
+  PERMITEMSCREEN: () => showPermItem()
 };
 
 // ,_______________
@@ -215,6 +216,12 @@ function setup() {
     new Item("BOMB", bomb),
     new Item("PALLET", selectivePallet),
     new Item("BRUSH", thickerBrush)
+  ];
+
+  PERM_ITEMS = [
+    new PermItem("WET PALETTE", selectivePallet, 5, "Increases\ninvincibility\nframes."),
+    new PermItem("HEART", heart, 6, "Start with\nan extra\nheart."),
+    new PermItem("ABRASIVE BRUSH", thickerBrush, 4, "Extra damage\nto bosses.")
   ];
 
   if (!ourPlayer) {
@@ -336,6 +343,7 @@ function keyPressed() {
       music.play();
       this.startButton.remove();
       this.rougeLikeButton.remove();
+      this.permItemButton.remove();
     }
     if (key === '2'){
       currentState = "ROUGE";
@@ -343,7 +351,8 @@ function keyPressed() {
       music = levelMusic;
       music.play();
       this.rougeLikeButton.remove();
-      this.startButton.remove();2
+      this.startButton.remove();
+      this.permItemButton.remove();
     }
 
   }
@@ -426,20 +435,21 @@ function showMainMenu() {
   // without the () and have it work the exact same!
   if(!this.startButton || !this.startButton.sprite)
   {
-    this.startButton = new Button(canvasWidth/2, canvasHeight/2 + 140, 500, 50, "lightgreen", "darkgreen", "Play Classic Mode - 1",
+    this.startButton = new Button(canvasWidth/2, canvasHeight/2 + 120, 500, 50, "lightgreen", "darkgreen", "Play Classic Mode - 1",
       () =>{
         currentState = "CLASSIC";
         if(music) music.stop();
         music = levelMusic;
         music.play();
         this.rougeLikeButton.remove();
-        this.startButton.remove();  
+        this.startButton.remove();
+        this.permItemButton.remove();
       }
     );
   }
   if(!this.rougeLikeButton || !this.rougeLikeButton.sprite)
   {
-    this.rougeLikeButton = new Button(canvasWidth/2, canvasHeight/2 + 220, 500, 50, "red", "darkred", "Play Rougelike Mode - 2",
+    this.rougeLikeButton = new Button(canvasWidth/2, canvasHeight/2 + 200, 500, 50, "red", "darkred", "Play Rougelike Mode - 2",
       () =>{
         currentState = "ROUGE";
         if(music) music.stop();
@@ -447,15 +457,177 @@ function showMainMenu() {
         music.play();
         this.rougeLikeButton.remove();
         this.startButton.remove();
+        this.permItemButton.remove();
       }
     );
   }
+
+  if(!this.permItemButton || !this.permItemButton.sprite)
+  {
+    this.permItemButton = new Button(canvasWidth/2, canvasHeight/2 + 280, 500, 50, "lightblue", "darkblue", "Buy Upgrades - 3",
+      () =>{
+        currentState = "PERMITEMSCREEN";
+        this.rougeLikeButton.remove();
+        this.startButton.remove();
+        this.permItemButton.remove();
+      }
+    );
+  }
+
   this.startButton.update();
   this.rougeLikeButton.update();
+  this.permItemButton.update();
   //text("Press 1 for Classic Mode", canvasWidth/2, canvasHeight/2);
   //text("Press 2 for Rouge Mode", canvasWidth/2, canvasHeight/2 + 30);
 
 }
+
+function showPermItem() {
+  push();
+
+  image(itemBG, 0, 0, canvasWidth, canvasHeight);
+
+  // Title
+  textAlign(CENTER, TOP);
+  textSize(28);
+  fill(255);
+  stroke(0);
+  strokeWeight(3);
+  text("Permanent Upgrades", canvasWidth/2, canvasHeight/9);
+
+  // Use player's coins (fall back to 0 if ourPlayer null)
+  const coinAmt = (ourPlayer && typeof ourPlayer.coins !== 'undefined') ? ourPlayer.coins : 0;
+
+  // Coin display 
+  textSize(18);
+  stroke(255);
+  fill(0);
+  text(`Coins: ${coinAmt}`, canvasWidth/2, canvasHeight/7 + 10);
+
+  // Layout parameters
+  const startX = 35;
+  const startY = 200;
+  const cardW = 220;
+  const cardH = 250;
+  const spacingX = 40;
+  imageMode(CORNER);
+  textAlign(LEFT, TOP);
+  textSize(14);
+
+  // Create buy buttons array if not present
+  if(!this.permBuyButtons) this.permBuyButtons = [];
+
+  for (let i = 0; i < PERM_ITEMS.length; ++i) {
+    const u = PERM_ITEMS[i];
+
+    const x = startX + i * (cardW + spacingX);
+    const y = startY;
+
+    // card background
+    push();
+    stroke(0);
+    strokeWeight(2);
+    fill(60, 60, 60, 220);
+    rect(x, y, cardW, cardH, 8);
+    pop();
+
+    // sprite (if available) centered near top of card
+    if (u.sprite) {
+      const imgW = 64, imgH = 64;
+      imageMode(CENTER);
+      image(u.sprite, x + cardW/2, y + 46, imgW, imgH);
+      imageMode(CORNER);
+    }
+
+    // Name
+    fill(255);
+    noStroke();
+    textSize(16);
+    textAlign(CENTER, TOP);
+    text(u.name, x + cardW/2, y + 90);
+
+    // Cost and Bought tracker
+    fill(255);
+    textSize(14);
+    textAlign(LEFT, TOP);
+    text(`${u.description}`, x + 20, y + 90);
+    text(`Bought: ${u.bought}`, x + 20, y + cardH * (3/4) + 4);
+  
+
+
+    // affordability indicator
+    const affordable = coinAmt >= u.cost;
+    if (!affordable) {
+      fill(220, 100, 100);
+      textSize(12);
+      textAlign(RIGHT, TOP);
+      text("Too expensive!!", x + cardW - 12, y + cardH * (3/4));
+      textAlign(LEFT, TOP);
+    }
+
+    // Buy button (create if doesn't exist)
+    if (this.permBuyButtons.length <= i || !this.permBuyButtons[i] || !this.permBuyButtons[i].sprite) {
+      // create button and store it
+      this.permBuyButtons[i] = new Button(x + cardW/2, y + cardH - 20, 160, 34,
+        // choose a slightly different color when unaffordable so it's visually clear
+        affordable ? "lightgreen" : "darkgray",
+        affordable ? "darkgreen" : "gray",
+        `Buy: $${u.cost}`,
+        (() => {
+          // closure to capture i
+          const idx = i;
+          return () => {
+            const upgrade = PERM_ITEMS[idx];
+            // ensure we reference the player's coins
+            const playerCoins = (ourPlayer && typeof ourPlayer.coins !== 'undefined') ? ourPlayer.coins : 0;
+            if (playerCoins >= upgrade.cost) {
+              // deduct and increment bought on the player-level coin store
+              ourPlayer.coins -= upgrade.cost;
+              upgrade.bought += 1;
+              upgrade.applyUpgrade(ourPlayer);
+            } else {
+              console.log("Not enough coins to buy", upgrade.id);
+            }
+          };
+        })()
+      );
+    }
+
+    // Keep button positioned in case layout changes
+    if (this.permBuyButtons[i]) {
+      this.permBuyButtons[i].x = x + cardW/2;
+      this.permBuyButtons[i].y = y + cardH - 20;
+      // Update the button visual to reflect affordability each frame:
+      // (If your Button class stores colors inside and doesn't respond to repeated constructor calls,
+      //  we only set the position and call update() — color-change requires re-creation,
+      //  so recreate when affordability changes.)
+      const needsRecreate = (this.permBuyButtons[i].label !== undefined && this.permBuyButtons[i].label !== `Buy (${u.cost})`)
+      // Defensive: ensure update called
+      this.permBuyButtons[i].update();
+    }
+  } // end upgrades loop
+
+  // Back button (to MAINMENU)
+  if(!this.permBackButton || !this.permBackButton.sprite) {
+    this.permBackButton = new Button(canvasWidth/2, canvasHeight - 60, 200, 44, "red", "darkred", "Back",
+      () => {
+        // remove all perm screen buttons and go back to main menu
+        if(this.permBackButton) this.permBackButton.remove();
+        if(this.permBuyButtons) {
+          for(let b of this.permBuyButtons) if(b) b.remove();
+          this.permBuyButtons = null;
+        }
+        currentState = "MAINMENU";
+        // main menu buttons will be lazily recreated by showMainMenu()
+      }
+    );
+  }
+  // update back button
+  this.permBackButton.update();
+
+  pop();
+}
+
 
 // ,________________
 // | Game Modes    |

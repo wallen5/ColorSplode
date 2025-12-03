@@ -1,3 +1,4 @@
+
 class Level {
   constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;
@@ -116,7 +117,11 @@ class Level {
     const collected = [];
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
-      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; } // maybe put this somewhere else? gets called every frame
+      if(!actor.alive && !actor.sorted && !actor.hasDecremented){
+         this.hasDecremented = true;
+         this.player.lives -= 1; 
+        
+        }
       
       // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
       if (typeof Coin !== 'undefined' && actor instanceof Coin) {
@@ -332,7 +337,7 @@ class SpawnPoint {
     const y = this.y + this.height / 2 - 15;
     // Chance to spawn a Coin instead of a Bucket
     const COIN_SPAWN_CHANCE = 0.15; // 15% chance
-    if (typeof Coin !== 'undefined' && random() < COIN_SPAWN_CHANCE) {
+    if (typeof Coin !== 'undefined' && random() <= COIN_SPAWN_CHANCE) {
       const coinSize = 24;
       const coin = new Coin(x, y, coinSize, null);
       level.allActors.push(coin);
