@@ -561,7 +561,7 @@ function showPermItem() {
       fill(220, 100, 100);
       textSize(12);
       textAlign(RIGHT, TOP);
-      text("Too expensive!!", x + cardW - 12, y + cardH * (3/4));
+      text("Too expensive!!", x + cardW - 12, y + cardH + 12);
       textAlign(LEFT, TOP);
     }
 

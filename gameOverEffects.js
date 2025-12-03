@@ -1,5 +1,5 @@
 function generateRandomSplat(){
-  let splatImages = [splat1, splat2, splat3, splat4, splat5, splat6, splatD];
+  let splatImages = [splat1, splat2, splat3, splat4, splat5, splat6];
   let randSplat = random(splatImages);
   let randColorIdx = int(random(0, 4));
 
