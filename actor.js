@@ -88,6 +88,9 @@ class Bucket extends Actor {
     this.timeSinceFlip = 0; // frames
     this.lookDir = 1; // 1 left, -1 right
 
+    this.hasDecremented = false; // kind of a dumb way to do this
+    //  but basically track if we've decremented player lives
+
     // NEW: logical timers that only advance when not paused
     this.lifeMs = 0;             // how long this bucket has been alive in “game time”
     this.freezeElapsedMs = 0;    // how long it has been frozen
