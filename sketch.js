@@ -561,7 +561,11 @@ function showPermItem() {
       fill(220, 100, 100);
       textSize(12);
       textAlign(RIGHT, TOP);
+<<<<<<< Updated upstream
       text("Too expensive!!", x + cardW - 12, y + cardH * (3/4));
+=======
+      text("Too expensive!!", x + cardW - 12, y + cardH + 12);
+>>>>>>> Stashed changes
       textAlign(LEFT, TOP);
     }
 
