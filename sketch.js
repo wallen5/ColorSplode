@@ -21,7 +21,7 @@ let TESTS_RAN = false;
 
 let levelNum = 1;
 let randBoss = 1;
-let level = new Level(levelNum, randBoss, 1, 1);
+let level = new Level(levelNum, randBoss, healthAmount, healthAmount);
 
 // These are used to update button position with window resizing
 let buttonBaseX;
@@ -169,7 +169,7 @@ function reset() {
   level = null;
   levelNum = 1;
   randBoss = random(2);
-  level = new Level(levelNum, randBoss, 1, 1);
+  level = new Level(levelNum, randBoss, healthAmount, healthAmount);
   level.initLevel = false;
   level.mode = "NONE";
   paintLayer = createGraphics(canvasWidth, canvasHeight);
@@ -331,7 +331,7 @@ function keyPressed() {
       paintLayer = createGraphics(canvasWidth, canvasHeight);
       paintLayer.background(levelBackground);
       levelNum++;
-      level = new Level(levelNum, randBoss, 1, 1)
+      level = new Level(levelNum, randBoss, healthAmount, healthAmount)
       currentState = "ROUGE";
       if(music) music.stop();
       music = levelMusic;
@@ -771,7 +771,7 @@ function showLevelTransition() {
           paintLayer = createGraphics(canvasWidth, canvasHeight);
           paintLayer.background(levelBackground);
           levelNum++;
-          level = new Level(levelNum, randBoss, 1, 1)
+          level = new Level(levelNum, randBoss, healthAmount, healthAmount)
           currentState = "ROUGE";
           if(music) music.stop();
           music = levelMusic;
