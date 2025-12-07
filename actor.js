@@ -360,7 +360,7 @@ class Cat extends Actor {
 
   findTarget(level) {
     for (let actor of level.allActors) {
-      if (actor.alive && !actor.sorted) { this.target = actor; if (random(10) <= 2) return; }
+      if (actor.alive && !actor.sorted && actor instanceof Bucket) { this.target = actor; if (random(10) <= 2) return; }
     }
     this.target = null;
   }
@@ -443,6 +443,9 @@ class rougeBucket extends Actor {
     if (!sorted.length) return;
 
     const chosen = random(sorted);
+    while (!(chosen instanceof Bucket)) {
+      chosen = random(sorted);
+    }
     this.targetColor = chosen.color;
     this.targets = level.allActors.filter(b => b.sorted && b.color === this.targetColor);
     this.target = this.getClosestTarget();
@@ -532,7 +535,7 @@ class rougeBucket extends Actor {
 }
 
 class Coin extends Actor {
-  constructor(x, y, size = 28, sprite = null) {
+  constructor(x, y, size = 28, sprite) {
     // Actor constructor signature: (x, y, width, height, sprite)
     super(x, y, size, size, sprite);
     this.width = size; this.height = size;
@@ -546,7 +549,7 @@ class Coin extends Actor {
     this.scored = false;
     this.speed = 1.5;
     this.moveAngle = random(TWO_PI);
-  }
+  } 
 }
 
 class Roller extends Actor {
