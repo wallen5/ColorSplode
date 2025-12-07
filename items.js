@@ -18,18 +18,16 @@ class PermItem extends Item {
     applyUpgrade(player) { 
       switch (this.id) { 
         case "WET PALETTE":
-
-        break;
+          invincAmt += 100;
+          break;
         
         case "HEART":
-         player.lives += 1;
-         player.maxLives += 1;
-
-        break;
+          healthAmount++;
+          break;
 
         case "ABRASIVE BRUSH":
-
-        break;
+          bossDamage++;
+          break;
 
       }
     }

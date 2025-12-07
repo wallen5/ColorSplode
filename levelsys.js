@@ -54,15 +54,15 @@ class Level {
     for(let sp of this.vents){
       switch(difficulty){
       case 1:
-        sp.spawnIncrease = 0.0046296;
+        sp.spawnIncrease = 0.003;
         break;
 
       case 2:
-        sp.spawnIncrease = 0.008342;
+        sp.spawnIncrease = 0.007;
         break;
 
       case 3:
-        sp.spawnIncrease = 0.01;
+        sp.spawnIncrease = 0.008;
         break;
       }
     }
@@ -119,7 +119,9 @@ class Level {
       if(!this.gameOver) actor.update(this);
       if(!actor.alive && !actor.sorted && !actor.hasDecremented){
          this.hasDecremented = true;
-         this.player.lives -= 1; 
+         this.player.lives -= 1;
+         
+         
         
         }
       
@@ -127,7 +129,7 @@ class Level {
       if (typeof Coin !== 'undefined' && actor instanceof Coin) {
         // many coin implementations use a 'grabbed' flag when clicked
         if (actor.grabbed && !actor.scored) {
-          this.player.coins = (this.player.coins || 0) + (actor.walletValue || 1);
+          coinCount++;
           actor.scored = true; // mark handled
           collected.push(actor);
         }
@@ -173,7 +175,7 @@ class Level {
     {
       this.currentCombo++;
     }
-    this.score += this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
+    this.score += bossDamage + this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
     if(level.difficulty == 3) {this.boss.health -= this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);};
   }
 
@@ -281,14 +283,24 @@ class Level {
   }
 }
 
+let healthAmount = 2;
+let invincAmt = 100;
+let bossDamage = 0;
+
+
+
 class Player {
   constructor(lives, maxLives){
     this.alive = true;
     this.lives = lives;
-    this.maxLives = maxLives;
+
+    this.maxLives = healthAmount;
     this.coins = 0;
     this.baseScore = 1;
     this.comboMult = 1.0;
+    
+    this.invincTimer = invincAmt;
+    this.trackInv = 0;
   }
 }
 

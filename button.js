@@ -62,8 +62,6 @@ class Button {
             this.sprite.color = this.normalColor;
 
         let currentSize = this.sprite.fontSize;
-        console.log(currentSize);
-        console.log(textWidth(this.sprite.text));
         this.fitText();
         this.sprite.x = buttonBaseX + this.x;
         this.sprite.y = buttonBaseY + this.y;

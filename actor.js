@@ -49,6 +49,10 @@ class Actor {
     pop();
   }
 
+  splode(){ // Dummy function to catch errors
+    return;
+  }
+
   update(level) {
     this.roam();
   }
@@ -274,6 +278,8 @@ class Bucket extends Actor {
     // advance life only when not paused
     this.lifeMs += dt;
     if ((this.lifeMs >= this.maxTimeAlive) && (this.alive)) {
+      if ((ourPlayer != null) && (ourPlayer.trackInv < ourPlayer.invincTimer)) return
+
       this.fixDeathAnim();
       this.alive = false;
       for(item of inventory){

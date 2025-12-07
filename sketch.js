@@ -48,6 +48,10 @@ let pendingItemChoices = null;   // when non-null, the item choice UI is open
 
 let ourPlayer = null;
 
+let coinCount = 0;
+ 
+
+
 // ,_________
 // | Helper |
 // |________|
@@ -220,9 +224,9 @@ function setup() {
   ];
 
   PERM_ITEMS = [
-    new PermItem("WET PALETTE", selectivePallet, 5, "Increases\ninvincibility\nframes."),
-    new PermItem("HEART", heart, 6, "Start with\nan extra\nheart."),
-    new PermItem("ABRASIVE BRUSH", thickerBrush, 4, "Extra damage\nto bosses.")
+    new PermItem("WET PALETTE", selectivePallet, 2, "Increases\ninvincibility\nframes."),
+    new PermItem("HEART", heart, 1, "Start with\nan extra\nheart."),
+    new PermItem("ABRASIVE BRUSH", thickerBrush, 1, "Extra damage\nto bosses.")
   ];
 
   if (!ourPlayer) {
@@ -497,7 +501,7 @@ function showPermItem() {
   text("Permanent Upgrades", canvasWidth/2, canvasHeight/9);
 
   // Use player's coins (fall back to 0 if ourPlayer null)
-  const coinAmt = (ourPlayer && typeof ourPlayer.coins !== 'undefined') ? ourPlayer.coins : 0;
+  const coinAmt = coinCount;
 
   // Coin display 
   textSize(18);
@@ -580,10 +584,10 @@ function showPermItem() {
           return () => {
             const upgrade = PERM_ITEMS[idx];
             // ensure we reference the player's coins
-            const playerCoins = (ourPlayer && typeof ourPlayer.coins !== 'undefined') ? ourPlayer.coins : 0;
+            const playerCoins = coinCount;
             if (playerCoins >= upgrade.cost) {
               // deduct and increment bought on the player-level coin store
-              ourPlayer.coins -= upgrade.cost;
+              coinCount -= upgrade.cost;
               upgrade.bought += 1;
               upgrade.applyUpgrade(ourPlayer);
             } else {
@@ -694,7 +698,7 @@ function runRougeMode(){
   }
 
   drawExplosion(); // shows bomb explode gif when bomb dropped. Triggered by itemEffectBomb(level)
-
+  
   for(item of inventory){
     if (item.id === "MAGNET") {
       itemEffectMagnet(level);
@@ -735,6 +739,13 @@ function runRougeMode(){
   text(`Score: ${level.score}`, 100,210, 25);
   text(`Combo: ${level.currentCombo}`, 100,250, 25);
   
+  if (ourPlayer) {
+    ourPlayer.trackInv++;
+  }
+
+  console.log("Lives: " + ourPlayer.lives + "Max Lives: " + ourPlayer.maxLives);
+  console.log("InvincTimer: " + ourPlayer.invincTimer + ": " + invincAmt );
+
 }
 
 function showLevelTransition() {
