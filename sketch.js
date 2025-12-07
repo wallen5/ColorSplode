@@ -140,6 +140,7 @@ function preload(){
   rougeBucketSprite = loadImage("images/susbucket.gif");
   catSprite = loadImage("images/catimage.gif");
   graffitiSprite = loadImage("images/Graffiti.png");
+  coinSprite = loadImage("images/Coin.png");
   thickerBrush = loadImage("images/ThickerBrush.png");
   selectivePallet = loadImage("images/SelectivePallet.png");
   levelBackground = loadImage("images/levelBackground.png");

@@ -339,7 +339,7 @@ class SpawnPoint {
     const COIN_SPAWN_CHANCE = 0.15; // 15% chance
     if (typeof Coin !== 'undefined' && random() <= COIN_SPAWN_CHANCE) {
       const coinSize = 24;
-      const coin = new Coin(x, y, coinSize, null);
+      const coin = new Coin(x, y, coinSize, coinSprite);
       level.allActors.push(coin);
     } else {
       const actor = new Bucket(x, y, 45, 45, floor(random(4)));

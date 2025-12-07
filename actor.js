@@ -532,7 +532,7 @@ class rougeBucket extends Actor {
 }
 
 class Coin extends Actor {
-  constructor(x, y, size = 28, sprite = null) {
+  constructor(x, y, size = 28, sprite) {
     // Actor constructor signature: (x, y, width, height, sprite)
     super(x, y, size, size, sprite);
     this.width = size; this.height = size;
@@ -546,7 +546,7 @@ class Coin extends Actor {
     this.scored = false;
     this.speed = 1.5;
     this.moveAngle = random(TWO_PI);
-  }
+  } 
 }
 
 class Roller extends Actor {
