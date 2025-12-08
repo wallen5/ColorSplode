@@ -343,6 +343,11 @@ function keyPressed() {
       this.nextLevelButton.remove();
     }
   }
+  if (currentState === "PERMITEMSCREEN") {
+    if (key === ESCAPE) {
+      reset();
+    }
+  }
 
   if (currentState === "MAINMENU") {
     if (key === '1') {
@@ -362,6 +367,14 @@ function keyPressed() {
       this.rougeLikeButton.remove();
       this.startButton.remove();
       this.permItemButton.remove();
+    }
+
+    if (key === '3'){
+      currentState = "PERMITEMSCREEN";
+      this.rougeLikeButton.remove();
+      this.startButton.remove();
+      this.permItemButton.remove();
+
     }
 
   }
