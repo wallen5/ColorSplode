@@ -183,6 +183,7 @@ function reset() {
   currentItem = null;
   pendingItemChoices = null;
   nextItemScoreThreshold = ITEM_SCORE_STEP;
+  if (level.player != null) ourPlayer = level.player;
 }
 
 
@@ -214,13 +215,13 @@ function setup() {
   currentState = "MAINMENU";
 
   ITEM_POOL = [
-    new Item("MAGNET", magnet),
-    new Item("FREEZE", freeze),
-    new Item("TOTEM", totem),
-    new Item("SCRAPER", scraper),
-    new Item("BOMB", bomb),
-    new Item("PALLET", selectivePallet),
-    new Item("BRUSH", thickerBrush)
+    new Item("MAGNET", magnet, "Pull buckets to the mouse"),
+    new Item("FREEZE", freeze, "Freeze buckets in place"),
+    new Item("TOTEM", totem, "Get an extra chance on gameover"),
+    new Item("SCRAPER", scraper, "Sploding resets nearby timers"),
+    new Item("BOMB", bomb, "Press 'b' to explode"),
+    new Item("PALLET", selectivePallet, "Increase base combo score"),
+    new Item("BRUSH", thickerBrush, "Increase combo multiplier")
   ];
 
   PERM_ITEMS = [
@@ -230,8 +231,11 @@ function setup() {
   ];
 
   if (!ourPlayer) {
-    // Player starts with 2 hearts by default
-    ourPlayer = new Player(2,2);
+    if (level && level.player) {
+      ourPlayer = level.player;
+    } else {
+      ourPlayer = new Player(healthAmount, healthAmount);
+    }
   }
 
   updateGameOffsets();
@@ -669,9 +673,19 @@ function runClassicMode() {
     gameOverText();
     drawGameOverButton();
   }
-
-  text(`Score: ${level.score}`, 100,210, 25);
-  text(`Combo: ${level.currentCombo}`, 100,250, 25);
+  let comboColorIndex = level.currentColor; // make sure this is 0,1,2,3
+  if (typeof comboColorIndex === 'number' && comboColorIndex >= 0 && comboColorIndex < SOFTPALETTE.length) {
+    fill(SOFTPALETTE[comboColorIndex]); 
+  } else {
+    fill(255); // fallback
+  }
+  
+  stroke(1);
+  textAlign(CENTER);
+  textSize(16);
+  text(`Combo\n    ${ level.currentCombo}`, -200,114, 300);
+  fill(255);
+  text(`Score\n    ${ level.score}`, -200,64, 300);
 
 }
 
@@ -679,6 +693,9 @@ function runRougeMode(){
 
   if(!isPaused)
     createPauseButton();
+
+  drawHeartIcons();
+  drawInventoryHUD();
 
   if(!level.initLevel){
     level.mode = "ROUGE";
@@ -738,14 +755,25 @@ function runRougeMode(){
     drawGameOverButton();
   }
 
-  text(`Score: ${level.score}`, 100,210, 25);
-  text(`Combo: ${level.currentCombo}`, 100,250, 25);
+  let comboColorIndex = level.currentColor; // make sure this is 0,1,2,3
+  if (typeof comboColorIndex === 'number' && comboColorIndex >= 0 && comboColorIndex < SOFTPALETTE.length) {
+    fill(SOFTPALETTE[comboColorIndex]); 
+  } else {
+    fill(255); // fallback
+  }
+  
+  stroke(1);
+  textAlign(CENTER);
+  textSize(16);
+  text(`Combo\n    ${ level.currentCombo}`, -200,114, 300);
+  fill(255);
+  text(`Score\n    ${ level.score}`, -200,64, 300);
   
   if (ourPlayer) {
     ourPlayer.trackInv++;
   }
 
-  console.log("Lives: " + ourPlayer.lives + "Max Lives: " + ourPlayer.maxLives);
+  console.log("Lives: " + ourPlayer.lives + "Max Lives: " + ourPlayer.maxLives + "Health Amt: " + healthAmount);
   console.log("InvincTimer: " + ourPlayer.invincTimer + ": " + invincAmt );
 
 }
@@ -806,6 +834,67 @@ function createPauseButton()
   }
   this.pauseButton.update();
 }
+
+function drawHeartIcons() {
+  if (!ourPlayer) return;
+
+  const heartSize = 32;          // width & height of each heart icon
+  const spacing = 8;             // vertical space between hearts
+  const startX = canvasWidth + 15; // same X as pause button
+  const startY = 25 + 60;        // start Y below the pause button
+
+  push();
+  imageMode(CORNER);
+
+  // Draw "empty" hearts first (gray for max lives)
+  for (let i = 0; i < ourPlayer.maxLives; i++) {
+    const y = startY + i * (heartSize + spacing);
+    tint(100, 100, 100); // gray out
+    image(heart, startX, y, heartSize, heartSize);
+  }
+
+  // Draw "full" hearts for current lives
+  noTint();
+  for (let i = 0; i < ourPlayer.lives; i++) {
+    const y = startY + i * (heartSize + spacing);
+    image(heart, startX, y, heartSize, heartSize);
+  }
+
+  pop();
+}
+
+
+function drawInventoryHUD() {
+  if (!ourPlayer) return;
+
+  // Change based on how many hearts we have
+  const heartSize = 32;     // Size of each heart icon (same as in drawHeartsHUD)
+  const heartSpacing = 8;   // Space between hearts
+  const totalHeartsHeight = ourPlayer.maxLives * (heartSize + heartSpacing);
+
+  const startX = canvasWidth + 15;           // X position for inventory display
+  const startY = 100 + totalHeartsHeight;   // Y position below hearts
+  const itemSize = 32;                      // Icon size
+  const itemSpacing = 8;                    // Vertical spacing between items
+
+  textAlign(LEFT, TOP);
+  textSize(16);
+  fill(255);
+
+  for (let i = 0; i < inventory.length; i++) {
+    const item = inventory[i];
+    const yPos = startY + 20 + i * (itemSize + itemSpacing);
+
+    // Draw the item's sprite
+    if (item.sprite) {
+      image(item.sprite, startX, yPos, itemSize, itemSize);
+    }
+
+    // Draw the item's name/ID next to the sprite
+    text(item.id, startX + itemSize + 5, yPos + 5);
+  }
+}
+
 
 
 function drawGameOverButton()
@@ -869,39 +958,46 @@ function drawItemChoiceUI() {
 
     // item card background
     fill(50, 50, 50, 220);
-    rect(x - 80, y - 80, 160, 160, 10);
+    rect(x - 80, y - 80, 160, 200, 10);
 
     // item icon
     if (item.sprite) {
       image(item.sprite, x, y - 20, 64, 64);
     }
 
-    // label
+    // item name
     fill(255);
-    // Button
-    if(this.choiceButtons.length < 3)
-      this.choiceButtons[i] = new Button(x, y + 120, 150, 40, "lightgreen", "darkgreen", `${i + 1}: ${item.id}`, 
-      () =>{
-        let index = i;
-        const chosen = pendingItemChoices[index];
-        setCurrentItem(chosen);
-        pendingItemChoices = null;
-        nextItemScoreThreshold += ITEM_SCORE_STEP;
-        for(let b of this.choiceButtons)
-          b.remove();
-        this.choiceButtons = null;
-      }
-    )
+    textSize(16);
+    text(item.id, x, y + 20);  // below the icon
+
+    // item description
+    textSize(12);
+    textAlign(CENTER);
+    text(item.desc, x - 70, y + 60, 150);  // below the item name
+    
+    // create button if it doesn't exist
+    if(this.choiceButtons.length < 3) {
+      this.choiceButtons[i] = new Button(x, y + 120, 150, 40, "lightgreen", "darkgreen", `${i + 1}: Select`, 
+        () => {
+          const chosen = pendingItemChoices[i];
+          setCurrentItem(chosen);
+          pendingItemChoices = null;
+          nextItemScoreThreshold += ITEM_SCORE_STEP;
+          for(let b of this.choiceButtons) b.remove();
+          this.choiceButtons = null;
+        }
+      );
+    }
   }
-  if(this.choiceButtons)
-  {
+
+  // update buttons each frame
+  if(this.choiceButtons) {
     for(let b of this.choiceButtons)
       b.update();
   }
 
   pop();
 }
-
 
 // optional: small helper to set the currently active item
 function setCurrentItem(item) {

@@ -1,9 +1,10 @@
 const itemID = ["MAGNET", "FREEZE", "TOTEM", "BOMB"];
 
 class Item {
-    constructor(id, sprite){
+    constructor(id, sprite, description){
         this.id = id;
         this.sprite = sprite;
+        this.desc = description;
     }
 }
 
@@ -22,7 +23,7 @@ class PermItem extends Item {
           break;
         
         case "HEART":
-          healthAmount++;
+          applyPermanentHeart();
           break;
 
         case "ABRASIVE BRUSH":
@@ -39,6 +40,25 @@ class PermItem extends Item {
 
 let ITEM_POOL = [];
 let PERM_ITEMS = [];
+
+function applyPermanentHeart() {
+  // bump baseline
+  healthAmount += 1;
+
+  // update the current active player(s)
+  if (level && level.player) {
+    // grow its max and optionally heal one life
+    level.player.maxLives = Math.max(level.player.maxLives, healthAmount);
+    level.player.lives = Math.min(level.player.lives + 1, level.player.maxLives);
+    ourPlayer = level.player; // keep global pointer
+  } else if (ourPlayer) {
+    ourPlayer.maxLives = Math.max(ourPlayer.maxLives, healthAmount);
+    ourPlayer.lives = Math.min(ourPlayer.lives + 1, ourPlayer.maxLives);
+  }
+
+  console.log("Permanent heart applied — baseline:", healthAmount, "current max:", ourPlayer && ourPlayer.maxLives);
+}
+
 
 function itemEffectMagnet(level) {
   const magnetWidth = 25;
@@ -132,6 +152,10 @@ function itemEffectBomb(level){
   level.allActors = [];
 }
 
-function ItemEffectTotem(){
+function itemEffectTotem(player) {
+  // Give the player 1 life
+  player.lives = round(player.maxLives/2);
+
+  player.invincTimer = 0; // reset i-frames
 
 }

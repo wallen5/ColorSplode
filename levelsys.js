@@ -118,10 +118,10 @@ class Level {
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
       if(!actor.alive && !actor.sorted && !actor.hasDecremented){
+        if (typeof Bucket !== 'undefined' && actor instanceof Bucket) {
          actor.hasDecremented = true;
          this.player.lives -= 1;
-         console.log(this);
-        
+        }
         }
       
       // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
@@ -140,9 +140,18 @@ class Level {
       this.allActors = this.allActors.filter(a => !collected.includes(a));
     }
     if(this.player.lives <= 0){
-      this.player.alive = false;
-      this.gameOver = true; 
-    }
+      const hasTotem = inventory.some(item => item.id === "TOTEM");
+
+      if (hasTotem) {
+        // Activate Totem effect and remove it from inventory
+        itemEffectTotem(this.player);
+        const index = inventory.findIndex(item => item.id === "TOTEM");
+        inventory.splice(index, 1); // remove used Totem
+      } else {
+        // No Totem, normal game over
+        this.player.alive = false;
+        this.gameOver = true;
+      }}
 
     for(let obstacle of this.obstacle){
       obstacle.update(this);
@@ -293,7 +302,7 @@ class Player {
     this.alive = true;
     this.lives = lives;
 
-    this.maxLives = healthAmount;
+    this.maxLives = (typeof maxLives === 'number') ? maxLives : healthAmount;
     this.coins = 0;
     this.baseScore = 1;
     this.comboMult = 1.0;
