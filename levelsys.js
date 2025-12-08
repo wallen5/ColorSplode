@@ -3,7 +3,7 @@ class Level {
   constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;
     this.bossKey = bossKey;
-    this.scoreThreshold = 25;
+    this.scoreThreshold = 1;
     this.obstacle = [];
     this.boss = null;
     this.colorZones = [];
@@ -44,7 +44,7 @@ class Level {
   setDifficulty(difficulty) {
     if(difficulty >= 2){
       this.setObstacle();
-      this.scoreThreshold = 50;
+      this.scoreThreshold = 1;
     }
     if(difficulty == 3){
       this.setBoss();
@@ -77,7 +77,7 @@ class Level {
     } else if (this.bossKey <= 2) {
       this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
       console.log("rougeBucket");
-    } else if (rand <= 3){
+    } else if (this.bossKey <= 3){
       this.obstacle = new Graffiti(graffitiSprite);
       console.log("graffiti");
     } else {
@@ -100,6 +100,8 @@ class Level {
     } else if (this.bossKey <= 2) {
       this.boss = new Boss("Garnet Grimjack", 300, canvasWidth / 2, canvasHeight / 2, w, h, garnetIdle, garnetIdle, garnetSpec);
       console.log("Garnet Grimjack");
+    } else if (this.bossKey <= 3){
+      this.boss = new Boss("Maroon Magician", 200, canvasWidth / 2, canvasHeight / 2, w, h, maroonIdle, maroonIdle, maroonSpec);
     } else {
       this.boss = null;
     }

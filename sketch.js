@@ -153,6 +153,8 @@ function preload(){
   garnetSpec = loadImage("images/Grimjack Gunfire.gif");
   carmineIdle = loadImage("images/CarmineQueenIdle.gif");
   carmineSpec = loadImage("images/CarmineQueenSpecial.gif");
+  maroonIdle = loadImage("Images/MaroonIdle.gif")
+  maroonSpec = loadImage("Images/MaroonSpecial.gif")
 
   menuMusic = loadSound('sounds/menu_music.mp3');
   levelMusic = loadSound('sounds/level_music.mp3');
@@ -168,7 +170,7 @@ function reset() {
   currentState = "MAINMENU";
   level = null;
   levelNum = 1;
-  randBoss = random(2);
+  randBoss = random(3);
   level = new Level(levelNum, randBoss, healthAmount, healthAmount);
   level.initLevel = false;
   level.mode = "NONE";

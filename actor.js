@@ -850,6 +850,10 @@ class Boss extends Actor{
       let cat = new Cat(canvasWidth / 2, canvasHeight / 2, 90, 90, catSprite);
       level.obstacle.push(cat);
       break;
+    case "Maroon Magician":
+      let graffiti = new Graffiti(graffitiSprite);
+      level.obstacle.push(graffiti);
+      break;
     };
     push();
     fill(255, 0, 0);
