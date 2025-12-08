@@ -118,10 +118,9 @@ class Level {
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
       if(!actor.alive && !actor.sorted && !actor.hasDecremented){
-         this.hasDecremented = true;
+         actor.hasDecremented = true;
          this.player.lives -= 1;
-         
-         
+         console.log(this);
         
         }
       

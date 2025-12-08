@@ -48,7 +48,10 @@ function itemEffectMagnet(level) {
   const x = mx - magnetWidth / 2;
   const y = my - magnetHeight / 2;
 
+  if (grabbing) return;
   for (let actor of level.allActors) {
+    if (actor.sorted) continue;
+
     if (rectsOverlap(x, y, magnetWidth, magnetHeight, actor.x, actor.y, actor.width, actor.height)) {
       // calculate center of actor
       const ax = actor.x + actor.width / 2;
@@ -129,3 +132,6 @@ function itemEffectBomb(level){
   level.allActors = [];
 }
 
+function ItemEffectTotem(){
+
+}

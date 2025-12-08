@@ -49,7 +49,7 @@ let pendingItemChoices = null;   // when non-null, the item choice UI is open
 let ourPlayer = null;
 
 let coinCount = 0;
- 
+ let grabbing = false;
 
 
 // ,_________
@@ -395,6 +395,7 @@ function mousePressed() {
       actor.alive
     ) {
       actor.grabbed = true;
+      grabbing = true;
       actor.splode();
       pickup.play();
     }
@@ -407,6 +408,7 @@ function mouseReleased() {
     {
       actor.dropInZone(level)
     }
+    grabbing = false;
     actor.grabbed = false;
   }
 }
