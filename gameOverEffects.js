@@ -1,5 +1,5 @@
 function generateRandomSplat(){
-  let splatImages = [splat1, splat2, splat3, splat4, splat5, splat6, splatD];
+  let splatImages = [splat1, splat2, splat3, splat4, splat5, splat6];
   let randSplat = random(splatImages);
   let randColorIdx = int(random(0, 4));
 
@@ -89,7 +89,7 @@ function gameOverText(){
   textSize(20);
   text("Game Over!",  canvasWidth/2 - 70, canvasHeight/2 - 70);
 
-  text(`Final score: ${level.score}`, canvasWidth/2 - 120, height/2 - 90);
+  text(`Final score: ${level.score}`, canvasWidth/2 - 110, height/2 - 90);
 
   //reset to normal values
   textSize(12);

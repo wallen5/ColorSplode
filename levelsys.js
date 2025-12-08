@@ -1,3 +1,4 @@
+
 class Level {
   constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;
@@ -53,15 +54,15 @@ class Level {
     for(let sp of this.vents){
       switch(difficulty){
       case 1:
-        sp.spawnIncrease = 0.0046296;
+        sp.spawnIncrease = 0.003;
         break;
 
       case 2:
-        sp.spawnIncrease = 0.008342;
+        sp.spawnIncrease = 0.007;
         break;
 
       case 3:
-        sp.spawnIncrease = 0.01;
+        sp.spawnIncrease = 0.008;
         break;
       }
     }
@@ -116,13 +117,18 @@ class Level {
     const collected = [];
     for (let actor of this.allActors) {
       if(!this.gameOver) actor.update(this);
-      if(!actor.alive && !actor.sorted){ this.player.lives -= 1; } // maybe put this somewhere else? gets called every frame
+      if(!actor.alive && !actor.sorted && !actor.hasDecremented){
+        if (typeof Bucket !== 'undefined' && actor instanceof Bucket) {
+         actor.hasDecremented = true;
+         this.player.lives -= 1;
+        }
+        }
       
       // Coin collection: when a Coin is grabbed (player clicked it), increment player's coins and mark for removal
       if (typeof Coin !== 'undefined' && actor instanceof Coin) {
         // many coin implementations use a 'grabbed' flag when clicked
         if (actor.grabbed && !actor.scored) {
-          this.player.coins = (this.player.coins || 0) + (actor.walletValue || 1);
+          coinCount++;
           actor.scored = true; // mark handled
           collected.push(actor);
         }
@@ -134,9 +140,18 @@ class Level {
       this.allActors = this.allActors.filter(a => !collected.includes(a));
     }
     if(this.player.lives <= 0){
-      this.player.alive = false;
-      this.gameOver = true; 
-    }
+      const hasTotem = inventory.some(item => item.id === "TOTEM");
+
+      if (hasTotem) {
+        // Activate Totem effect and remove it from inventory
+        itemEffectTotem(this.player);
+        const index = inventory.findIndex(item => item.id === "TOTEM");
+        inventory.splice(index, 1); // remove used Totem
+      } else {
+        // No Totem, normal game over
+        this.player.alive = false;
+        this.gameOver = true;
+      }}
 
     for(let obstacle of this.obstacle){
       obstacle.update(this);
@@ -168,7 +183,7 @@ class Level {
     {
       this.currentCombo++;
     }
-    this.score += this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
+    this.score += bossDamage + this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);
     if(level.difficulty == 3) {this.boss.health -= this.player.baseScore + round((this.currentCombo - 1) * this.player.comboMult);};
   }
 
@@ -276,14 +291,24 @@ class Level {
   }
 }
 
+let healthAmount = 2;
+let invincAmt = 100;
+let bossDamage = 0;
+
+
+
 class Player {
   constructor(lives, maxLives){
     this.alive = true;
     this.lives = lives;
-    this.maxLives = maxLives;
+
+    this.maxLives = (typeof maxLives === 'number') ? maxLives : healthAmount;
     this.coins = 0;
     this.baseScore = 1;
     this.comboMult = 1.0;
+    
+    this.invincTimer = invincAmt;
+    this.trackInv = 0;
   }
 }
 
@@ -332,9 +357,9 @@ class SpawnPoint {
     const y = this.y + this.height / 2 - 15;
     // Chance to spawn a Coin instead of a Bucket
     const COIN_SPAWN_CHANCE = 0.15; // 15% chance
-    if (typeof Coin !== 'undefined' && random() < COIN_SPAWN_CHANCE) {
+    if (typeof Coin !== 'undefined' && random() <= COIN_SPAWN_CHANCE) {
       const coinSize = 24;
-      const coin = new Coin(x, y, coinSize, null);
+      const coin = new Coin(x, y, coinSize, coinSprite);
       level.allActors.push(coin);
     } else {
       const actor = new Bucket(x, y, 45, 45, floor(random(4)));
@@ -355,59 +380,8 @@ class AudioManager {
   }
 }
 
-
-// level initilization testing
-
-test("Level initializes properly", () => {
-  const lvl = new Level(100, 3, 5);  // just create single instance
-  assert(lvl.scoreThreshold === 100);
-  assert(lvl.player.lives === 3);
-  assert(Array.isArray(lvl.colorZones));
-  assert(Array.isArray(lvl.vents));
-});
-
-test("Player default properties", () => {
-  const p = new Player(3, 5);
-  assert(p.alive === true);
-  assert(p.lives === 3);
-  assert(p.maxLives === 5);
-  assert(p.coins === 0);
-  assert(p.baseScore === 1);
-});
-
-test("Zone properties set correctly", () => {
-  const z = new Zone(10, 20, 30, 40, 2);
-  assert(z.x === 10);
-  assert(z.y === 20);
-  assert(z.width === 30);
-  assert(z.height === 40);
-  assert(z.color === 2);
-  assert(z.borderWidth === 4);
-});
-
-test("Level.createRandomZones creates four zones", () => {
-  if (typeof canvasWidth === 'undefined') { var canvasWidth = 800; }
-  if (typeof canvasHeight === 'undefined') { var canvasHeight = 600; }
-  const lvl = new Level(0, 3, 3);
-  lvl.createRandomZones();
-  assert(Array.isArray(lvl.colorZones));
-  assert(lvl.colorZones.length === 4);
-});
-
-//this one may or may not have been GPT'd so it may or may not work
-test("Level.addScore increases score and combo", () => {
-  if (typeof round === 'undefined') { function round(n) { return Math.round(n); } }
-  const lvl = new Level(100, 3, 5);
-  const actor = { color: 1 };
-  lvl.currentColor = null;
-  lvl.currentCombo = 0;
-  lvl.player.baseScore = 2;
-  lvl.player.comboMult = 1;
-  lvl.score = 0;
-  lvl.addScore(actor);
-  assert(lvl.score === 2);
-  lvl.addScore(actor);
-  assert(lvl.currentCombo === 2);
-  assert(lvl.score > 2);
-});
+//Calls `runTests()` if available
+if (typeof window !== 'undefined' && typeof runTests === 'function') {
+  try { runTests(); } catch (e) { console.error('runTests() failed:', e); }
+}
 

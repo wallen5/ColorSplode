@@ -1,13 +1,64 @@
 const itemID = ["MAGNET", "FREEZE", "TOTEM", "BOMB"];
 
 class Item {
-    constructor(id, sprite){
+    constructor(id, sprite, description){
         this.id = id;
         this.sprite = sprite;
+        this.desc = description;
     }
 }
 
+class PermItem extends Item {
+    constructor(id, sprite, cost, description = "") {
+        super(id, sprite);
+        this.cost = cost;        // coin cost to purchase
+        this.bought = 0;         // number of times purchased
+        this.description = description;
+    }
+
+    applyUpgrade(player) { 
+      switch (this.id) { 
+        case "WET PALETTE":
+          invincAmt += 100;
+          break;
+        
+        case "HEART":
+          applyPermanentHeart();
+          break;
+
+        case "ABRASIVE BRUSH":
+          bossDamage++;
+          break;
+
+      }
+    }
+    
+}
+
+  
+
+
 let ITEM_POOL = [];
+let PERM_ITEMS = [];
+
+function applyPermanentHeart() {
+  // bump baseline
+  healthAmount += 1;
+
+  // update the current active player(s)
+  if (level && level.player) {
+    // grow its max and optionally heal one life
+    level.player.maxLives = Math.max(level.player.maxLives, healthAmount);
+    level.player.lives = Math.min(level.player.lives + 1, level.player.maxLives);
+    ourPlayer = level.player; // keep global pointer
+  } else if (ourPlayer) {
+    ourPlayer.maxLives = Math.max(ourPlayer.maxLives, healthAmount);
+    ourPlayer.lives = Math.min(ourPlayer.lives + 1, ourPlayer.maxLives);
+  }
+
+  console.log("Permanent heart applied — baseline:", healthAmount, "current max:", ourPlayer && ourPlayer.maxLives);
+}
+
 
 function itemEffectMagnet(level) {
   const magnetWidth = 25;
@@ -17,7 +68,10 @@ function itemEffectMagnet(level) {
   const x = mx - magnetWidth / 2;
   const y = my - magnetHeight / 2;
 
+  if (grabbing) return;
   for (let actor of level.allActors) {
+    if (actor.sorted) continue;
+
     if (rectsOverlap(x, y, magnetWidth, magnetHeight, actor.x, actor.y, actor.width, actor.height)) {
       // calculate center of actor
       const ax = actor.x + actor.width / 2;
@@ -98,3 +152,10 @@ function itemEffectBomb(level){
   level.allActors = [];
 }
 
+function itemEffectTotem(player) {
+  // Give the player 1 life
+  player.lives = round(player.maxLives/2);
+
+  player.invincTimer = 0; // reset i-frames
+
+}

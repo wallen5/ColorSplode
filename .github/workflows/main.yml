@@ -3,7 +3,7 @@ name: Pull on Cassini
 on:
   workflow_dispatch:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   pull-remote:
@@ -11,21 +11,18 @@ jobs:
     env:
       HOST: cassini.cs.kent.edu
       USER: colorsplode            # change if needed
-      REMOTE_DIR: ~/ColorSplode
-      ID_ED25519: ${{ secrets.ID_ED25519 }}
-      KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
+      REMOTE_DIR: /home/colorsplode/web
     steps:
-      - name: Install SSH Key
-        uses: shimataro/ssh-key-action@v2.7.0
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
         with:
-            key: $ID_ED25519 
-            name: id_ed25519
-            known_hosts: $KNOWN_HOSTS
-          
+          key: ${{ secrets.ID_ED25519 }}
+          name: id_ed25519
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
       - name: Pull latest on Cassini
         run: |
-          ls -la
-          ssh "$USER@$HOST" 'ls -la && hostname'
-          ssh -o BatchMode=yes "$USER@$HOST" 'cd "$REMOTE_DIR" && git pull --ff-only'
+          echo $ ssh -o BatchMode=yes $USER@$HOST 'cd /home/colorsplode/web && git pull --ff-only'
+          ssh -o BatchMode=yes $USER@$HOST 'cd /home/colorsplode/web && git pull --ff-only'
 
         
