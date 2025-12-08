@@ -360,59 +360,8 @@ class AudioManager {
   }
 }
 
-
-// level initilization testing
-
-test("Level initializes properly", () => {
-  const lvl = new Level(100, 3, 5);  // just create single instance
-  assert(lvl.scoreThreshold === 100);
-  assert(lvl.player.lives === 3);
-  assert(Array.isArray(lvl.colorZones));
-  assert(Array.isArray(lvl.vents));
-});
-
-test("Player default properties", () => {
-  const p = new Player(3, 5);
-  assert(p.alive === true);
-  assert(p.lives === 3);
-  assert(p.maxLives === 5);
-  assert(p.coins === 0);
-  assert(p.baseScore === 1);
-});
-
-test("Zone properties set correctly", () => {
-  const z = new Zone(10, 20, 30, 40, 2);
-  assert(z.x === 10);
-  assert(z.y === 20);
-  assert(z.width === 30);
-  assert(z.height === 40);
-  assert(z.color === 2);
-  assert(z.borderWidth === 4);
-});
-
-test("Level.createRandomZones creates four zones", () => {
-  if (typeof canvasWidth === 'undefined') { var canvasWidth = 800; }
-  if (typeof canvasHeight === 'undefined') { var canvasHeight = 600; }
-  const lvl = new Level(0, 3, 3);
-  lvl.createRandomZones();
-  assert(Array.isArray(lvl.colorZones));
-  assert(lvl.colorZones.length === 4);
-});
-
-//this one may or may not have been GPT'd so it may or may not work
-test("Level.addScore increases score and combo", () => {
-  if (typeof round === 'undefined') { function round(n) { return Math.round(n); } }
-  const lvl = new Level(100, 3, 5);
-  const actor = { color: 1 };
-  lvl.currentColor = null;
-  lvl.currentCombo = 0;
-  lvl.player.baseScore = 2;
-  lvl.player.comboMult = 1;
-  lvl.score = 0;
-  lvl.addScore(actor);
-  assert(lvl.score === 2);
-  lvl.addScore(actor);
-  assert(lvl.currentCombo === 2);
-  assert(lvl.score > 2);
-});
+//Calls `runTests()` if available
+if (typeof window !== 'undefined' && typeof runTests === 'function') {
+  try { runTests(); } catch (e) { console.error('runTests() failed:', e); }
+}
 
