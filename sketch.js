@@ -358,6 +358,7 @@ function keyPressed() {
       this.startButton.remove();
       this.rougeLikeButton.remove();
       this.permItemButton.remove();
+      level = new Level(levelNum, null, 1, 1);
     }
     if (key === '2'){
       currentState = "ROUGE";
@@ -468,6 +469,7 @@ function showMainMenu() {
         this.rougeLikeButton.remove();
         this.startButton.remove();
         this.permItemButton.remove();
+        level = new Level(levelNum, null, 1, 1);
       }
     );
   }
