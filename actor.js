@@ -362,6 +362,8 @@ class Cat extends Actor {
     this.lastSwipe = 0;
     this.swipeCooldown = 2000; // ms
     this.roamUntil = millis() + 2000;
+
+    this.lookDir = 1;
   }
 
   findTarget(level) {
@@ -396,12 +398,33 @@ class Cat extends Actor {
 
     if (!this.target || !this.target.alive || this.target.sorted) {
       this.roam();
+
+      // while roaming, update facing from moveAngle so it faces direction of travel
+      const vx = Math.cos(this.moveAngle);
+      this.lookDir = vx >= 0 ? -1 : 1;
+
       if (now >= this.roamUntil) {
         this.findTarget(level);
         this.roamUntil = now + random(500, 1500);
       }
-    } else if (!this.target.grabbed) {this.moveTowardTarget();} 
-      else if (this.target.grabbed){this.roam();}
+    } else if (!this.target.grabbed) {
+      this.moveTowardTarget();
+    } else if (this.target.grabbed) {
+      this.roam();
+      // keep facing consistent while following mouse/grabbed
+      const vx = Math.cos(this.moveAngle);
+      this.lookDir = vx >= 0 ? -1 : 1;
+    }
+  }  
+
+    draw() {
+    push();
+    imageMode(CENTER);
+    // translate to center and scale horizontally by lookDir
+    translate(this.cx, this.cy);
+    scale(this.lookDir, 1);
+    if (this.sprite) image(this.sprite, 0, 0, this.width, this.height);
+    pop();
   }
 }
 
@@ -461,6 +484,7 @@ class rougeBucket extends Actor {
     if (!this.target) return;
     const dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
     const d = Math.hypot(dx, dy);
+    this.lookDir = dx >= 0 ? -1 : 1;
     if (d < 1) return;
     this.x += (dx / d) * this.speed;
     this.y += (dy / d) * this.speed;

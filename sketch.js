@@ -40,7 +40,7 @@ let gameOffsetY = 0;
 let currentColor = SOFTPALETTE[0]; // used in showMainMenu color cycling
 
 
-const ITEM_SCORE_STEP = 5;       // gain an item every 5 points
+const ITEM_SCORE_STEP = 5;       // gain an item every 8 points
 let nextItemScoreThreshold = ITEM_SCORE_STEP;
 let inventory = [];              // all items you’ve picked so far (if you want)
 let currentItem = null;          // the item you can currently use
@@ -225,9 +225,9 @@ function setup() {
   ];
 
   PERM_ITEMS = [
-    new PermItem("WET PALETTE", selectivePallet, 2, "Increases\ninvincibility\nframes."),
-    new PermItem("HEART", heart, 1, "Start with\nan extra\nheart."),
-    new PermItem("ABRASIVE BRUSH", thickerBrush, 1, "Extra damage\nto bosses.")
+    new PermItem("WET PALETTE", selectivePallet, 1, "Increases\ninvincibility\nframes."),
+    new PermItem("HEART", heart, 3, "Start with\nan extra\nheart."),
+    new PermItem("ABRASIVE BRUSH", thickerBrush, 2, "Extra damage\nto bosses.")
   ];
 
   if (!ourPlayer) {
@@ -319,7 +319,7 @@ function keyPressed() {
         const chosen = pendingItemChoices[idx];
         setCurrentItem(chosen);
         pendingItemChoices = null;
-        nextItemScoreThreshold += ITEM_SCORE_STEP;
+        nextItemScoreThreshold += ITEM_SCORE_STEP + round(nextItemScoreThreshold/3);;
       }
       for(let b of this.choiceButtons)
       {
@@ -699,7 +699,9 @@ function runClassicMode() {
   text(`Combo\n    ${ level.currentCombo}`, -200,114, 300);
   fill(255);
   text(`Score\n    ${ level.score}`, -200,64, 300);
+  text(`Coins\n    ${ coinCount}`, -200,164, 300)
 
+  if (ourPlayer) { ourPlayer.trackInv++; }
 }
 
 function runRougeMode(){
@@ -781,7 +783,8 @@ function runRougeMode(){
   text(`Combo\n    ${ level.currentCombo}`, -200,114, 300);
   fill(255);
   text(`Score\n    ${ level.score}`, -200,64, 300);
-  
+  text(`Coins\n    ${ coinCount}`, -200,164, 300)
+
   if (ourPlayer) {
     ourPlayer.trackInv++;
   }
@@ -995,7 +998,7 @@ function drawItemChoiceUI() {
           const chosen = pendingItemChoices[i];
           setCurrentItem(chosen);
           pendingItemChoices = null;
-          nextItemScoreThreshold += ITEM_SCORE_STEP;
+          nextItemScoreThreshold += ITEM_SCORE_STEP + round(nextItemScoreThreshold/3);
           for(let b of this.choiceButtons) b.remove();
           this.choiceButtons = null;
         }
