@@ -853,6 +853,8 @@ class Boss extends Actor{
     case "Maroon Magician":
       let graffiti = new Graffiti(graffitiSprite);
       level.obstacle.push(graffiti);
+      let graffiti2 = new Graffiti(graffitiSprite);
+      level.obstacle.push(graffiti2);
       break;
     };
     push();

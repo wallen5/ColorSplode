@@ -3,7 +3,7 @@ class Level {
   constructor(difficulty, bossKey, lives, maxLives) {
     this.difficulty = difficulty;
     this.bossKey = bossKey;
-    this.scoreThreshold = 1;
+    this.scoreThreshold = 25;
     this.obstacle = [];
     this.boss = null;
     this.colorZones = [];
@@ -44,7 +44,7 @@ class Level {
   setDifficulty(difficulty) {
     if(difficulty >= 2){
       this.setObstacle();
-      this.scoreThreshold = 1;
+      this.scoreThreshold = 50;
     }
     if(difficulty == 3){
       this.setBoss();
@@ -78,7 +78,7 @@ class Level {
       this.obstacle.push(new rougeBucket(canvasWidth / 2, canvasHeight / 2, w, h, rougeBucketSprite));
       console.log("rougeBucket");
     } else if (this.bossKey <= 3){
-      this.obstacle = new Graffiti(graffitiSprite);
+      this.obstacle.push(new Graffiti(graffitiSprite));
       console.log("graffiti");
     } else {
       this.obstacle = [];
