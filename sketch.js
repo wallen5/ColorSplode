@@ -734,6 +734,9 @@ function runRougeMode(){
   }
 
   drawExplosion(); // shows bomb explode gif when bomb dropped. Triggered by itemEffectBomb(level)
+
+  let baseScoreAddition = 1
+  let comboMult = 1.0;
   
   for(item of inventory){
     if (item.id === "MAGNET") {
@@ -747,8 +750,17 @@ function runRougeMode(){
       let index = inventory.indexOf(item);
       inventory.splice(index,1); // remove bomb after it is used
       break;
+    } else if (item.id === "BRUSH")
+    {
+      baseScoreAddition += 1;
+    } else if (item.id === "PALLET")
+    {
+      comboMult += 0.25
     }
   }
+  level.player.baseScore = baseScoreAddition;
+  level.player.comboMult = comboMult;
+  
 
   // everything is updated when the level gets drawn
   level.draw();
